@@ -1,4 +1,5 @@
 mod menubar;
+pub mod sidepanel;
 
 use eframe::egui;
 
@@ -10,6 +11,8 @@ pub struct LauncherApp {
 impl eframe::App for LauncherApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         menubar::show(ui, &mut self.show_about);
+
+        sidepanel::show(ui);
 
         egui::CentralPanel::default().show(ui, |_ui| {});
 

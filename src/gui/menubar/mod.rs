@@ -1,4 +1,4 @@
-mod configuration;
+mod settings;
 mod emulation;
 mod file;
 mod help;
@@ -13,7 +13,7 @@ pub(super) fn show(ui: &mut egui::Ui, show_about: &mut bool) {
         egui::MenuBar::new().ui(ui, |ui| {
             file::show(ui);
             emulation::show(ui);
-            configuration::show(ui);
+            settings::show(ui);
             manage::show(ui);
             utilities::show(ui);
             view::show(ui);

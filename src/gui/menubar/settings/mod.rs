@@ -1,6 +1,6 @@
 use eframe::egui;
 pub fn show(ui: &mut egui::Ui) {
-    ui.menu_button("Configuration", |ui| {
+    ui.menu_button("Settings", |ui| {
         let _ = ui.button("General");
         let _ = ui.button("Audio");
         let _ = ui.button("GUI");
