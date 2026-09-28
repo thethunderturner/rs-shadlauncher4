@@ -11,7 +11,11 @@ fn main()  {
     let res = sfo::sfo::read_sfo(Path::new("/run/media/mateo/ExtremeMainPart/Games/Emulation/dumped_games/ps4/Games/CUSA00127/sce_sys/param.sfo"));
     // println!("{:#?}", res);
     let res1 = scanning::scan(Path::new("/run/media/mateo/ExtremeMainPart/Games/Emulation/dumped_games/ps4/Games/"));
-    println!("{:#?}", res1);
+    println!(
+        "{} titles; {} bytes allocated for Title slots",
+        res1.len(),
+        res1.capacity() * std::mem::size_of::<scanning::Title>()
+    );
 
     // let options = eframe::NativeOptions {
     //     renderer: eframe::Renderer::Glow,
