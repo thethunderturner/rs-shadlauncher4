@@ -1,6 +1,5 @@
-mod gui;
-
 use eframe::egui;
+mod gui;
 
 fn main() -> eframe::Result {
     let options = eframe::NativeOptions {

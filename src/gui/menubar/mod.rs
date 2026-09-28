@@ -1,12 +1,3 @@
-pub(super) mod controllers;
-mod emulation;
-mod file;
-mod help;
-mod manage;
-mod settings;
-mod utilities;
-mod view;
-
 use crate::gui::menubar::controllers::Controllers;
 use crate::gui::menubar::emulation::Emulation;
 use crate::gui::menubar::file::File;
@@ -17,6 +8,14 @@ use crate::gui::menubar::utilities::Utilities;
 use crate::gui::menubar::view::View;
 use eframe::egui;
 
+pub(super) mod controllers;
+mod emulation;
+mod file;
+mod help;
+mod manage;
+mod settings;
+mod utilities;
+mod view;
 pub struct Menubar {
     pub controllers: Controllers,
     pub emulation: Emulation,

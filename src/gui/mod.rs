@@ -1,17 +1,17 @@
-pub mod menubar;
-pub mod sidepanel;
-pub mod centralpanel;
-
+use crate::gui::centralpanel::Centralpanel;
 use crate::gui::menubar::Menubar;
 use crate::gui::sidepanel::Sidepanel;
 use eframe::egui;
-use crate::gui::centralpanel::Centralpanel;
+
+pub mod centralpanel;
+pub mod menubar;
+pub mod sidepanel;
 
 #[derive(Default)]
 pub struct LauncherApp {
     pub menubar: Menubar,
     pub sidepanel: Sidepanel,
-    pub centralpanel: Centralpanel
+    pub centralpanel: Centralpanel,
 }
 
 impl eframe::App for LauncherApp {
