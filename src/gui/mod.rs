@@ -6,11 +6,12 @@ use eframe::egui;
 #[derive(Default)]
 pub struct LauncherApp {
     show_about: bool,
+    show_controllers: bool,
 }
 
 impl eframe::App for LauncherApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
-        menubar::show(ui, &mut self.show_about);
+        menubar::show(ui, &mut self.show_about, &mut self.show_controllers);
 
         sidepanel::show(ui);
 
@@ -25,5 +26,7 @@ impl eframe::App for LauncherApp {
                     ui.label("A launcher for shadPS4.");
                 });
         }
+
+        menubar::controllers::show_window(ui.ctx(), &mut self.show_controllers);
     }
 }
