@@ -5,6 +5,7 @@ use crate::sfo::key_table::{SfoKeyTable, read_key_table};
 use std::io::{Cursor, Error};
 use std::path::Path;
 
+#[derive(Debug)]
 pub struct Sfo {
     pub header: SfoHeader,
     pub index_table: SfoIndexTable,
@@ -23,11 +24,8 @@ pub struct Sfo {
        Key table: Stores the names like TITLE, APP_VER
        Data table Stores the actual values like "Bloodborne", "01.09"
 */
-pub fn read_sfo(path: &mut Path) -> std::io::Result<Sfo> {
-    // Download param.sfo.
-    let buffer = ftp.retr_as_buffer(&path).map_err(Error::other)?;
-
-    let mut f = Cursor::new(buffer.into_inner());
+pub fn read_sfo(path: &Path) -> std::io::Result<Sfo> {
+    let mut f = Cursor::new(std::fs::read(path)?);
 
     // Read header
     let header = read_header(&mut f)?;
