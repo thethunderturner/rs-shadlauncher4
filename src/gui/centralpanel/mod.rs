@@ -95,6 +95,9 @@ impl Centralpanel {
                     .id_salt("games_table")
                     .striped(true)
                     .resizable(true)
+                    .cell_layout(egui::Layout::centered_and_justified(
+                        egui::Direction::TopDown,
+                    ))
                     .column(Column::exact(52.0))
                     .column(Column::initial(210.0).at_least(120.0))
                     .column(Column::initial(110.0).at_least(90.0))
@@ -129,8 +132,12 @@ impl Centralpanel {
                             });
                             row.col(|ui| {
                                 let name = patch.map_or(title.app.name.as_str(), |p| &p.name);
-                                ui.add(egui::Label::new(name).truncate())
-                                    .on_hover_text(name);
+                                ui.add(
+                                    egui::Label::new(name)
+                                        .truncate()
+                                        .halign(egui::Align::Center),
+                                )
+                                .on_hover_text(name);
                             });
                             row.col(|ui| {
                                 ui.label(&title.serial);
@@ -148,8 +155,12 @@ impl Centralpanel {
                             });
                             row.col(|ui| {
                                 let path = title.parent_dir.to_string_lossy();
-                                ui.add(egui::Label::new(path.as_ref()).truncate())
-                                    .on_hover_text(path.as_ref());
+                                ui.add(
+                                    egui::Label::new(path.as_ref())
+                                        .truncate()
+                                        .halign(egui::Align::Center)
+                                )
+                                .on_hover_text(path.as_ref());
                             });
                         });
                     });
