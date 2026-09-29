@@ -1,10 +1,15 @@
 use crate::scanning::Title;
 use eframe::egui;
 use egui_extras::{Column, TableBuilder};
+use std::path::Path;
+use std::sync::mpsc::{self, Receiver, TryRecvError};
 
 pub struct Centralpanel {
     titles: Vec<Title>,
     icons: Vec<Option<egui::TextureHandle>>,
+    selected_serial: Option<String>,
+    background: Option<egui::TextureHandle>,
+    background_rx: Option<Receiver<Option<egui::ColorImage>>>,
     loading: bool,
     scan_failed: bool,
 }
@@ -15,26 +20,20 @@ pub(super) struct ScannedTitle {
 }
 
 pub(super) fn prepare_titles(titles: Vec<Title>) -> Vec<ScannedTitle> {
-    titles
-        .into_iter()
-        .map(|title| {
-            let icon = (|| {
-                let image = title
-                    .patch
-                    .as_ref()
-                    .and_then(|patch| image::open(patch.path.join("sce_sys/icon0.png")).ok())
-                    .or_else(|| image::open(title.app.path.join("sce_sys/icon0.png")).ok())?
-                    .thumbnail(40, 40)
-                    .to_rgba8();
-                let color_image = egui::ColorImage::from_rgba_unmultiplied(
-                    [image.width() as usize, image.height() as usize],
-                    image.as_raw(),
-                );
-                Some(color_image)
-            })();
-            ScannedTitle { title, icon }
-        })
-        .collect()
+    titles.into_iter().map(prepare_title).collect()
+}
+
+fn prepare_title(title: Title) -> ScannedTitle {
+    let icon = title.icon_path.as_deref().and_then(load_icon);
+    ScannedTitle { title, icon }
+}
+
+fn load_icon(path: &Path) -> Option<egui::ColorImage> {
+    let image = image::open(path).ok()?.thumbnail(40, 40).to_rgba8();
+    Some(egui::ColorImage::from_rgba_unmultiplied(
+        [image.width() as usize, image.height() as usize],
+        image.as_raw(),
+    ))
 }
 
 impl Centralpanel {
@@ -42,6 +41,9 @@ impl Centralpanel {
         Self {
             titles: Vec::new(),
             icons: Vec::new(),
+            selected_serial: None,
+            background: None,
+            background_rx: None,
             loading: true,
             scan_failed: false,
         }
@@ -50,6 +52,9 @@ impl Centralpanel {
     pub(super) fn set_titles(&mut self, ctx: &egui::Context, scanned: Vec<ScannedTitle>) {
         self.titles.clear();
         self.icons.clear();
+        self.selected_serial = None;
+        self.background = None;
+        self.background_rx = None;
         for ScannedTitle { title, icon } in scanned {
             self.icons.push(icon.map(|image| {
                 ctx.load_texture(
@@ -68,8 +73,47 @@ impl Centralpanel {
         self.scan_failed = true;
     }
 
+    fn select_title(&mut self, index: usize, ctx: &egui::Context) {
+        let title = &self.titles[index];
+        if self.selected_serial.as_deref() == Some(&title.serial) {
+            return;
+        }
+        self.selected_serial = Some(title.serial.clone());
+        self.background = None;
+        self.background_rx = None;
+        if let Some(path) = title.background_path.clone() {
+            let (tx, rx) = mpsc::channel();
+            self.background_rx = Some(rx);
+            let ctx = ctx.clone();
+            std::thread::spawn(move || {
+                let image = load_background(&path);
+                let _ = tx.send(image);
+                ctx.request_repaint();
+            });
+        }
+    }
+
     pub(super) fn show(&mut self, ui: &mut egui::Ui) {
+        if let Some(rx) = &self.background_rx {
+            match rx.try_recv() {
+                Ok(Some(image)) => {
+                    self.background = Some(ui.ctx().load_texture(
+                        "selected-game-background",
+                        image,
+                        egui::TextureOptions::LINEAR,
+                    ));
+                    self.background_rx = None;
+                }
+                Ok(None) | Err(TryRecvError::Disconnected) => {
+                    self.background_rx = None;
+                }
+                Err(TryRecvError::Empty) => {}
+            }
+        }
         egui::CentralPanel::default().show(ui, |ui| {
+            if let Some(background) = &self.background {
+                paint_background(ui, background);
+            }
             if self.loading {
                 ui.horizontal(|ui| {
                     ui.spinner();
@@ -89,11 +133,13 @@ impl Centralpanel {
                 return;
             }
 
+            let mut clicked_title = None;
             egui::ScrollArea::horizontal().show(ui, |ui| {
                 ui.set_min_width(1120.0);
                 TableBuilder::new(ui)
                     .id_salt("games_table")
-                    .striped(true)
+                    .striped(self.background.is_none())
+                    .sense(egui::Sense::click())
                     .resizable(true)
                     .cell_layout(egui::Layout::centered_and_justified(
                         egui::Direction::TopDown,
@@ -119,6 +165,9 @@ impl Centralpanel {
                             let index = row.index();
                             let title = &self.titles[index];
                             let patch = title.patch.as_ref();
+                            row.set_selected(
+                                self.selected_serial.as_deref() == Some(&title.serial),
+                            );
 
                             row.col(|ui| {
                                 if let Some(icon) = &self.icons[index] {
@@ -127,7 +176,8 @@ impl Centralpanel {
                                             .fit_to_exact_size(egui::vec2(40.0, 40.0)),
                                     );
                                 } else {
-                                    ui.label("?").on_hover_text("Icon unavailable");
+                                    ui.add(egui::Label::new("?").selectable(false))
+                                        .on_hover_text("Icon unavailable");
                                 }
                             });
                             row.col(|ui| {
@@ -135,23 +185,34 @@ impl Centralpanel {
                                 ui.add(
                                     egui::Label::new(name)
                                         .truncate()
-                                        .halign(egui::Align::Center),
+                                        .halign(egui::Align::Center)
+                                        .selectable(false),
                                 )
                                 .on_hover_text(name);
                             });
                             row.col(|ui| {
-                                ui.label(&title.serial);
+                                ui.add(egui::Label::new(&title.serial).selectable(false));
                             });
                             row.col(|ui| {
-                                ui.label(patch.map_or(title.app.fw.as_str(), |p| &p.fw));
+                                ui.add(
+                                    egui::Label::new(
+                                        patch.map_or(title.app.fw.as_str(), |p| &p.fw),
+                                    )
+                                    .selectable(false),
+                                );
                             });
                             row.col(|ui| {
                                 let bytes =
                                     title.app.size.saturating_add(patch.map_or(0, |p| p.size));
-                                ui.label(format_size(bytes));
+                                ui.add(egui::Label::new(format_size(bytes)).selectable(false));
                             });
                             row.col(|ui| {
-                                ui.label(patch.map_or(title.app.version.as_str(), |p| &p.version));
+                                ui.add(
+                                    egui::Label::new(
+                                        patch.map_or(title.app.version.as_str(), |p| &p.version),
+                                    )
+                                    .selectable(false),
+                                );
                             });
                             row.col(|ui| {
                                 let path = title.parent_dir.to_string_lossy();
@@ -159,14 +220,51 @@ impl Centralpanel {
                                     egui::Label::new(path.as_ref())
                                         .truncate()
                                         .halign(egui::Align::Center)
+                                        .selectable(false),
                                 )
                                 .on_hover_text(path.as_ref());
                             });
+                            if row.response().clicked() {
+                                clicked_title = Some(index);
+                            }
                         });
                     });
             });
+            if let Some(index) = clicked_title {
+                self.select_title(index, ui.ctx());
+            }
         });
     }
+}
+
+fn load_background(path: &Path) -> Option<egui::ColorImage> {
+    let image = image::open(path).ok()?.to_rgba8();
+    Some(egui::ColorImage::from_rgba_unmultiplied(
+        [image.width() as usize, image.height() as usize],
+        image.as_raw(),
+    ))
+}
+
+fn paint_background(ui: &egui::Ui, background: &egui::TextureHandle) {
+    let rect = ui.max_rect();
+    let size = background.size_vec2();
+    let image_ratio = size.x / size.y;
+    let rect_ratio = rect.width() / rect.height();
+    let uv = if image_ratio > rect_ratio {
+        let margin = (1.0 - rect_ratio / image_ratio) / 2.0;
+        egui::Rect::from_min_max(egui::pos2(margin, 0.0), egui::pos2(1.0 - margin, 1.0))
+    } else {
+        let margin = (1.0 - image_ratio / rect_ratio) / 2.0;
+        egui::Rect::from_min_max(egui::pos2(0.0, margin), egui::pos2(1.0, 1.0 - margin))
+    };
+    ui.painter()
+        .image(background.id(), rect, uv, egui::Color32::WHITE);
+    let overlay = if ui.visuals().dark_mode {
+        egui::Color32::from_black_alpha(220)
+    } else {
+        egui::Color32::from_white_alpha(220)
+    };
+    ui.painter().rect_filled(rect, 0.0, overlay);
 }
 
 fn format_size(bytes: u64) -> String {

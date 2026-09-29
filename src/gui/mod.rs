@@ -1,4 +1,4 @@
-use crate::gui::centralpanel::{prepare_titles, Centralpanel, ScannedTitle};
+use crate::gui::centralpanel::{Centralpanel, ScannedTitle, prepare_titles};
 use crate::gui::menubar::Menubar;
 use crate::gui::sidepanel::Sidepanel;
 use crate::scanning;

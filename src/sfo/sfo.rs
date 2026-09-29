@@ -1,15 +1,14 @@
 use crate::sfo::data_table::{SfoDataTable, read_data_table};
-use crate::sfo::header::{SfoHeader, read_header};
-use crate::sfo::index_table::{SfoIndexTable, read_index};
-use crate::sfo::key_table::{SfoKeyTable, read_key_table};
+use crate::sfo::header::read_header;
+use crate::sfo::index_table::read_index;
+use crate::sfo::key_table::read_key_table;
 use std::io::Cursor;
 use std::path::Path;
 
-#[derive(Debug)]
 pub struct Sfo {
-    pub header: SfoHeader,
-    pub index_table: SfoIndexTable,
-    pub key_table: SfoKeyTable,
+    // pub header: SfoHeader,
+    // pub index_table: SfoIndexTable,
+    // pub key_table: SfoKeyTable,
     pub data_table: SfoDataTable,
 }
 // Read: https://www.psdevwiki.com/ps4/Param.sfo
@@ -40,9 +39,9 @@ pub fn read_sfo(path: &Path) -> std::io::Result<Sfo> {
     let data_table = read_data_table(&mut f, &index_table, &key_table)?;
 
     Ok(Sfo {
-        header,
-        index_table,
-        key_table,
+        // header,
+        // index_table,
+        // key_table,
         data_table,
     })
 }

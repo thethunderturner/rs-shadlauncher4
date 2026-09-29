@@ -5,6 +5,8 @@ use std::path::{Path, PathBuf};
 
 #[derive(Debug)]
 pub struct Title {
+    pub icon_path: Option<PathBuf>,
+    pub background_path: Option<PathBuf>,
     pub parent_dir: PathBuf,
     pub serial: String,
     pub compatibility: Option<String>,
@@ -73,6 +75,8 @@ pub fn scan(path: &Path) -> Vec<Title> {
                             game_dir.file_name().unwrap().to_string_lossy().into_owned();
                         let is_patch =
                             folder_name.ends_with("-patch") || folder_name.ends_with("-UPDATE");
+                        let icon = find_icon(&game_dir);
+                        let background = find_background(&game_dir);
 
                         if is_patch {
                             let patch = Patch {
@@ -90,6 +94,8 @@ pub fn scan(path: &Path) -> Vec<Title> {
                             }
                         } else {
                             list.push(Title {
+                                icon_path: icon,
+                                background_path: background,
                                 parent_dir: parent,
                                 serial,
                                 compatibility: None,
@@ -114,8 +120,32 @@ pub fn scan(path: &Path) -> Vec<Title> {
     }
     for title in &mut list {
         title.patch = patches.remove(&title.serial);
+        if let Some(patch) = &title.patch {
+            if let Some(icon) = existing_file(patch.path.join("sce_sys/icon0.png")) {
+                title.icon_path = Some(icon);
+            }
+            if let Some(background) = find_background(&patch.path) {
+                title.background_path = Some(background);
+            }
+        }
     }
     list
+}
+
+fn existing_file(path: PathBuf) -> Option<PathBuf> {
+    path.is_file().then_some(path)
+}
+
+fn find_icon(game_dir: &Path) -> Option<PathBuf> {
+    ["icon0.png", "icon1.png"]
+        .into_iter()
+        .find_map(|name| existing_file(game_dir.join("sce_sys").join(name)))
+}
+
+fn find_background(game_dir: &Path) -> Option<PathBuf> {
+    ["pic0.png", "pic1.png"]
+        .into_iter()
+        .find_map(|name| existing_file(game_dir.join("sce_sys").join(name)))
 }
 
 fn directory_size(path: &Path) -> std::io::Result<u64> {
