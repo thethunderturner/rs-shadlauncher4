@@ -1,4 +1,5 @@
 use crate::sfo::sfo::read_sfo;
+use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -10,11 +11,11 @@ pub struct Title {
     pub publisher_id: String,
     pub playtime: String,
     pub app: App,
-    pub patch: Option<Patch> // Maybe a title doesn't have a patch
+    pub patch: Option<Patch>, // Maybe a title doesn't have a patch
 }
 
 #[derive(Debug)]
-struct App {
+pub struct App {
     pub name: String, // Keeping the name here, because some titles change names between versions
     pub fw: String,
     pub size: u64,
@@ -23,7 +24,7 @@ struct App {
 }
 
 #[derive(Debug)]
-struct Patch {
+pub struct Patch {
     pub name: String, // Keeping the name here, because some titles change names between versions
     pub fw: String,
     pub size: u64,
@@ -33,6 +34,7 @@ struct Patch {
 
 pub fn scan(path: &Path) -> Vec<Title> {
     let mut list: Vec<Title> = Vec::new();
+    let mut patches: HashMap<String, Patch> = HashMap::new();
     match fs::read_dir(path) {
         Ok(entries) => {
             for entry in entries {
@@ -57,26 +59,61 @@ pub fn scan(path: &Path) -> Vec<Title> {
                             }
                         };
 
-                        let parent = game_dir.parent();
+                        let parent = game_dir.parent().unwrap_or(path).to_path_buf();
+                        let serial = data_table.find_string("TITLE_ID").unwrap(); // serial
+                        let name = data_table.find_string("TITLE").unwrap();
+                        let system_ver = data_table.find_integer("SYSTEM_VER").unwrap();
+                        let fw = format!(
+                            "{:x}.{:02x}",
+                            (system_ver >> 24) & 0xff,
+                            (system_ver >> 16) & 0xff
+                        );
+                        let version = data_table.find_string("APP_VER").unwrap();
+                        let folder_name =
+                            game_dir.file_name().unwrap().to_string_lossy().into_owned();
+                        let is_patch =
+                            folder_name.ends_with("-patch") || folder_name.ends_with("-UPDATE");
 
+                        if is_patch {
+                            let patch = Patch {
+                                name,
+                                fw,
+                                size: size_bytes,
+                                version,
+                                path: game_dir,
+                            };
 
-                        // list.push(Title {
-                        //     name: data_table.find_string("TITLE").unwrap(),
-                        //     serial: data_table.find_string("TITLE_ID").unwrap(),
-                        //     compatibility: None,
-                        //     publisher_id: data_table.find_string("CONTENT_ID").unwrap(),
-                        //     fw: data_table.find_integer("SYSTEM_VER").unwrap().to_string(),
-                        //     size: format!("{:.2} GiB", size_bytes as f64 / 1024_f64.powi(3)),
-                        //     version: data_table.find_string("VERSION").unwrap(),
-                        //     playtime: String::new(),
-                        //     path: game_dir,
-                        // });
+                            // shadPS4 prefers -UPDATE when both update folder names exist.
+                            let prefer_update = folder_name.ends_with("-UPDATE");
+                            if prefer_update || !patches.contains_key(&serial) {
+                                patches.insert(serial, patch);
+                            }
+                        } else {
+                            list.push(Title {
+                                parent_dir: parent,
+                                serial,
+                                compatibility: None,
+                                publisher_id: data_table.find_string("CONTENT_ID").unwrap(),
+                                playtime: String::new(),
+                                app: App {
+                                    name,
+                                    fw,
+                                    size: size_bytes,
+                                    version,
+                                    path: game_dir,
+                                },
+                                patch: None,
+                            });
+                        }
                     }
                     Err(e) => eprintln!("Error: {}", e),
                 }
             }
         }
         Err(e) => eprintln!("Error: {}", e),
+    }
+    for title in &mut list {
+        title.patch = patches.remove(&title.serial);
     }
     list
 }

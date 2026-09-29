@@ -14,7 +14,7 @@ use std::io::Read;
 */
 pub struct SfoHeader {
     pub magic: [u8; 4],           // PSF
-    pub version: u32,             // Version of the game
+    pub version: u32,             // SFO format version, not the game's APP_VER
     pub key_table_offset: u32,    // Tells you where the key table starts
     pub data_table_offset: u32,   // Tells you where the data table starts
     pub index_table_entries: u32, // Tells you where the index table starts
