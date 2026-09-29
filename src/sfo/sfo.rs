@@ -2,7 +2,7 @@ use crate::sfo::data_table::{SfoDataTable, read_data_table};
 use crate::sfo::header::{SfoHeader, read_header};
 use crate::sfo::index_table::{SfoIndexTable, read_index};
 use crate::sfo::key_table::{SfoKeyTable, read_key_table};
-use std::io::{Cursor, Error};
+use std::io::Cursor;
 use std::path::Path;
 
 #[derive(Debug)]
