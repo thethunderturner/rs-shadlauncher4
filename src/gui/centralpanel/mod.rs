@@ -149,11 +149,10 @@ impl Centralpanel {
                     .column(Column::initial(110.0).at_least(90.0))
                     .column(Column::initial(90.0).at_least(75.0))
                     .column(Column::initial(90.0).at_least(75.0))
-                    .column(Column::initial(90.0).at_least(75.0))
                     .column(Column::remainder().at_least(320.0))
                     .header(24.0, |mut header| {
                         for label in [
-                            "Icon", "Name", "Serial", "Firmware", "Size", "Version", "Path",
+                            "Icon", "Name", "Serial", "Firmware", "Version", "Path",
                         ] {
                             header.col(|ui| {
                                 ui.strong(label);
@@ -200,11 +199,6 @@ impl Centralpanel {
                                     )
                                     .selectable(false),
                                 );
-                            });
-                            row.col(|ui| {
-                                let bytes =
-                                    title.app.size.saturating_add(patch.map_or(0, |p| p.size));
-                                ui.add(egui::Label::new(format_size(bytes)).selectable(false));
                             });
                             row.col(|ui| {
                                 ui.add(
@@ -265,19 +259,4 @@ fn paint_background(ui: &egui::Ui, background: &egui::TextureHandle) {
         egui::Color32::from_white_alpha(220)
     };
     ui.painter().rect_filled(rect, 0.0, overlay);
-}
-
-fn format_size(bytes: u64) -> String {
-    const KB: f64 = 1024.0;
-    let bytes = bytes as f64;
-    let (value, unit) = if bytes < KB.powi(2) {
-        (bytes / KB, "KB")
-    } else if bytes < KB.powi(3) {
-        (bytes / KB.powi(2), "MB")
-    } else if bytes < KB.powi(4) {
-        (bytes / KB.powi(3), "GB")
-    } else {
-        (bytes / KB.powi(4), "TB")
-    };
-    format!("{value:.2} {unit}")
 }

@@ -8,7 +8,7 @@ mod sfo;
 
 fn main() -> eframe::Result {
     let games_path =
-        Path::new("/run/media/mateo/ExtremeMainPart/Games/Emulation/dumped_games/ps4/Games/")
+        Path::new("/run/media/mateo/SEAGATE 4TB/ps4/Games/")
             .to_path_buf();
 
     let options = eframe::NativeOptions {

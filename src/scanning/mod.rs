@@ -20,7 +20,6 @@ pub struct Title {
 pub struct App {
     pub name: String, // Keeping the name here, because some titles change names between versions
     pub fw: String,
-    pub size: u64,
     pub version: String,
     pub path: PathBuf,
 }
@@ -29,7 +28,6 @@ pub struct App {
 pub struct Patch {
     pub name: String, // Keeping the name here, because some titles change names between versions
     pub fw: String,
-    pub size: u64,
     pub version: String,
     pub path: PathBuf,
 }
@@ -53,14 +51,6 @@ pub fn scan(path: &Path) -> Vec<Title> {
                         }
 
                         let data_table = read_sfo(&sfo_path).unwrap().data_table;
-                        let size_bytes = match directory_size(&game_dir) {
-                            Ok(bytes) => bytes,
-                            Err(err) => {
-                                eprintln!("Could not measure {}: {err}", game_dir.display());
-                                continue;
-                            }
-                        };
-
                         let parent = game_dir.parent().unwrap_or(path).to_path_buf();
                         let serial = data_table.find_string("TITLE_ID").unwrap(); // serial
                         let name = data_table.find_string("TITLE").unwrap();
@@ -82,7 +72,6 @@ pub fn scan(path: &Path) -> Vec<Title> {
                             let patch = Patch {
                                 name,
                                 fw,
-                                size: size_bytes,
                                 version,
                                 path: game_dir,
                             };
@@ -104,7 +93,6 @@ pub fn scan(path: &Path) -> Vec<Title> {
                                 app: App {
                                     name,
                                     fw,
-                                    size: size_bytes,
                                     version,
                                     path: game_dir,
                                 },
@@ -146,21 +134,4 @@ fn find_background(game_dir: &Path) -> Option<PathBuf> {
     ["pic0.png", "pic1.png"]
         .into_iter()
         .find_map(|name| existing_file(game_dir.join("sce_sys").join(name)))
-}
-
-fn directory_size(path: &Path) -> std::io::Result<u64> {
-    let mut bytes = 0;
-
-    for entry in std::fs::read_dir(path)? {
-        let entry = entry?;
-        let kind = entry.file_type()?;
-
-        if kind.is_dir() {
-            bytes += directory_size(&entry.path())?;
-        } else if kind.is_file() {
-            bytes += entry.metadata()?.len();
-        }
-    }
-
-    Ok(bytes)
 }
