@@ -1,3 +1,6 @@
+pub mod list;
+pub mod toolbar;
+
 use crate::scanning::Title;
 use eframe::egui;
 use egui_extras::{Column, TableBuilder};
@@ -117,7 +120,7 @@ impl Centralpanel {
             if self.loading {
                 ui.horizontal(|ui| {
                     ui.spinner();
-                    ui.label("Scanning games…");
+                    ui.label("Scanning games!");
                 });
                 return;
             }
@@ -134,6 +137,7 @@ impl Centralpanel {
             }
 
             let mut clicked_title = None;
+            let left_aligned = egui::Layout::left_to_right(egui::Align::Center);
             egui::ScrollArea::horizontal().show(ui, |ui| {
                 ui.set_min_width(1120.0);
                 TableBuilder::new(ui)
@@ -146,16 +150,23 @@ impl Centralpanel {
                     ))
                     .column(Column::exact(52.0))
                     .column(Column::initial(210.0).at_least(120.0))
-                    .column(Column::initial(110.0).at_least(90.0))
-                    .column(Column::initial(90.0).at_least(75.0))
-                    .column(Column::initial(90.0).at_least(75.0))
+                    .column(Column::exact(90.0))
+                    .column(Column::exact(75.0))
+                    .column(Column::exact(75.0))
                     .column(Column::remainder().at_least(320.0))
                     .header(24.0, |mut header| {
                         for label in [
                             "Icon", "Name", "Serial", "Firmware", "Version", "Path",
                         ] {
                             header.col(|ui| {
-                                ui.strong(label);
+                                if matches!(label, "Name" | "Path") {
+                                    ui.with_layout(left_aligned, |ui| {
+                                        ui.add_space(8.0);
+                                        ui.strong(label);
+                                    });
+                                } else {
+                                    ui.strong(label);
+                                }
                             });
                         }
                     })
@@ -181,13 +192,15 @@ impl Centralpanel {
                             });
                             row.col(|ui| {
                                 let name = patch.map_or(title.app.name.as_str(), |p| &p.name);
-                                ui.add(
-                                    egui::Label::new(name)
-                                        .truncate()
-                                        .halign(egui::Align::Center)
-                                        .selectable(false),
-                                )
-                                .on_hover_text(name);
+                                ui.with_layout(left_aligned, |ui| {
+                                    ui.add_space(8.0);
+                                    ui.add(
+                                        egui::Label::new(name)
+                                            .truncate()
+                                            .halign(egui::Align::LEFT)
+                                            .selectable(false),
+                                    );
+                                });
                             });
                             row.col(|ui| {
                                 ui.add(egui::Label::new(&title.serial).selectable(false));
@@ -210,13 +223,16 @@ impl Centralpanel {
                             });
                             row.col(|ui| {
                                 let path = title.parent_dir.to_string_lossy();
-                                ui.add(
-                                    egui::Label::new(path.as_ref())
-                                        .truncate()
-                                        .halign(egui::Align::Center)
-                                        .selectable(false),
-                                )
-                                .on_hover_text(path.as_ref());
+                                ui.with_layout(left_aligned, |ui| {
+                                    ui.add_space(8.0);
+                                    ui.add(
+                                        egui::Label::new(path.as_ref())
+                                            .truncate()
+                                            .halign(egui::Align::LEFT)
+                                            .selectable(false),
+                                    )
+                                    .on_hover_text(path.as_ref());
+                                });
                             });
                             if row.response().clicked() {
                                 clicked_title = Some(index);
