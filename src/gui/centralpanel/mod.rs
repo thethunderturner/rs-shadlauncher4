@@ -155,9 +155,7 @@ impl Centralpanel {
                     .column(Column::exact(75.0))
                     .column(Column::remainder().at_least(320.0))
                     .header(24.0, |mut header| {
-                        for label in [
-                            "Icon", "Name", "Serial", "Firmware", "Version", "Path",
-                        ] {
+                        for label in ["Icon", "Name", "Serial", "Firmware", "Version", "Path"] {
                             header.col(|ui| {
                                 if matches!(label, "Name" | "Path") {
                                     ui.with_layout(left_aligned, |ui| {

@@ -7,9 +7,7 @@ pub mod scanning;
 mod sfo;
 
 fn main() -> eframe::Result {
-    let games_path =
-        Path::new("/run/media/mateo/SEAGATE 4TB/ps4/Games/")
-            .to_path_buf();
+    let games_path = Path::new("/run/media/mateo/SEAGATE 4TB/ps4/Games/").to_path_buf();
 
     let options = eframe::NativeOptions {
         renderer: eframe::Renderer::Glow,

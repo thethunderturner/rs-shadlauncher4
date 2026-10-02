@@ -37,7 +37,7 @@ impl Default for Menubar {
             file: File {},
             help: Help { show_about: false },
             manage: Manage {},
-            settings: Settings {},
+            settings: Settings::default(),
             utilities: Utilities,
             view: View {},
         }
@@ -61,6 +61,7 @@ impl Menubar {
     }
 
     pub(super) fn show_windows(&mut self, ctx: &egui::Context) {
+        self.settings.show_window(ctx);
         self.controllers.show_window(ctx);
         self.help.show_window(ctx);
     }

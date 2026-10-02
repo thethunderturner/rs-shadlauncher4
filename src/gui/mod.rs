@@ -19,6 +19,7 @@ pub struct LauncherApp {
 
 impl LauncherApp {
     pub fn new(cc: &eframe::CreationContext<'_>, games_path: PathBuf) -> Self {
+        egui_extras::install_image_loaders(&cc.egui_ctx);
         let (tx, scan_rx) = mpsc::channel();
         let ctx = cc.egui_ctx.clone();
         std::thread::spawn(move || {
