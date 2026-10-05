@@ -1,5 +1,4 @@
 use crate::gui::menubar::controllers::Controllers;
-use crate::gui::menubar::emulation::Emulation;
 use crate::gui::menubar::file::File;
 use crate::gui::menubar::help::Help;
 use crate::gui::menubar::manage::Manage;
@@ -9,7 +8,6 @@ use crate::gui::menubar::view::View;
 use eframe::egui;
 
 pub(super) mod controllers;
-mod emulation;
 mod file;
 mod help;
 mod manage;
@@ -18,7 +16,6 @@ mod utilities;
 mod view;
 pub struct Menubar {
     pub controllers: Controllers,
-    pub emulation: Emulation,
     pub file: File,
     pub help: Help,
     pub manage: Manage,
@@ -33,7 +30,6 @@ impl Default for Menubar {
             controllers: Controllers {
                 show_controllers: false,
             },
-            emulation: Emulation {},
             file: File {},
             help: Help { show_about: false },
             manage: Manage {},
@@ -49,7 +45,6 @@ impl Menubar {
         egui::Panel::top("menu_bar").show(ui, |ui| {
             egui::MenuBar::new().ui(ui, |ui| {
                 self.file.show(ui);
-                self.emulation.show(ui);
                 self.settings.show(ui);
                 self.controllers.show(ui);
                 self.manage.show(ui);
