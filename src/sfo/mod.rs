@@ -4,3 +4,4 @@ pub mod index_table;
 pub mod key_table;
 
 pub mod sfo;
+pub mod writer;

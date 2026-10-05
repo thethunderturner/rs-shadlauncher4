@@ -130,7 +130,11 @@ fn show_row_menu(ui: &mut egui::Ui, title: &Title, actions: &mut Row) {
     });
     let _ = ui.button("Cheats/Patches");
     let _ = ui.button("Trophy Viewer");
-    if ui.button("SFO Viewer").clicked() {
+    if ui
+        .add_enabled(!actions.is_saving_sfo(), egui::Button::new("SFO Viewer"))
+        .on_disabled_hover_text("Wait for the SFO save to finish.")
+        .clicked()
+    {
         actions.open_sfo(title);
         ui.close();
     }

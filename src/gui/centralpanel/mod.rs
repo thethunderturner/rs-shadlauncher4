@@ -61,5 +61,16 @@ impl Centralpanel {
             }
         });
         self.row.show_windows(ui.ctx());
+        for (path, sfo) in self.row.take_sfo_saves() {
+            for title in &mut self.titles {
+                if title.app.path == path {
+                    title.app.sfo = sfo.clone();
+                } else if let Some(patch) = title.patch.as_mut() {
+                    if patch.path == path {
+                        patch.sfo = sfo.clone();
+                    }
+                }
+            }
+        }
     }
 }
