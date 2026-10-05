@@ -10,14 +10,19 @@ impl File {
                 Button::image_and_text(
                     egui::include_image!("../../../assets/menubar/file/install.svg"),
                     "Install Packages",
-                ).image_tint_follows_text_color(true),
+                )
+                .image_tint_follows_text_color(true),
             );
-            if ui.add(
-                Button::image_and_text(
-                    egui::include_image!("../../../assets/menubar/file/exit.svg"),
-                    "Exit",
-                ).image_tint_follows_text_color(true),
-            ).clicked() {
+            if ui
+                .add(
+                    Button::image_and_text(
+                        egui::include_image!("../../../assets/menubar/file/exit.svg"),
+                        "Exit",
+                    )
+                    .image_tint_follows_text_color(true),
+                )
+                .clicked()
+            {
                 ui.send_viewport_cmd(egui::ViewportCommand::Close);
             }
         });
