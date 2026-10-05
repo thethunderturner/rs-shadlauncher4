@@ -1,4 +1,5 @@
 use crate::gui::centralpanel::Centralpanel;
+use crate::gui::centralpanel::actions::assets;
 use crate::gui::centralpanel::actions::row::Row;
 use crate::scanning::Title;
 use eframe::egui;
@@ -31,6 +32,7 @@ impl Centralpanel {
 
     pub fn show_list(&mut self, ui: &mut egui::Ui) {
         let mut clicked_column = None;
+        let mut clicked_title = None;
         let reset_scroll = std::mem::take(&mut self.reset_scroll);
         egui::ScrollArea::horizontal().show(ui, |ui| {
             ui.set_min_width(1120.0);
@@ -88,10 +90,15 @@ impl Centralpanel {
                         let index = self.visible_titles[row.index()];
                         let title = &self.titles[index];
                         let patch = title.patch.as_ref();
+                        row.set_selected(self.selected_title.as_ref() == Some(&title.app.path));
 
                         row.col(|ui| {
-                            ui.add(egui::Label::new("?").selectable(false))
-                                .on_hover_text("Icon unavailable");
+                            if let Some(icon) = assets::load_icon(title) {
+                                ui.add(icon);
+                            } else {
+                                ui.add(egui::Label::new("?").selectable(false))
+                                    .on_hover_text("Icon unavailable");
+                            }
                         });
                         row.col(|ui| {
                             let name = patch.map_or(title.app.name.as_str(), |p| &p.name);
@@ -141,12 +148,29 @@ impl Centralpanel {
                                 },
                             );
                         });
-                        egui::Popup::context_menu(&row.response())
+                        let response = row.response();
+                        if response.clicked() || response.secondary_clicked() {
+                            clicked_title = Some(title.app.path.clone());
+                        }
+                        egui::Popup::context_menu(&response)
                             .id(egui::Id::new(("game_row_menu", &title.app.path)))
                             .show(|ui| show_row_menu(ui, title, &mut self.row));
                     });
                 });
         });
+        if let Some(path) = clicked_title {
+            if self.selected_title.as_ref() != Some(&path) {
+                if let Some(previous) = self
+                    .titles
+                    .iter()
+                    .find(|title| Some(&title.app.path) == self.selected_title.as_ref())
+                {
+                    assets::forget_background(ui.ctx(), previous);
+                }
+                self.selected_title = Some(path);
+                ui.ctx().request_repaint();
+            }
+        }
         if let Some(column) = clicked_column {
             self.sorting.select_column(column);
             self.sorting.sort(&mut self.titles);

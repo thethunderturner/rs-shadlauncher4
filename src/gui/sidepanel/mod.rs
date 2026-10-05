@@ -1,9 +1,9 @@
 pub mod actions;
 
+use crate::gui::sidepanel::actions::SidepanelActions;
+use crate::gui::sidepanel::actions::search::Search;
 use eframe::egui;
 use eframe::egui::Button;
-use crate::gui::sidepanel::actions::search::Search;
-use crate::gui::sidepanel::actions::SidepanelActions;
 
 #[derive(Default)]
 pub struct Sidepanel {
@@ -86,11 +86,7 @@ impl Sidepanel {
                             egui::include_image!(
                                 "../../assets/centralpanel/refresh/refresh-titles.svg"
                             ),
-                            if scanning {
-                                "Scanning"
-                            } else {
-                                "Refresh List"
-                            },
+                            if scanning { "Scanning" } else { "Refresh List" },
                         )
                         .image_tint_follows_text_color(true),
                     )
@@ -118,8 +114,8 @@ impl Sidepanel {
         SidepanelActions {
             search: Search {
                 query: search_changed.then_some(self.search.as_str()),
-                refresh_list
-            }
+                refresh_list,
+            },
         }
     }
 }

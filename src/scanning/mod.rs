@@ -114,7 +114,7 @@ pub fn scan(path: &Path) -> Vec<Title> {
     for title in &mut list {
         title.patch = patches.remove(&title.serial);
         if let Some(patch) = &title.patch {
-            if let Some(icon) = existing_file(patch.path.join("sce_sys/icon0.png")) {
+            if let Some(icon) = find_icon(&patch.path) {
                 title.icon_path = Some(icon);
             }
             if let Some(background) = find_background(&patch.path) {

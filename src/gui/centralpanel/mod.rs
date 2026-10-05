@@ -2,6 +2,7 @@ use crate::gui::centralpanel::actions::row::Row;
 use crate::gui::centralpanel::sorting::{Order, Sorting};
 use crate::scanning::Title;
 use eframe::egui;
+use std::path::PathBuf;
 use std::time::Duration;
 
 pub mod actions;
@@ -12,6 +13,7 @@ pub struct Centralpanel {
     titles: Vec<Title>,
     search: String,
     visible_titles: Vec<usize>,
+    selected_title: Option<PathBuf>,
     reset_scroll: bool,
     sorting: Sorting,
     loading: bool,
@@ -26,6 +28,7 @@ impl Default for Centralpanel {
             titles: Vec::new(),
             search: String::new(),
             visible_titles: Vec::new(),
+            selected_title: None,
             reset_scroll: false,
             sorting: Sorting {
                 column: String::from("name"),
@@ -40,7 +43,8 @@ impl Default for Centralpanel {
 }
 
 impl Centralpanel {
-    pub fn start_scan(&mut self) {
+    pub fn start_scan(&mut self, ctx: &egui::Context) {
+        actions::assets::clear_cache(ctx, &self.titles);
         self.loading = true;
         self.scan_failed = false;
         self.scan_duration = None;
@@ -48,6 +52,13 @@ impl Centralpanel {
 
     pub fn set_titles(&mut self, titles: Vec<Title>, duration: Duration) {
         self.titles = titles;
+        if !self
+            .titles
+            .iter()
+            .any(|title| Some(&title.app.path) == self.selected_title.as_ref())
+        {
+            self.selected_title = None;
+        }
         self.sorting.sort(&mut self.titles);
         self.filter_titles();
         self.loading = false;
@@ -70,8 +81,11 @@ impl Centralpanel {
                     self.visible_titles.len()
                 };
                 if let Some(duration) = self.scan_duration {
-                    ui.label(format!("{shown} Titles Shown ({} ms)", duration.as_millis()))
-                        .on_hover_text("Time spent scanning the games folder.");
+                    ui.label(format!(
+                        "{shown} Titles Shown ({} ms)",
+                        duration.as_millis()
+                    ))
+                    .on_hover_text("Time spent scanning the games folder.");
                 } else {
                     ui.label(format!("{shown} Titles Shown"));
                 }
@@ -93,6 +107,14 @@ impl Centralpanel {
                 ui.label("No games match your search.");
                 ui.label("Try another title or CUSA, or clear the search.");
             } else {
+                if let Some(title) = self
+                    .visible_titles
+                    .iter()
+                    .map(|&index| &self.titles[index])
+                    .find(|title| Some(&title.app.path) == self.selected_title.as_ref())
+                {
+                    actions::assets::show_background(ui, title);
+                }
                 self.show_list(ui);
             }
         });
