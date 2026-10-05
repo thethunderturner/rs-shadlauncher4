@@ -13,6 +13,9 @@ impl Sidepanel {
                 ui.heading("Library");
                 ui.label("All games:  TBD");
                 ui.label("Favorites:  TBD");
+                ui.label("Demos:  TBD");
+                ui.label("VR:  TBD");
+                ui.label("International:  TBD");
                 ui.separator();
                 ui.horizontal(|ui| {
                     ui.strong("Folders");

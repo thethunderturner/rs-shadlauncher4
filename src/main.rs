@@ -7,6 +7,8 @@ pub mod scanning;
 mod sfo;
 
 fn main() -> eframe::Result {
+    // let sfo = read_sfo(Path::new("/run/media/mateo/SEAGATE 4TB/ps4/Games/CUSA01210/sce_sys/param.sfo"));
+    // println!("{:#?}", sfo)
     let games_path = Path::new("/run/media/mateo/SEAGATE 4TB/ps4/Games/").to_path_buf();
 
     let options = eframe::NativeOptions {
