@@ -1,6 +1,7 @@
+use crate::gui::centralpanel::Centralpanel;
+use crate::scanning::Title;
 use eframe::egui;
 use egui_extras::{Column, TableBuilder};
-use crate::gui::centralpanel::Centralpanel;
 
 impl Centralpanel {
     pub fn show_list(&self, ui: &mut egui::Ui) {
@@ -74,7 +75,7 @@ impl Centralpanel {
                                 egui::Label::new(
                                     patch.map_or(title.app.version.as_str(), |p| &p.version),
                                 )
-                                    .selectable(false),
+                                .selectable(false),
                             );
                         });
                         row.col(|ui| {
@@ -89,12 +90,58 @@ impl Centralpanel {
                                             .halign(egui::Align::LEFT)
                                             .selectable(false),
                                     )
-                                        .on_hover_text(path.as_ref());
+                                    .on_hover_text(path.as_ref());
                                 },
                             );
                         });
+                        egui::Popup::context_menu(&row.response())
+                            .id(egui::Id::new(("game_row_menu", &title.app.path)))
+                            .show(|ui| show_row_menu(ui, title));
                     });
                 });
         });
     }
+}
+
+fn show_row_menu(ui: &mut egui::Ui, title: &Title) {
+    ui.menu_button("Launch", |ui| {
+        let _ = ui.button("Launch with game specific configs (default)");
+        let _ = ui.button("Launch with global configs only");
+        let _ = ui.button("Launch with default settings");
+    });
+    ui.menu_button("Open Folder", |ui| {
+        let _ = ui.button("Game Folder");
+        let _ = ui.button("Update folder");
+        let _ = ui.button("Log Folder");
+        ui.menu_button("Save Data folder", |ui| {
+            let _ = ui.button("Unimplemented user 1");
+            let _ = ui.button("Unimplemented user 2");
+            let _ = ui.button("Unimplemented user 3");
+            let _ = ui.button("Unimplemented user 4");
+        });
+    });
+    ui.menu_button("Game Specific Settings", |ui| {
+        let _ = ui.button("TODO");
+    });
+    let _ = ui.button("Add to favorites");
+    ui.menu_button("Add to folder", |ui| {
+        let _ = ui.button("TODO");
+    });
+    let _ = ui.button("Cheats/Patches");
+    let _ = ui.button("Trophy Viewer");
+    let _ = ui.button("SFO Viewer");
+    ui.menu_button("Copy Info", |ui| {
+        let _ = ui.button("Name");
+        let _ = ui.button("Serial");
+        let _ = ui.button("Publisher ID");
+    });
+    ui.menu_button("Delete", |ui| {
+        let _ = ui.button("TODO");
+    });
+    ui.menu_button("Compatibility", |ui| {
+        let _ = ui.button("TODO");
+    });
+    ui.menu_button("ZAR compression", |ui| {
+        let _ = ui.button("TODO");
+    });
 }
