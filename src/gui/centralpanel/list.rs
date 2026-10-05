@@ -6,6 +6,7 @@ use egui_extras::{Column, TableBuilder};
 
 impl Centralpanel {
     pub fn show_list(&mut self, ui: &mut egui::Ui) {
+        let mut clicked_column = None;
         egui::ScrollArea::horizontal().show(ui, |ui| {
             ui.set_min_width(1120.0);
             TableBuilder::new(ui)
@@ -21,18 +22,34 @@ impl Centralpanel {
                 .column(Column::exact(75.0))
                 .column(Column::remainder().at_least(320.0))
                 .header(24.0, |mut header| {
-                    for label in ["Icon", "Name", "Serial", "Firmware", "Version", "Path"] {
+                    for (column, label) in [
+                        ("icon", "Icon"),
+                        ("name", "Name"),
+                        ("serial", "Serial"),
+                        ("firmware", "Firmware"),
+                        ("version", "Version"),
+                        ("path", "Path"),
+                    ] {
                         header.col(|ui| {
-                            if matches!(label, "Name" | "Path") {
+                            let mut show_button = |ui: &mut egui::Ui| {
+                                let response = ui.add(self.sorting.header(column, label));
+                                if response.clicked() {
+                                    clicked_column = Some(column);
+                                }
+                                if column == "icon" {
+                                    response.on_hover_text("Sort by icon availability");
+                                }
+                            };
+                            if matches!(column, "name" | "path") {
                                 ui.with_layout(
                                     egui::Layout::left_to_right(egui::Align::Center),
                                     |ui| {
                                         ui.add_space(8.0);
-                                        ui.strong(label);
+                                        show_button(ui);
                                     },
                                 );
                             } else {
-                                ui.strong(label);
+                                show_button(ui);
                             }
                         });
                     }
@@ -101,6 +118,11 @@ impl Centralpanel {
                     });
                 });
         });
+        if let Some(column) = clicked_column {
+            self.sorting.select_column(column);
+            self.sorting.sort(&mut self.titles);
+            ui.ctx().request_repaint();
+        }
     }
 }
 

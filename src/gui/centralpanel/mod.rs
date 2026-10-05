@@ -20,8 +20,8 @@ impl Default for Centralpanel {
         Self {
             titles: Vec::new(),
             sorting: Sorting {
-                column: String::from("icon"),
-                order: Order::Descending,
+                column: String::from("name"),
+                order: Order::Ascending,
             },
             loading: true,
             scan_failed: false,
@@ -33,6 +33,7 @@ impl Default for Centralpanel {
 impl Centralpanel {
     pub fn set_titles(&mut self, titles: Vec<Title>) {
         self.titles = titles;
+        self.sorting.sort(&mut self.titles);
         self.loading = false;
         self.scan_failed = false;
     }
