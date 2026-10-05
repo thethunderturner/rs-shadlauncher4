@@ -1,3 +1,4 @@
+use crate::sfo::data_table::SfoDataTable;
 use crate::sfo::sfo::read_sfo;
 use std::collections::HashMap;
 use std::fs;
@@ -22,6 +23,7 @@ pub struct App {
     pub fw: String,
     pub version: String,
     pub path: PathBuf,
+    pub sfo: SfoDataTable,
 }
 
 #[derive(Clone, Debug)]
@@ -30,6 +32,7 @@ pub struct Patch {
     pub fw: String,
     pub version: String,
     pub path: PathBuf,
+    pub sfo: SfoDataTable,
 }
 
 pub fn scan(path: &Path) -> Vec<Title> {
@@ -74,6 +77,7 @@ pub fn scan(path: &Path) -> Vec<Title> {
                                 fw,
                                 version,
                                 path: game_dir,
+                                sfo: data_table,
                             };
 
                             // shadPS4 prefers -UPDATE when both update folder names exist.
@@ -95,6 +99,7 @@ pub fn scan(path: &Path) -> Vec<Title> {
                                     fw,
                                     version,
                                     path: game_dir,
+                                    sfo: data_table,
                                 },
                                 patch: None,
                             });

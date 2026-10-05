@@ -1,7 +1,7 @@
-use std::path::{Path, PathBuf};
 use crate::scanning::Title;
+use crate::sfo::data_table::{SfoDataTable, SfoValue};
 use eframe::egui;
-use crate::sfo::sfo::read_sfo;
+use egui_extras::{Column, TableBuilder};
 
 pub struct SfoViewer {
     pub open: bool,
@@ -46,17 +46,60 @@ impl SfoViewer {
                 });
                 ui.separator();
                 if self.tab == Tab::App {
-                    Self::show_sfo_table(self.title.app.path.join("sce_sys").join("param.sfo"))
+                    ui.push_id(&self.title.app.path, |ui| {
+                        Self::show_sfo_table(ui, &self.title.app.sfo);
+                    });
                 } else if self.tab == Tab::Patch {
                     if let Some(patch) = self.title.patch.as_ref() {
-                        Self::show_sfo_table(patch.path.join("sce_sys").join("param.sfo"))
+                        ui.push_id(&patch.path, |ui| {
+                            Self::show_sfo_table(ui, &patch.sfo);
+                        });
                     }
                 }
-                ui.allocate_space(ui.available_size());
             });
     }
 
-    pub fn show_sfo_table(path_buf: PathBuf) {
-        let sfo = read_sfo(Path::new(&path_buf)).unwrap().data_table;
+    pub fn show_sfo_table(ui: &mut egui::Ui, sfo: &SfoDataTable) {
+        if sfo.params.is_empty() {
+            ui.label("This SFO contains no fields.");
+            return;
+        }
+        egui::ScrollArea::horizontal().show(ui, |ui| {
+            ui.set_min_width(540.0);
+            TableBuilder::new(ui)
+                .id_salt("sfo_table")
+                .striped(true)
+                .resizable(true)
+                .auto_shrink([false, false])
+                .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
+                .column(Column::exact(270.0))
+                .column(Column::exact(270.0))
+                .header(24.0, |mut header| {
+                    header.col(|ui| {
+                        ui.strong("Key");
+                    });
+                    header.col(|ui| {
+                        ui.strong("Value");
+                    });
+                })
+                .body(|body| {
+                    body.rows(24.0, sfo.params.len(), |mut row| {
+                        let param = &sfo.params[row.index()];
+                        row.col(|ui| {
+                            ui.add(egui::Label::new(&param.key).truncate())
+                                .on_hover_text(&param.key);
+                        });
+                        row.col(|ui| {
+                            let value = match &param.data {
+                                SfoValue::Utf8(value) => value.clone(),
+                                SfoValue::Integer(value) => value.to_string(),
+                                SfoValue::Raw(_) => format!("{:?}", param.data),
+                            };
+                            ui.add(egui::Label::new(&value).truncate())
+                                .on_hover_text(&value);
+                        });
+                    });
+                });
+        });
     }
 }

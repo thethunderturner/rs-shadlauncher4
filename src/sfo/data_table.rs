@@ -29,12 +29,14 @@ use std::io::{Error, ErrorKind, Read};
         data_offset 0x0: to be found
 */
 
+#[derive(Clone)]
 pub enum SfoValue {
     Utf8(String),
     Integer(u32),
     Raw(Vec<u8>),
 }
 
+#[derive(Clone)]
 pub struct SfoDataParam {
     pub key: String,
     pub data: SfoValue,
@@ -43,6 +45,7 @@ pub struct SfoDataParam {
     pub param_fmt: u16,
 }
 
+#[derive(Clone, Default)]
 pub struct SfoDataTable {
     pub params: Vec<SfoDataParam>,
 }
