@@ -5,6 +5,7 @@ use crate::scanning;
 use eframe::egui;
 use std::path::PathBuf;
 use std::sync::mpsc::{self, Receiver, TryRecvError};
+use std::time::{Duration, Instant};
 
 pub mod centralpanel;
 pub mod menubar;
@@ -15,26 +16,43 @@ pub struct LauncherApp {
     pub menubar: Menubar,
     pub sidepanel: Sidepanel,
     pub centralpanel: Centralpanel,
-    scan_rx: Option<Receiver<Result<Vec<scanning::Title>, ()>>>,
+    games_path: PathBuf,
+    scan_rx: Option<Receiver<Result<(Vec<scanning::Title>, Duration), ()>>>,
 }
 
 impl LauncherApp {
     pub fn new(cc: &eframe::CreationContext<'_>, games_path: PathBuf) -> Self {
         egui_extras::install_image_loaders(&cc.egui_ctx);
-        let (tx, scan_rx) = mpsc::channel();
-        let ctx = cc.egui_ctx.clone();
-        std::thread::spawn(move || {
-            let titles = std::panic::catch_unwind(|| scanning::scan(&games_path)).map_err(|_| ());
-            let _ = tx.send(titles);
-            ctx.request_repaint();
-        });
-
-        Self {
+        let mut app = Self {
             menubar: Menubar::default(),
             sidepanel: Sidepanel::default(),
             centralpanel: Centralpanel::default(),
-            scan_rx: Some(scan_rx),
+            games_path,
+            scan_rx: None,
+        };
+        app.start_scan(&cc.egui_ctx);
+        app
+    }
+
+    fn start_scan(&mut self, ctx: &egui::Context) {
+        if self.scan_rx.is_some() {
+            return;
         }
+        let (tx, scan_rx) = mpsc::channel();
+        let ctx = ctx.clone();
+        let games_path = self.games_path.clone();
+        self.centralpanel.start_scan();
+        self.scan_rx = Some(scan_rx);
+        std::thread::spawn(move || {
+            let titles = std::panic::catch_unwind(|| {
+                let started = Instant::now();
+                let titles = scanning::scan(&games_path);
+                (titles, started.elapsed())
+            })
+            .map_err(|_| ());
+            let _ = tx.send(titles);
+            ctx.request_repaint();
+        });
     }
 }
 
@@ -42,8 +60,8 @@ impl eframe::App for LauncherApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         if let Some(scan_rx) = &self.scan_rx {
             match scan_rx.try_recv() {
-                Ok(Ok(titles)) => {
-                    self.centralpanel.set_titles(titles);
+                Ok(Ok((titles, duration))) => {
+                    self.centralpanel.set_titles(titles, duration);
                     self.scan_rx = None;
                 }
                 Ok(Err(())) | Err(TryRecvError::Disconnected) => {
@@ -55,8 +73,12 @@ impl eframe::App for LauncherApp {
         }
 
         self.menubar.show(ui);
-        if let Some(search) = self.sidepanel.show(ui) {
+        let actions = self.sidepanel.show(ui, self.scan_rx.is_some());
+        if let Some(search) = actions.search.query {
             self.centralpanel.set_search(search);
+        }
+        if actions.search.refresh_list {
+            self.start_scan(ui.ctx());
         }
         self.centralpanel.show(ui);
 

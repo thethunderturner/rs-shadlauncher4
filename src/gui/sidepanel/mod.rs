@@ -1,5 +1,9 @@
+pub mod actions;
+
 use eframe::egui;
 use eframe::egui::Button;
+use crate::gui::sidepanel::actions::search::Search;
+use crate::gui::sidepanel::actions::SidepanelActions;
 
 #[derive(Default)]
 pub struct Sidepanel {
@@ -7,8 +11,9 @@ pub struct Sidepanel {
 }
 
 impl Sidepanel {
-    pub(super) fn show(&mut self, ui: &mut egui::Ui) -> Option<&str> {
+    pub fn show(&mut self, ui: &mut egui::Ui, scanning: bool) -> SidepanelActions<'_> {
         let mut search_changed = false;
+        let mut refresh_list = false;
         egui::Panel::left("sidebar")
             .default_size(175.0)
             .max_size(250.0)
@@ -74,15 +79,23 @@ impl Sidepanel {
                 ui.separator();
 
                 ui.heading("Refresh");
-                let _ = ui.add(
-                    Button::image_and_text(
-                        egui::include_image!(
-                            "../../assets/centralpanel/refresh/refresh-titles.svg"
-                        ),
-                        "Refresh List",
+                refresh_list = ui
+                    .add_enabled(
+                        !scanning,
+                        Button::image_and_text(
+                            egui::include_image!(
+                                "../../assets/centralpanel/refresh/refresh-titles.svg"
+                            ),
+                            if scanning {
+                                "Scanning"
+                            } else {
+                                "Refresh List"
+                            },
+                        )
+                        .image_tint_follows_text_color(true),
                     )
-                    .image_tint_follows_text_color(true),
-                );
+                    .on_disabled_hover_text("Wait for the current scan to finish.")
+                    .clicked();
                 let _ = ui.add(
                     Button::image_and_text(
                         egui::include_image!(
@@ -102,6 +115,11 @@ impl Sidepanel {
                     .image_tint_follows_text_color(true),
                 );
             });
-        search_changed.then_some(self.search.as_str())
+        SidepanelActions {
+            search: Search {
+                query: search_changed.then_some(self.search.as_str()),
+                refresh_list
+            }
+        }
     }
 }
