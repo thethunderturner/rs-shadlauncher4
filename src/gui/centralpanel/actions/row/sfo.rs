@@ -1,5 +1,7 @@
+use std::path::{Path, PathBuf};
 use crate::scanning::Title;
 use eframe::egui;
+use crate::sfo::sfo::read_sfo;
 
 pub struct SfoViewer {
     pub open: bool,
@@ -43,7 +45,18 @@ impl SfoViewer {
                     }
                 });
                 ui.separator();
+                if self.tab == Tab::App {
+                    Self::show_sfo_table(self.title.app.path.join("sce_sys").join("param.sfo"))
+                } else if self.tab == Tab::Patch {
+                    if let Some(patch) = self.title.patch.as_ref() {
+                        Self::show_sfo_table(patch.path.join("sce_sys").join("param.sfo"))
+                    }
+                }
                 ui.allocate_space(ui.available_size());
             });
+    }
+
+    pub fn show_sfo_table(path_buf: PathBuf) {
+        let sfo = read_sfo(Path::new(&path_buf)).unwrap().data_table;
     }
 }

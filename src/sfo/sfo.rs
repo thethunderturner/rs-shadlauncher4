@@ -5,6 +5,7 @@ use crate::sfo::key_table::read_key_table;
 use std::io::Cursor;
 use std::path::Path;
 
+#[derive(Debug)]
 pub struct Sfo {
     // pub header: SfoHeader,
     // pub index_table: SfoIndexTable,
