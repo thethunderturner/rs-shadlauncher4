@@ -1,10 +1,11 @@
 use crate::gui::centralpanel::Centralpanel;
+use crate::gui::centralpanel::actions::row::Row;
 use crate::scanning::Title;
 use eframe::egui;
 use egui_extras::{Column, TableBuilder};
 
 impl Centralpanel {
-    pub fn show_list(&self, ui: &mut egui::Ui) {
+    pub fn show_list(&mut self, ui: &mut egui::Ui) {
         egui::ScrollArea::horizontal().show(ui, |ui| {
             ui.set_min_width(1120.0);
             TableBuilder::new(ui)
@@ -96,14 +97,14 @@ impl Centralpanel {
                         });
                         egui::Popup::context_menu(&row.response())
                             .id(egui::Id::new(("game_row_menu", &title.app.path)))
-                            .show(|ui| show_row_menu(ui, title));
+                            .show(|ui| show_row_menu(ui, title, &mut self.row));
                     });
                 });
         });
     }
 }
 
-fn show_row_menu(ui: &mut egui::Ui, title: &Title) {
+fn show_row_menu(ui: &mut egui::Ui, title: &Title, actions: &mut Row) {
     ui.menu_button("Launch", |ui| {
         let _ = ui.button("Launch with game specific configs (default)");
         let _ = ui.button("Launch with global configs only");
@@ -129,7 +130,10 @@ fn show_row_menu(ui: &mut egui::Ui, title: &Title) {
     });
     let _ = ui.button("Cheats/Patches");
     let _ = ui.button("Trophy Viewer");
-    let _ = ui.button("SFO Viewer");
+    if ui.button("SFO Viewer").clicked() {
+        actions.open_sfo(title);
+        ui.close();
+    }
     ui.menu_button("Copy Info", |ui| {
         let _ = ui.button("Name");
         let _ = ui.button("Serial");

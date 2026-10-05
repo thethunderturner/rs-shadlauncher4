@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-#[derive(Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct Title {
     pub icon_path: Option<PathBuf>,
     pub background_path: Option<PathBuf>,
@@ -16,7 +16,7 @@ pub struct Title {
     pub patch: Option<Patch>, // Maybe a title doesn't have a patch
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct App {
     pub name: String, // Keeping the name here, because some titles change names between versions
     pub fw: String,
@@ -24,7 +24,7 @@ pub struct App {
     pub path: PathBuf,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Patch {
     pub name: String, // Keeping the name here, because some titles change names between versions
     pub fw: String,

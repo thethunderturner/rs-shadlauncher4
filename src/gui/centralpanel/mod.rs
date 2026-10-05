@@ -1,17 +1,18 @@
+use crate::gui::centralpanel::actions::row::Row;
+use crate::gui::centralpanel::sorting::{Order, Sorting};
 use crate::scanning::Title;
 use eframe::egui;
-use egui_extras::{Column, TableBuilder};
-use crate::gui::centralpanel::sorting::{Order, Sorting};
 
+pub mod actions;
 pub mod list;
 pub mod sorting;
-pub mod actions;
 
 pub struct Centralpanel {
     titles: Vec<Title>,
     sorting: Sorting,
     loading: bool,
     scan_failed: bool,
+    row: Row,
 }
 
 impl Default for Centralpanel {
@@ -24,6 +25,7 @@ impl Default for Centralpanel {
             },
             loading: true,
             scan_failed: false,
+            row: Row::default(),
         }
     }
 }
@@ -58,5 +60,6 @@ impl Centralpanel {
                 self.show_list(ui);
             }
         });
+        self.row.show_windows(ui.ctx());
     }
 }
