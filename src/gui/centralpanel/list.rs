@@ -5,11 +5,40 @@ use eframe::egui;
 use egui_extras::{Column, TableBuilder};
 
 impl Centralpanel {
+    pub fn set_search(&mut self, search: &str) {
+        self.search = search.trim().to_lowercase();
+        self.filter_titles();
+    }
+
+    pub fn filter_titles(&mut self) {
+        self.visible_titles = self
+            .titles
+            .iter()
+            .enumerate()
+            .filter_map(|(index, title)| {
+                let matches = self.search.is_empty()
+                    || title.app.name.to_lowercase().contains(&self.search)
+                    || title
+                        .patch
+                        .as_ref()
+                        .is_some_and(|patch| patch.name.to_lowercase().contains(&self.search))
+                    || title.serial.to_lowercase().contains(&self.search);
+                matches.then_some(index)
+            })
+            .collect();
+        self.reset_scroll = true;
+    }
+
     pub fn show_list(&mut self, ui: &mut egui::Ui) {
         let mut clicked_column = None;
+        let reset_scroll = std::mem::take(&mut self.reset_scroll);
         egui::ScrollArea::horizontal().show(ui, |ui| {
             ui.set_min_width(1120.0);
-            TableBuilder::new(ui)
+            let mut table = TableBuilder::new(ui);
+            if reset_scroll {
+                table = table.vertical_scroll_offset(0.0);
+            }
+            table
                 .sense(egui::Sense::click())
                 .resizable(true)
                 .cell_layout(egui::Layout::centered_and_justified(
@@ -55,8 +84,8 @@ impl Centralpanel {
                     }
                 })
                 .body(|body| {
-                    body.rows(44.0, self.titles.len(), |mut row| {
-                        let index = row.index();
+                    body.rows(44.0, self.visible_titles.len(), |mut row| {
+                        let index = self.visible_titles[row.index()];
                         let title = &self.titles[index];
                         let patch = title.patch.as_ref();
 
@@ -121,6 +150,7 @@ impl Centralpanel {
         if let Some(column) = clicked_column {
             self.sorting.select_column(column);
             self.sorting.sort(&mut self.titles);
+            self.filter_titles();
             ui.ctx().request_repaint();
         }
     }

@@ -9,6 +9,9 @@ pub mod sorting;
 
 pub struct Centralpanel {
     titles: Vec<Title>,
+    search: String,
+    visible_titles: Vec<usize>,
+    reset_scroll: bool,
     sorting: Sorting,
     loading: bool,
     scan_failed: bool,
@@ -19,6 +22,9 @@ impl Default for Centralpanel {
     fn default() -> Self {
         Self {
             titles: Vec::new(),
+            search: String::new(),
+            visible_titles: Vec::new(),
+            reset_scroll: false,
             sorting: Sorting {
                 column: String::from("name"),
                 order: Order::Ascending,
@@ -34,6 +40,7 @@ impl Centralpanel {
     pub fn set_titles(&mut self, titles: Vec<Title>) {
         self.titles = titles;
         self.sorting.sort(&mut self.titles);
+        self.filter_titles();
         self.loading = false;
         self.scan_failed = false;
     }
@@ -57,6 +64,9 @@ impl Centralpanel {
                 );
             } else if self.titles.is_empty() {
                 ui.label("No games found in the games folder.");
+            } else if self.visible_titles.is_empty() {
+                ui.label("No games match your search.");
+                ui.label("Try another title or CUSA, or clear the search.");
             } else {
                 self.show_list(ui);
             }

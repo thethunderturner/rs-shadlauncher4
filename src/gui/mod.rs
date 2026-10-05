@@ -55,7 +55,9 @@ impl eframe::App for LauncherApp {
         }
 
         self.menubar.show(ui);
-        self.sidepanel.show(ui);
+        if let Some(search) = self.sidepanel.show(ui) {
+            self.centralpanel.set_search(search);
+        }
         self.centralpanel.show(ui);
 
         self.menubar.show_windows(ui.ctx());
