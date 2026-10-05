@@ -5,7 +5,7 @@ use crate::gui::centralpanel::sorting::{Order, Sorting};
 
 pub mod list;
 pub mod sorting;
-pub mod toolbar;
+pub mod actions;
 
 pub struct Centralpanel {
     titles: Vec<Title>,

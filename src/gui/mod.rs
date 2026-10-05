@@ -9,6 +9,7 @@ use std::sync::mpsc::{self, Receiver, TryRecvError};
 pub mod centralpanel;
 pub mod menubar;
 pub mod sidepanel;
+pub mod toolbar;
 
 pub struct LauncherApp {
     pub menubar: Menubar,
