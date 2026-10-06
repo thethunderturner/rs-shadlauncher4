@@ -21,7 +21,7 @@ pub struct Title {
 pub struct App {
     pub name: String, // Keeping the name here, because some titles change names between versions
     pub fw: String,
-    pub app_type: String,
+    pub app_type: Option<u32>,
     pub category: String,
     pub version: String,
     pub path: PathBuf,
@@ -32,7 +32,7 @@ pub struct App {
 pub struct Patch {
     pub name: String, // Keeping the name here, because some titles change names between versions
     pub fw: String,
-    pub app_type: String,
+    pub app_type: Option<u32>,
     pub category: String,
     pub version: String,
     pub path: PathBuf,
@@ -57,7 +57,13 @@ pub fn scan(path: &Path) -> Vec<Title> {
                             continue;
                         }
 
-                        let data_table = read_sfo(&sfo_path).unwrap().data_table;
+                        let data_table = match read_sfo(&sfo_path) {
+                            Ok(sfo) => sfo.data_table,
+                            Err(error) => {
+                                eprintln!("Skipping {}: {error}", sfo_path.display());
+                                continue;
+                            }
+                        };
                         let parent = game_dir.parent().unwrap_or(path).to_path_buf();
                         let serial = data_table.find_string("TITLE_ID").unwrap(); // serial
                         let name = data_table.find_string("TITLE").unwrap();
@@ -69,7 +75,7 @@ pub fn scan(path: &Path) -> Vec<Title> {
                         );
                         let version = data_table.find_string("APP_VER").unwrap();
                         let category = data_table.find_string("CATEGORY").unwrap();
-                        let app_type = data_table.find_string("APP_TYPE").unwrap();
+                        let app_type = data_table.find_integer("APP_TYPE");
                         let folder_name =
                             game_dir.file_name().unwrap().to_string_lossy().into_owned();
                         let is_patch =

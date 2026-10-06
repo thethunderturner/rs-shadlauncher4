@@ -170,6 +170,12 @@ impl SfoViewer {
                                         .id(editor_id.with(&param.key))
                                         .desired_width(f32::INFINITY),
                                 );
+                                let response =
+                                    if matches!(param.key.as_str(), "ATTRIBUTE" | "ATTRIBUTE2") {
+                                        response.on_hover_text(ATTRIBUTE_BYTES_HELP)
+                                    } else {
+                                        response
+                                    };
                                 if edit.focus {
                                     response.request_focus();
                                     edit.focus = false;
@@ -186,9 +192,13 @@ impl SfoViewer {
                                     });
                                 }
                             } else {
-                                let value = value_text(&param.data);
-                                ui.add(egui::Label::new(&value).truncate())
-                                    .on_hover_text(&value);
+                                let value = value_text(&param.key, &param.data);
+                                let response = ui.add(egui::Label::new(&value).truncate());
+                                if matches!(param.key.as_str(), "ATTRIBUTE" | "ATTRIBUTE2") {
+                                    response.on_hover_text(ATTRIBUTE_BYTES_HELP);
+                                } else {
+                                    response.on_hover_text(&value);
+                                }
                             }
                         });
                         row.col(|ui| {
@@ -202,7 +212,7 @@ impl SfoViewer {
                             {
                                 *editing = Some(SfoEdit {
                                     key: param.key.clone(),
-                                    draft: value_text(&param.data),
+                                    draft: value_text(&param.key, &param.data),
                                     error: None,
                                     focus: true,
                                 });
@@ -212,7 +222,7 @@ impl SfoViewer {
                             *editing = None;
                         } else if apply {
                             if let Some(edit) = editing.as_mut() {
-                                match parse_value(&param.data, &edit.draft) {
+                                match parse_value(&param.key, &param.data, &edit.draft) {
                                     Ok(value) => {
                                         param.data = value;
                                         *editing = None;
@@ -238,21 +248,43 @@ struct SfoEdit {
     focus: bool,
 }
 
-fn value_text(value: &SfoValue) -> String {
+const ATTRIBUTE_BYTES_HELP: &str =
+    "Enter four hexadecimal bytes in file order (little endian)";
+
+fn value_text(key: &str, value: &SfoValue) -> String {
     match value {
         SfoValue::Utf8(value) => value.clone(),
+        SfoValue::Integer(value) if matches!(key, "ATTRIBUTE" | "ATTRIBUTE2") => {
+            let [a, b, c, d] = value.to_le_bytes();
+            format!("{a:02X} {b:02X} {c:02X} {d:02X}")
+        }
         SfoValue::Integer(value) => value.to_string(),
         SfoValue::Raw(_) => format!("{value:?}"),
     }
 }
 
-fn parse_value(original: &SfoValue, text: &str) -> Result<SfoValue, String> {
+fn parse_value(key: &str, original: &SfoValue, text: &str) -> Result<SfoValue, String> {
     match original {
         SfoValue::Utf8(_) => {
             if text.contains('\0') {
                 return Err("Text cannot contain a null character.".into());
             }
             Ok(SfoValue::Utf8(text.to_owned()))
+        }
+        SfoValue::Integer(_) if matches!(key, "ATTRIBUTE" | "ATTRIBUTE2") => {
+            let mut parts = text.split_ascii_whitespace();
+            let mut bytes = [0; 4];
+            for byte in &mut bytes {
+                let part = parts.next().ok_or(ATTRIBUTE_BYTES_HELP)?;
+                if part.len() != 2 || !part.bytes().all(|ch| ch.is_ascii_hexdigit()) {
+                    return Err(ATTRIBUTE_BYTES_HELP.into());
+                }
+                *byte = u8::from_str_radix(part, 16).map_err(|_| ATTRIBUTE_BYTES_HELP)?;
+            }
+            if parts.next().is_some() {
+                return Err(ATTRIBUTE_BYTES_HELP.into());
+            }
+            Ok(SfoValue::Integer(u32::from_le_bytes(bytes)))
         }
         SfoValue::Integer(_) => {
             let text = text.trim();
