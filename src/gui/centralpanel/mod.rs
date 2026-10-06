@@ -6,12 +6,12 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 pub mod actions;
-pub mod list;
+pub mod table_list;
 pub mod sorting;
 
 pub struct Centralpanel {
     titles: Vec<Title>,
-    sorting: Sorting,
+    column_sorting: Sorting,
     loading: bool,
     search: String,
     visible_titles: Vec<usize>,
@@ -30,7 +30,7 @@ impl Default for Centralpanel {
             visible_titles: Vec::new(),
             selected_title: None,
             reset_scroll: false,
-            sorting: Sorting::default(),
+            column_sorting: Sorting::default(),
             loading: true,
             scan_failed: false,
             scan_duration: None,
@@ -56,7 +56,7 @@ impl Centralpanel {
         {
             self.selected_title = None;
         }
-        self.sorting.sort(&mut self.titles);
+        self.column_sorting.sort(&mut self.titles);
         self.filter_titles();
         self.loading = false;
         self.scan_failed = false;

@@ -63,7 +63,7 @@ impl Centralpanel {
                     ] {
                         header.col(|ui| {
                             let mut show_button = |ui: &mut egui::Ui| {
-                                let response = ui.add(self.sorting.header(column, label));
+                                let response = ui.add(self.column_sorting.header(column, label));
                                 if response.clicked() {
                                     clicked_column = Some(column);
                                 }
@@ -172,8 +172,8 @@ impl Centralpanel {
             }
         }
         if let Some(column) = clicked_column {
-            self.sorting.select_column(column);
-            self.sorting.sort(&mut self.titles);
+            self.column_sorting.select_column(column);
+            self.column_sorting.sort(&mut self.titles);
             self.filter_titles();
             ui.ctx().request_repaint();
         }
