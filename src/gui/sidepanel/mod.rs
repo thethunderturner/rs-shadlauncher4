@@ -7,7 +7,7 @@ use eframe::egui::Button;
 
 #[derive(Default)]
 pub struct Sidepanel {
-    search: String,
+    search: Search,
 }
 
 impl Sidepanel {
@@ -22,7 +22,7 @@ impl Sidepanel {
                 ui.heading("Search");
                 search_changed = ui
                     .add(
-                        egui::TextEdit::singleline(&mut self.search)
+                        egui::TextEdit::singleline(&mut self.search.query)
                             .id_salt("game_search")
                             .hint_text("Title or CUSA")
                             .desired_width(f32::INFINITY),
@@ -112,10 +112,8 @@ impl Sidepanel {
                 );
             });
         SidepanelActions {
-            search: Search {
-                query: search_changed.then_some(self.search.as_str()),
-                refresh_list,
-            },
+            search: search_changed.then_some(self.search.query.as_str()),
+            refresh_list,
         }
     }
 }

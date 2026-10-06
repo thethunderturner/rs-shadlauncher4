@@ -74,10 +74,10 @@ impl eframe::App for LauncherApp {
 
         self.menubar.show(ui);
         let actions = self.sidepanel.show(ui, self.scan_rx.is_some());
-        if let Some(search) = actions.search.query {
+        if let Some(search) = actions.search {
             self.centralpanel.set_search(search);
         }
-        if actions.search.refresh_list {
+        if actions.refresh_list {
             self.start_scan(ui.ctx());
         }
         self.centralpanel.show(ui);

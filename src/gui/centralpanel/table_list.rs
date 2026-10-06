@@ -12,7 +12,7 @@ impl Centralpanel {
     }
 
     pub fn filter_titles(&mut self) {
-        self.visible_titles = self
+        self.filtered_titles = self
             .titles
             .iter()
             .enumerate()
@@ -86,8 +86,8 @@ impl Centralpanel {
                     }
                 })
                 .body(|body| {
-                    body.rows(44.0, self.visible_titles.len(), |mut row| {
-                        let index = self.visible_titles[row.index()];
+                    body.rows(44.0, self.filtered_titles.len(), |mut row| {
+                        let index = self.filtered_titles[row.index()];
                         let title = &self.titles[index];
                         let patch = title.patch.as_ref();
                         row.set_selected(self.selected_title.as_ref() == Some(&title.app.path));
@@ -154,7 +154,7 @@ impl Centralpanel {
                         }
                         egui::Popup::context_menu(&response)
                             .id(egui::Id::new(("game_row_menu", &title.app.path)))
-                            .show(|ui| show_row_menu(ui, title, &mut self.row));
+                            .show(|ui| show_row_menu(ui, title, &mut self.actions.row));
                     });
                 });
         });
