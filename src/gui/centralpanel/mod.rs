@@ -25,7 +25,7 @@ pub struct Centralpanel {
 impl Default for Centralpanel {
     fn default() -> Self {
         Self {
-            loading: true,
+            loading: false,
             titles: Vec::new(),
             filtered_titles: Vec::new(),
             column_sorting: Sorting::default(),
@@ -86,7 +86,11 @@ impl Centralpanel {
                     "Could not scan the games folder.",
                 );
             } else if self.titles.is_empty() {
-                ui.label("No games found in the games folder.");
+                if self.scan.scan_duration.is_none() {
+                    ui.label("Choose a games folder with Browse above.");
+                } else {
+                    ui.label("No games found in the selected folder.");
+                }
             } else if self.filtered_titles.is_empty() {
                 ui.label("No games match your search.");
                 ui.label("Try another title or CUSA, or clear the search.");

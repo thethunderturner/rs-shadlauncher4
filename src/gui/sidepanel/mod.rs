@@ -11,7 +11,12 @@ pub struct Sidepanel {
 }
 
 impl Sidepanel {
-    pub fn show(&mut self, ui: &mut egui::Ui, scanning: bool) -> SidepanelActions<'_> {
+    pub fn show(
+        &mut self,
+        ui: &mut egui::Ui,
+        scanning: bool,
+        can_refresh: bool,
+    ) -> SidepanelActions<'_> {
         let mut search_changed = false;
         let mut refresh_list = false;
         egui::Panel::left("sidebar")
@@ -81,7 +86,7 @@ impl Sidepanel {
                 ui.heading("Refresh");
                 refresh_list = ui
                     .add_enabled(
-                        !scanning,
+                        !scanning && can_refresh,
                         Button::image_and_text(
                             egui::include_image!(
                                 "../../assets/centralpanel/refresh/refresh-titles.svg"
@@ -90,7 +95,11 @@ impl Sidepanel {
                         )
                         .image_tint_follows_text_color(true),
                     )
-                    .on_disabled_hover_text("Wait for the current scan to finish.")
+                    .on_disabled_hover_text(if scanning {
+                        "Wait for the current scan to finish."
+                    } else {
+                        "Choose a games folder with Browse first."
+                    })
                     .clicked();
                 let _ = ui.add(
                     Button::image_and_text(

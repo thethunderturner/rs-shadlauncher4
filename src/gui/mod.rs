@@ -1,9 +1,9 @@
 use crate::gui::centralpanel::Centralpanel;
 use crate::gui::menubar::Menubar;
 use crate::gui::sidepanel::Sidepanel;
+use crate::gui::toolbar::Toolbar;
 use crate::scanning;
 use eframe::egui;
-use std::path::PathBuf;
 use std::sync::mpsc::{self, Receiver, TryRecvError};
 use std::time::{Duration, Instant};
 
@@ -16,31 +16,31 @@ pub struct LauncherApp {
     pub menubar: Menubar,
     pub sidepanel: Sidepanel,
     pub centralpanel: Centralpanel,
-    games_path: PathBuf,
+    toolbar: Toolbar,
     scan_rx: Option<Receiver<Result<(Vec<scanning::Title>, Duration), ()>>>,
 }
 
 impl LauncherApp {
-    pub fn new(cc: &eframe::CreationContext<'_>, games_path: PathBuf) -> Self {
+    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         egui_extras::install_image_loaders(&cc.egui_ctx);
-        let mut app = Self {
+        Self {
             menubar: Menubar::default(),
             sidepanel: Sidepanel::default(),
             centralpanel: Centralpanel::default(),
-            games_path,
+            toolbar: Toolbar::default(),
             scan_rx: None,
-        };
-        app.start_scan(&cc.egui_ctx);
-        app
+        }
     }
 
     fn start_scan(&mut self, ctx: &egui::Context) {
         if self.scan_rx.is_some() {
             return;
         }
+        let Some(games_path) = self.toolbar.games_path().map(|path| path.to_path_buf()) else {
+            return;
+        };
         let (tx, scan_rx) = mpsc::channel();
         let ctx = ctx.clone();
-        let games_path = self.games_path.clone();
         self.centralpanel.start_scan(&ctx);
         self.scan_rx = Some(scan_rx);
         std::thread::spawn(move || {
@@ -73,11 +73,16 @@ impl eframe::App for LauncherApp {
         }
 
         self.menubar.show(ui);
-        let actions = self.sidepanel.show(ui, self.scan_rx.is_some());
+        let actions = self
+            .sidepanel
+            .show(ui, self.scan_rx.is_some(), self.toolbar.can_refresh());
         if let Some(search) = actions.search {
             self.centralpanel.set_search(search);
         }
         if actions.refresh_list {
+            self.start_scan(ui.ctx());
+        }
+        if self.toolbar.show(ui, self.scan_rx.is_some()) {
             self.start_scan(ui.ctx());
         }
         self.centralpanel.show(ui);
