@@ -1,10 +1,16 @@
 use crate::gui::centralpanel::Centralpanel;
 use crate::gui::centralpanel::actions::row::Row;
+use crate::gui::sidepanel::actions::library::LibraryFilter;
 use crate::scanning::Title;
 use eframe::egui;
 use egui_extras::{Column, TableBuilder};
 
 impl Centralpanel {
+    pub fn set_library_filter(&mut self, filter: LibraryFilter) {
+        self.library_filter = filter;
+        self.filter_titles();
+    }
+
     pub fn set_search(&mut self, search: &str) {
         self.search = search.trim().to_lowercase();
         self.filter_titles();
@@ -23,7 +29,7 @@ impl Centralpanel {
                         .as_ref()
                         .is_some_and(|patch| patch.name.to_lowercase().contains(&self.search))
                     || title.serial.to_lowercase().contains(&self.search);
-                matches.then_some(index)
+                (matches && self.library_filter.matches(title)).then_some(index)
             })
             .collect();
         self.reset_scroll = true;

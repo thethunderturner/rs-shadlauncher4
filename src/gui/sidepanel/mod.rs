@@ -4,7 +4,7 @@ use crate::gui::sidepanel::actions::SidepanelActions;
 use crate::gui::sidepanel::actions::search::Search;
 use eframe::egui;
 use eframe::egui::Button;
-use crate::gui::sidepanel::actions::library::Library;
+use crate::gui::sidepanel::actions::library::{Library, LibraryFilter};
 
 #[derive(Default)]
 pub struct Sidepanel {
@@ -20,6 +20,7 @@ impl Sidepanel {
         can_refresh: bool,
     ) -> SidepanelActions<'_> {
         let mut search_changed = false;
+        let mut library_changed = false;
         let mut refresh_list = false;
         egui::Panel::left("sidebar")
             .default_size(175.0)
@@ -39,11 +40,24 @@ impl Sidepanel {
                 ui.separator();
 
                 ui.heading("Library");
-                ui.label("All games:  TBD");
+                library_changed |= ui
+                    .selectable_value(&mut self.library.selected, LibraryFilter::All, "All games")
+                    .changed();
                 ui.label("Favorites:  TBD");
-                ui.label("Demos:  TBD");
+                library_changed |= ui
+                    .selectable_value(&mut self.library.selected, LibraryFilter::Demos, "Demos")
+                    .changed();
                 ui.label("VR:  TBD");
-                ui.label("International:  TBD");
+                library_changed |= ui
+                    .selectable_value(
+                        &mut self.library.selected,
+                        LibraryFilter::International,
+                        "International",
+                    )
+                    .changed();
+                library_changed |= ui
+                    .selectable_value(&mut self.library.selected, LibraryFilter::TV, "TV")
+                    .changed();
                 ui.horizontal(|ui| {
                     ui.strong("Folders");
                     if ui.small_button("+").on_hover_text("New folder").clicked() {
@@ -124,6 +138,7 @@ impl Sidepanel {
             });
         SidepanelActions {
             search: search_changed.then_some(self.search.query.as_str()),
+            library_filter: library_changed.then_some(self.library.selected),
             refresh_list,
         }
     }

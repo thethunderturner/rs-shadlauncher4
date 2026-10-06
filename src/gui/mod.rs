@@ -79,6 +79,9 @@ impl eframe::App for LauncherApp {
         if let Some(search) = actions.search {
             self.centralpanel.set_search(search);
         }
+        if let Some(filter) = actions.library_filter {
+            self.centralpanel.set_library_filter(filter);
+        }
         if actions.refresh_list {
             self.start_scan(ui.ctx());
         }

@@ -1,6 +1,7 @@
 use crate::gui::centralpanel::actions::Actions;
 use crate::gui::centralpanel::actions::scan::Scan;
 use crate::gui::centralpanel::sorting::Sorting;
+use crate::gui::sidepanel::actions::library::LibraryFilter;
 use crate::scanning::Title;
 use eframe::egui;
 use std::path::PathBuf;
@@ -17,6 +18,7 @@ pub struct Centralpanel {
     column_sorting: Sorting,
     selected_title: Option<PathBuf>,
     search: String,
+    library_filter: LibraryFilter,
     reset_scroll: bool,
     scan: Scan,
     actions: Actions,
@@ -30,6 +32,7 @@ impl Default for Centralpanel {
             filtered_titles: Vec::new(),
             column_sorting: Sorting::default(),
             search: String::new(),
+            library_filter: LibraryFilter::default(),
             selected_title: None,
             reset_scroll: false,
             scan: Scan::default(),
@@ -93,8 +96,8 @@ impl Centralpanel {
                     ui.label("No games found in the selected folder.");
                 }
             } else if self.filtered_titles.is_empty() {
-                ui.label("No games match your search.");
-                ui.label("Try another title or CUSA, or clear the search.");
+                ui.label("No games match the current filters.");
+                ui.label("Select All games or change your search.");
             } else {
                 if let Some(title) = self
                     .filtered_titles
