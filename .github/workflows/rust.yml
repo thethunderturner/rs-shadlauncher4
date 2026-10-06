@@ -111,13 +111,14 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           RELEASE_DATE=$(TZ=Europe/Amsterdam date +'%d/%m/%Y')
+          SHORT_SHA="${GITHUB_SHA::7}"
           TAG="continuous-${GITHUB_RUN_NUMBER}"
 
           gh release create "$TAG" \
             release/* \
             --repo "${GITHUB_REPOSITORY}" \
             --target "${GITHUB_SHA}" \
-            --title "rs-shadlauncher-${RELEASE_DATE}" \
+            --title "shadlauncher-${RELEASE_DATE}-${SHORT_SHA}" \
             --notes "Automated development build from main." \
             --prerelease \
             --latest=false
