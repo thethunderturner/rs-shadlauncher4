@@ -2,21 +2,116 @@ name: Rust
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
+
+permissions:
+  contents: write
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   build:
+    strategy:
+      matrix:
+        os:
+          - windows-latest
+          - ubuntu-latest
+          - macos-26
+
+    name: Build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Build
+        run: cargo build --release --verbose
+
+      - name: Run tests
+        run: cargo test --release --verbose
+
+      # Linux
+      - name: Install AppImage tools
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y file wget
+          cargo install cargo-appimage --locked
+          wget -q \
+            https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage \
+            -O appimagetool
+
+          chmod +x appimagetool
+          sudo mv appimagetool /usr/local/bin/appimagetool
+
+      - name: Build AppImage
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          APPIMAGE_EXTRACT_AND_RUN=1 cargo appimage
+          mkdir -p dist
+          cp \
+            target/appimage/rs-shadlauncher4.AppImage \
+            dist/rs-shadlauncher4-linux-x86_64.AppImage
+
+      # Windows
+      - name: Prepare Windows build
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist
+          Copy-Item `
+            target\release\rs-shadlauncher4.exe `
+            dist\rs-shadlauncher4-windows-x86_64.exe
+
+      # macOS
+      - name: Prepare macOS build
+        if: matrix.os == 'macos-26'
+        run: |
+          mkdir -p dist
+          cp \
+            target/release/rs-shadlauncher4 \
+            dist/rs-shadlauncher4-macos-arm64
+
+      # Store build for release job
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rs-shadlauncher4-${{ matrix.os }}
+          path: dist/*
+          if-no-files-found: error
+
+  upload:
+    name: Create release and upload artifacts
+    needs: build
+
+    # Dont create a GitHub release for PR builds
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: rs-shadlauncher4-*
+          path: release
+          merge-multiple: true
+
+      - name: Inspect release files
+        run: ls -alh release/
+
+      - name: Create release and upload artifacts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          wget -q \
+            https://github.com/TheAssassin/pyuploadtool/releases/download/continuous/pyuploadtool-x86_64.AppImage
+
+          chmod +x pyuploadtool-x86_64.AppImage
+
+          GITHUB_CONTINUOUS_RELEASE_TYPE=stable \
+            ./pyuploadtool-x86_64.AppImage release/*
