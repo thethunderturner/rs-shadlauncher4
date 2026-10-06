@@ -5,6 +5,8 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
+  release:
+    types: [published]
 
 permissions:
   contents: write
@@ -76,16 +78,16 @@ jobs:
             target/release/rs-shadlauncher4 \
             dist/rs-shadlauncher4-macos-arm64
 
-      # Store build for release job
+      # Upload build artifacts
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: rs-shadlauncher4-${{ matrix.os }}
           path: dist/*
           if-no-files-found: error
 
-  upload:
-    name: Create release and upload artifacts
+  prerelease:
+    name: Create prerelease
     needs: build
 
     # Dont create a GitHub release for PR builds
@@ -95,7 +97,7 @@ jobs:
 
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: rs-shadlauncher4-*
           path: release
@@ -104,14 +106,47 @@ jobs:
       - name: Inspect release files
         run: ls -alh release/
 
-      - name: Create release and upload artifacts
+      - name: Create prerelease
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          wget -q \
-            https://github.com/TheAssassin/pyuploadtool/releases/download/continuous/pyuploadtool-x86_64.AppImage
+          RELEASE_DATE=$(TZ=Europe/Amsterdam date +'%d/%m/%Y')
+          TAG="continuous-${GITHUB_RUN_NUMBER}"
 
-          chmod +x pyuploadtool-x86_64.AppImage
+          gh release create "$TAG" \
+            release/* \
+            --repo "${GITHUB_REPOSITORY}" \
+            --target "${GITHUB_SHA}" \
+            --title "rs-shadlauncher-${RELEASE_DATE}" \
+            --notes "Automated development build from main." \
+            --prerelease \
+            --latest=false
 
-          GITHUB_CONTINUOUS_RELEASE_TYPE=stable \
-            ./pyuploadtool-x86_64.AppImage release/*
+  upload-release:
+    name: Upload artifacts to release
+    needs: build
+
+    if: github.event_name == 'release'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: rs-shadlauncher4-*
+          path: release
+          merge-multiple: true
+
+      - name: Inspect release files
+        run: ls -alh release/
+
+      - name: Upload artifacts to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload \
+            "${{ github.event.release.tag_name }}" \
+            release/* \
+            --repo "${GITHUB_REPOSITORY}" \
+            --clobber
