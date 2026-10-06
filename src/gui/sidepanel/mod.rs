@@ -4,10 +4,12 @@ use crate::gui::sidepanel::actions::SidepanelActions;
 use crate::gui::sidepanel::actions::search::Search;
 use eframe::egui;
 use eframe::egui::Button;
+use crate::gui::sidepanel::actions::library::Library;
 
 #[derive(Default)]
 pub struct Sidepanel {
     search: Search,
+    library: Library
 }
 
 impl Sidepanel {
