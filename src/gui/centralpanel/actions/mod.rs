@@ -6,5 +6,6 @@ pub mod scan;
 
 #[derive(Default)]
 pub struct Actions {
+    pub assets: assets::Assets,
     pub row: Row,
 }

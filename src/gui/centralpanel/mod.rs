@@ -56,6 +56,7 @@ impl Centralpanel {
     }
 
     pub fn show(&mut self, ui: &mut egui::Ui) {
+        self.actions.assets.begin_frame(ui.ctx());
         egui::Panel::bottom("titles_footer")
             .resizable(false)
             .show(ui, |ui| {
@@ -101,11 +102,12 @@ impl Centralpanel {
                     .map(|&index| &self.titles[index])
                     .find(|title| Some(&title.app.path) == self.selected_title.as_ref())
                 {
-                    actions::assets::show_background(ui, title);
+                    self.actions.assets.show_background(ui, title);
                 }
                 self.show_list(ui);
             }
         });
+        self.actions.assets.end_frame(ui.ctx());
         self.actions.row.show_windows(ui.ctx());
         for (path, sfo) in self.actions.row.take_sfo_saves() {
             for title in &mut self.titles {

@@ -1,5 +1,4 @@
 use crate::gui::centralpanel::Centralpanel;
-use crate::gui::centralpanel::actions::assets;
 use crate::gui::centralpanel::actions::row::Row;
 use crate::scanning::Title;
 use eframe::egui;
@@ -93,7 +92,7 @@ impl Centralpanel {
                         row.set_selected(self.selected_title.as_ref() == Some(&title.app.path));
 
                         row.col(|ui| {
-                            if let Some(icon) = assets::load_icon(title) {
+                            if let Some(icon) = self.actions.assets.load_icon(title) {
                                 ui.add(icon);
                             } else {
                                 ui.add(egui::Label::new("?").selectable(false))
@@ -160,13 +159,6 @@ impl Centralpanel {
         });
         if let Some(path) = clicked_title {
             if self.selected_title.as_ref() != Some(&path) {
-                if let Some(previous) = self
-                    .titles
-                    .iter()
-                    .find(|title| Some(&title.app.path) == self.selected_title.as_ref())
-                {
-                    assets::forget_background(ui.ctx(), previous);
-                }
                 self.selected_title = Some(path);
                 ui.ctx().request_repaint();
             }

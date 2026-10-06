@@ -41,7 +41,7 @@ impl LauncherApp {
         };
         let (tx, scan_rx) = mpsc::channel();
         let ctx = ctx.clone();
-        self.centralpanel.start_scan(&ctx);
+        self.centralpanel.start_scan();
         self.scan_rx = Some(scan_rx);
         std::thread::spawn(move || {
             let titles = std::panic::catch_unwind(|| {

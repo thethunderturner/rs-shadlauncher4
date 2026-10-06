@@ -1,5 +1,4 @@
-use crate::gui::centralpanel::{Centralpanel, actions};
-use eframe::egui;
+use crate::gui::centralpanel::Centralpanel;
 use std::time::Duration;
 
 pub struct Scan {
@@ -17,8 +16,8 @@ impl Default for Scan {
 }
 
 impl Centralpanel {
-    pub fn start_scan(&mut self, ctx: &egui::Context) {
-        actions::assets::clear_cache(ctx, &self.titles);
+    pub fn start_scan(&mut self) {
+        self.actions.assets.clear_cache();
         self.loading = true;
         self.scan.scan_failed = false;
         self.scan.scan_duration = None;

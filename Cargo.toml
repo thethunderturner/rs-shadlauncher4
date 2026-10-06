@@ -7,6 +7,7 @@ license = "GPL-2"
 [dependencies]
 eframe = { version = "0.36.2", features = ["glow"] }
 egui_extras = { version = "0.36.1", default-features = false, features = ["svg", "image", "file"] }
+image = { version = "0.25.10", default-features = false, features = ["png"] }
 rfd = "0.17.2"
 
 [package.metadata.appimage]
