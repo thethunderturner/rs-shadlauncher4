@@ -21,6 +21,8 @@ pub struct Title {
 pub struct App {
     pub name: String, // Keeping the name here, because some titles change names between versions
     pub fw: String,
+    pub app_type: String,
+    pub category: String,
     pub version: String,
     pub path: PathBuf,
     pub sfo: SfoDataTable,
@@ -30,6 +32,8 @@ pub struct App {
 pub struct Patch {
     pub name: String, // Keeping the name here, because some titles change names between versions
     pub fw: String,
+    pub app_type: String,
+    pub category: String,
     pub version: String,
     pub path: PathBuf,
     pub sfo: SfoDataTable,
@@ -64,6 +68,8 @@ pub fn scan(path: &Path) -> Vec<Title> {
                             (system_ver >> 16) & 0xff
                         );
                         let version = data_table.find_string("APP_VER").unwrap();
+                        let category = data_table.find_string("CATEGORY").unwrap();
+                        let app_type = data_table.find_string("APP_TYPE").unwrap();
                         let folder_name =
                             game_dir.file_name().unwrap().to_string_lossy().into_owned();
                         let is_patch =
@@ -75,6 +81,8 @@ pub fn scan(path: &Path) -> Vec<Title> {
                             let patch = Patch {
                                 name,
                                 fw,
+                                category,
+                                app_type,
                                 version,
                                 path: game_dir,
                                 sfo: data_table,
@@ -97,6 +105,8 @@ pub fn scan(path: &Path) -> Vec<Title> {
                                 app: App {
                                     name,
                                     fw,
+                                    category,
+                                    app_type,
                                     version,
                                     path: game_dir,
                                     sfo: data_table,
