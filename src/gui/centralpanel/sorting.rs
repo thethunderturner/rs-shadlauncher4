@@ -2,15 +2,23 @@ use crate::scanning::Title;
 use eframe::egui;
 use std::cmp::Ordering;
 
-pub struct Sorting {
-    pub column: String,
-    pub order: Order,
-}
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Order {
     Ascending,
     Descending,
+}
+
+pub struct Sorting {
+    pub column: String,
+    pub order: Order,
+}
+impl Default for Sorting {
+    fn default() -> Self {
+        Self {
+            column: String::from("name"),
+            order: Order::Ascending,
+        }
+    }
 }
 
 impl Sorting {

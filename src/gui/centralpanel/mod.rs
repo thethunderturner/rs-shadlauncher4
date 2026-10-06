@@ -11,12 +11,12 @@ pub mod sorting;
 
 pub struct Centralpanel {
     titles: Vec<Title>,
+    sorting: Sorting,
+    loading: bool,
     search: String,
     visible_titles: Vec<usize>,
     selected_title: Option<PathBuf>,
     reset_scroll: bool,
-    sorting: Sorting,
-    loading: bool,
     scan_failed: bool,
     scan_duration: Option<Duration>,
     row: Row,
@@ -30,10 +30,7 @@ impl Default for Centralpanel {
             visible_titles: Vec::new(),
             selected_title: None,
             reset_scroll: false,
-            sorting: Sorting {
-                column: String::from("name"),
-                order: Order::Ascending,
-            },
+            sorting: Sorting::default(),
             loading: true,
             scan_failed: false,
             scan_duration: None,
