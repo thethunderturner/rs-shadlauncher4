@@ -7,6 +7,7 @@ pub enum LibraryFilter {
     Demos,
     International,
     TV,
+    VR
 }
 
 impl LibraryFilter {
@@ -16,6 +17,7 @@ impl LibraryFilter {
             Self::Demos => title.app.app_type == Some(3),
             Self::International => title.publisher_id.starts_with("IP"),
             Self::TV => title.app.category == "gde",
+            Self::VR => true //todo
         }
     }
 }

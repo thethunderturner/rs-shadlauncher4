@@ -58,6 +58,9 @@ impl Sidepanel {
                 library_changed |= ui
                     .selectable_value(&mut self.library.selected, LibraryFilter::TV, "TV")
                     .changed();
+                library_changed |= ui
+                    .selectable_value(&mut self.library.selected, LibraryFilter::VR, "VR")
+                    .changed();
                 ui.horizontal(|ui| {
                     ui.strong("Folders");
                     if ui.small_button("+").on_hover_text("New folder").clicked() {
