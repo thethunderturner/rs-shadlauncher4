@@ -1,15 +1,15 @@
 pub mod actions;
 
 use crate::gui::sidepanel::actions::SidepanelActions;
+use crate::gui::sidepanel::actions::library::{Library, LibraryFilter};
 use crate::gui::sidepanel::actions::search::Search;
 use eframe::egui;
 use eframe::egui::Button;
-use crate::gui::sidepanel::actions::library::{Library, LibraryFilter};
 
 #[derive(Default)]
 pub struct Sidepanel {
     search: Search,
-    library: Library
+    library: Library,
 }
 
 impl Sidepanel {

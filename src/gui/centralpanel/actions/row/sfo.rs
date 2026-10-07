@@ -248,8 +248,7 @@ struct SfoEdit {
     focus: bool,
 }
 
-const ATTRIBUTE_BYTES_HELP: &str =
-    "Enter four hexadecimal bytes in file order (little endian)";
+const ATTRIBUTE_BYTES_HELP: &str = "Enter four hexadecimal bytes in file order (little endian)";
 
 fn value_text(key: &str, value: &SfoValue) -> String {
     match value {
