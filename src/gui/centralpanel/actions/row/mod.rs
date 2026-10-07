@@ -27,7 +27,10 @@ impl Row {
 
     pub fn take_sfo_saves(
         &mut self,
-    ) -> Vec<(std::path::PathBuf, crate::sfo::data_table::SfoDataTable)> {
+    ) -> Vec<(
+        std::path::PathBuf,
+        crate::sfo::internal::data_table::SfoDataTable,
+    )> {
         self.sfo_viewer.take_saves()
     }
 

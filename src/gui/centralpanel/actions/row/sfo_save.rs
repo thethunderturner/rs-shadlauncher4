@@ -1,4 +1,4 @@
-use crate::sfo::data_table::SfoDataTable;
+use crate::sfo::internal::data_table::SfoDataTable;
 use crate::sfo::writer::write_sfo;
 use eframe::egui;
 use std::path::Path;

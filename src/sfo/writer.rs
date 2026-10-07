@@ -1,6 +1,6 @@
-use super::data_table::{SfoDataTable, SfoValue};
-use super::header::read_header;
-use super::index_table::read_index;
+use crate::sfo::internal::data_table::{SfoDataTable, SfoValue};
+use crate::sfo::internal::header::read_header;
+use crate::sfo::internal::index_table::read_index;
 use std::fs::{self, OpenOptions};
 use std::io::{self, Cursor, Write};
 use std::path::Path;

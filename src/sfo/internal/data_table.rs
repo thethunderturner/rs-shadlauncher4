@@ -1,5 +1,5 @@
-use crate::sfo::index_table::SfoIndexTable;
-use crate::sfo::key_table::SfoKeyTable;
+use crate::sfo::internal::index_table::SfoIndexTable;
+use crate::sfo::internal::key_table::SfoKeyTable;
 use std::fmt;
 use std::io::{Error, ErrorKind, Read};
 

@@ -40,14 +40,13 @@ impl Sidepanel {
                 ui.separator();
 
                 ui.heading("Library");
+                ui.label("Favorites:  TBD");
                 library_changed |= ui
                     .selectable_value(&mut self.library.selected, LibraryFilter::All, "All games")
                     .changed();
-                ui.label("Favorites:  TBD");
                 library_changed |= ui
                     .selectable_value(&mut self.library.selected, LibraryFilter::Demos, "Demos")
                     .changed();
-                ui.label("VR:  TBD");
                 library_changed |= ui
                     .selectable_value(
                         &mut self.library.selected,
@@ -60,6 +59,9 @@ impl Sidepanel {
                     .changed();
                 library_changed |= ui
                     .selectable_value(&mut self.library.selected, LibraryFilter::VR, "VR")
+                    .changed();
+                library_changed |= ui
+                    .selectable_value(&mut self.library.selected, LibraryFilter::Neo, "PS4 Pro")
                     .changed();
                 ui.horizontal(|ui| {
                     ui.strong("Folders");

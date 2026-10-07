@@ -1,7 +1,7 @@
-use crate::sfo::data_table::{SfoDataTable, read_data_table};
-use crate::sfo::header::read_header;
-use crate::sfo::index_table::read_index;
-use crate::sfo::key_table::read_key_table;
+use crate::sfo::internal::data_table::{SfoDataTable, read_data_table};
+use crate::sfo::internal::header::read_header;
+use crate::sfo::internal::index_table::read_index;
+use crate::sfo::internal::key_table::read_key_table;
 use std::io::Cursor;
 use std::path::Path;
 

@@ -1,6 +1,6 @@
 use super::sfo_save::SfoSave;
 use crate::scanning::Title;
-use crate::sfo::data_table::{SfoDataTable, SfoValue};
+use crate::sfo::internal::data_table::{SfoDataTable, SfoValue};
 use eframe::egui;
 use egui_extras::{Column, TableBuilder};
 use std::path::PathBuf;

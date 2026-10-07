@@ -1,5 +1,7 @@
-use crate::sfo::data_table::SfoDataTable;
-use crate::sfo::sfo::read_sfo;
+use crate::sfo::internal::data_table::SfoDataTable;
+use crate::sfo::parse_param::attribute;
+use crate::sfo::parse_param::attribute::{supports_neo, supports_vr};
+use crate::sfo::reader::read_sfo;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -13,6 +15,8 @@ pub struct Title {
     pub compatibility: Option<String>,
     pub publisher_id: String,
     pub playtime: String,
+    pub supports_vr: bool,
+    pub supports_neo: bool,
     pub app: App,
     pub patch: Option<Patch>, // Maybe a title doesn't have a patch
 }
@@ -82,6 +86,10 @@ pub fn scan(path: &Path) -> Vec<Title> {
                             folder_name.ends_with("-patch") || folder_name.ends_with("-UPDATE");
                         let icon = find_icon(&game_dir);
                         let background = find_background(&game_dir);
+                        let attribute_bytes = data_table
+                            .find_integer("ATTRIBUTE")
+                            .unwrap_or_default()
+                            .to_le_bytes();
 
                         if is_patch {
                             let patch = Patch {
@@ -108,6 +116,8 @@ pub fn scan(path: &Path) -> Vec<Title> {
                                 compatibility: None,
                                 publisher_id: data_table.find_string("CONTENT_ID").unwrap(),
                                 playtime: String::new(),
+                                supports_vr: supports_vr(attribute_bytes),
+                                supports_neo: supports_neo(attribute_bytes),
                                 app: App {
                                     name,
                                     fw,
@@ -129,6 +139,15 @@ pub fn scan(path: &Path) -> Vec<Title> {
     }
     for title in &mut list {
         title.patch = patches.remove(&title.serial);
+        let attribute_bytes = title
+            .patch
+            .as_ref()
+            .and_then(|patch| patch.sfo.find_integer("ATTRIBUTE"))
+            .or_else(|| title.app.sfo.find_integer("ATTRIBUTE"))
+            .unwrap_or_default()
+            .to_le_bytes();
+        title.supports_vr = attribute::supports_vr(attribute_bytes);
+        title.supports_neo = attribute::supports_neo(attribute_bytes);
         if let Some(patch) = &title.patch {
             if let Some(icon) = find_icon(&patch.path) {
                 title.icon_path = Some(icon);
