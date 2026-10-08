@@ -118,12 +118,32 @@ impl Assets {
             return;
         };
         let rect = ui.available_rect_before_wrap();
+        if rect.width() <= 0.0 || rect.height() <= 0.0 {
+            return;
+        }
+
         let size = texture.size_vec2();
-        let size = size * (rect.width() / size.x).min(rect.height() / size.y);
+        let rect_aspect = rect.width() / rect.height();
+        let image_aspect = size.x / size.y;
+        let uv = if image_aspect > rect_aspect {
+            let visible_width = rect_aspect / image_aspect;
+            let left = (1.0 - visible_width) * 0.5;
+            egui::Rect::from_min_max(
+                egui::pos2(left, 0.0),
+                egui::pos2(left + visible_width, 1.0),
+            )
+        } else {
+            let visible_height = image_aspect / rect_aspect;
+            let top = (1.0 - visible_height) * 0.5;
+            egui::Rect::from_min_max(
+                egui::pos2(0.0, top),
+                egui::pos2(1.0, top + visible_height),
+            )
+        };
         ui.painter().image(
             texture.id(),
-            egui::Rect::from_center_size(rect.center(), size),
-            egui::Rect::from_min_max(egui::Pos2::ZERO, egui::pos2(1.0, 1.0)),
+            rect,
+            uv,
             egui::Color32::WHITE,
         );
         ui.painter()
