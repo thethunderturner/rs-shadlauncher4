@@ -128,24 +128,14 @@ impl Assets {
         let uv = if image_aspect > rect_aspect {
             let visible_width = rect_aspect / image_aspect;
             let left = (1.0 - visible_width) * 0.5;
-            egui::Rect::from_min_max(
-                egui::pos2(left, 0.0),
-                egui::pos2(left + visible_width, 1.0),
-            )
+            egui::Rect::from_min_max(egui::pos2(left, 0.0), egui::pos2(left + visible_width, 1.0))
         } else {
             let visible_height = image_aspect / rect_aspect;
             let top = (1.0 - visible_height) * 0.5;
-            egui::Rect::from_min_max(
-                egui::pos2(0.0, top),
-                egui::pos2(1.0, top + visible_height),
-            )
+            egui::Rect::from_min_max(egui::pos2(0.0, top), egui::pos2(1.0, top + visible_height))
         };
-        ui.painter().image(
-            texture.id(),
-            rect,
-            uv,
-            egui::Color32::WHITE,
-        );
+        ui.painter()
+            .image(texture.id(), rect, uv, egui::Color32::WHITE);
         ui.painter()
             .rect_filled(rect, 0.0, ui.visuals().panel_fill.gamma_multiply(0.85));
     }

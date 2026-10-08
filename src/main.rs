@@ -1,12 +1,17 @@
 use eframe::egui;
 
+pub mod common;
 pub mod compatibility;
 mod gui;
 pub mod scanning;
 mod sfo;
-pub mod common;
 
 fn main() -> eframe::Result {
+    if let Err(error) = common::paths::initialize_user_directory() {
+        eprintln!("Failed to initialize user directory: {error}");
+        std::process::exit(1);
+    }
+
     let options = eframe::NativeOptions {
         renderer: eframe::Renderer::Glow,
         viewport: egui::ViewportBuilder::default()
