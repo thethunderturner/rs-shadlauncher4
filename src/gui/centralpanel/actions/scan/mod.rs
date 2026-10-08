@@ -17,6 +17,7 @@ impl Default for Scan {
 
 impl Centralpanel {
     pub fn start_scan(&mut self) {
+        self.actions.row.stop_audio();
         self.actions.assets.clear_cache();
         self.loading = true;
         self.scan.scan_failed = false;

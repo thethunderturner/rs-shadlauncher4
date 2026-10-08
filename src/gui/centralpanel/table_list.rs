@@ -32,6 +32,13 @@ impl Centralpanel {
                 (matches && self.library_filter.matches(title)).then_some(index)
             })
             .collect();
+        if !self
+            .filtered_titles
+            .iter()
+            .any(|&index| Some(&self.titles[index].app.path) == self.selected_title.as_ref())
+        {
+            self.actions.row.stop_audio();
+        }
         self.reset_scroll = true;
     }
 
@@ -155,7 +162,7 @@ impl Centralpanel {
                         });
                         let response = row.response();
                         if response.clicked() || response.secondary_clicked() {
-                            clicked_title = Some(title.app.path.clone());
+                            clicked_title = Some((index, response.clicked()));
                         }
                         egui::Popup::context_menu(&response)
                             .id(egui::Id::new(("game_row_menu", &title.app.path)))
@@ -163,9 +170,14 @@ impl Centralpanel {
                     });
                 });
         });
-        if let Some(path) = clicked_title {
-            if self.selected_title.as_ref() != Some(&path) {
-                self.selected_title = Some(path);
+        if let Some((index, primary_click)) = clicked_title {
+            let title = &self.titles[index];
+            let selection_changed = self.selected_title.as_ref() != Some(&title.app.path);
+            if primary_click || selection_changed {
+                self.actions.row.play_audio(title);
+            }
+            if selection_changed {
+                self.selected_title = Some(title.app.path.clone());
                 ui.ctx().request_repaint();
             }
         }

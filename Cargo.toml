@@ -5,10 +5,14 @@ edition = "2024"
 license = "GPL-2"
 
 [dependencies]
+rodio = { version = "0.21.1", default-features = false, features = ["playback"] }
 eframe = { version = "0.36.2", features = ["glow"] }
 egui_extras = { version = "0.36.1", default-features = false, features = ["svg", "image", "file"] }
 image = { version = "0.25.10", default-features = false, features = ["png"] }
 rfd = "0.17.2"
+
+[build-dependencies]
+cc = "1"
 
 [package.metadata.appimage]
 icon = "src/assets/icon.png"

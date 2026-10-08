@@ -40,18 +40,18 @@ impl Default for SfoViewer {
 }
 
 impl SfoViewer {
-    pub(super) fn reset_edits(&mut self) {
+    pub(crate) fn reset_edits(&mut self) {
         self.app_edit = None;
         self.patch_edit = None;
         self.app_save = SfoSave::default();
         self.patch_save = SfoSave::default();
     }
 
-    pub(super) fn is_saving(&self) -> bool {
+    pub(crate) fn is_saving(&self) -> bool {
         self.app_save.is_saving() || self.patch_save.is_saving()
     }
 
-    pub(super) fn take_saves(&mut self) -> Vec<(PathBuf, SfoDataTable)> {
+    pub(crate) fn take_saves(&mut self) -> Vec<(PathBuf, SfoDataTable)> {
         std::mem::take(&mut self.saved)
     }
 

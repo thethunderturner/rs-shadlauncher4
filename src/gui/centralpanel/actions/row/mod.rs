@@ -1,15 +1,23 @@
-use crate::gui::centralpanel::actions::row::sfo::{SfoViewer, Tab};
+use crate::gui::centralpanel::actions::row::sfo::sfo::{SfoViewer, Tab};
 use crate::scanning::Title;
+use atrac9::audio;
 
+pub mod atrac9;
 pub mod sfo;
-mod sfo_save;
 
 #[derive(Default)]
 pub struct Row {
     sfo_viewer: SfoViewer,
+    audio: audio::Audio,
 }
 
 impl Row {
+    pub fn play_audio(&mut self, title: &Title) {
+        self.audio.play(title);
+    }
+    pub fn stop_audio(&self) {
+        self.audio.stop();
+    }
     pub fn open_sfo(&mut self, title: &Title) {
         if self.sfo_viewer.is_saving() {
             return;

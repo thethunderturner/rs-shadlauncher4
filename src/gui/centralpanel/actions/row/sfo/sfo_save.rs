@@ -66,7 +66,7 @@ impl SfoSave {
             }
             if self.is_saving() {
                 ui.spinner();
-                ui.label("Saving…");
+                ui.label("Saving...");
             } else if editing {
                 ui.label("Editing value");
             } else if changed {
