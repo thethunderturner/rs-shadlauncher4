@@ -4,6 +4,7 @@ pub mod compatibility;
 mod gui;
 pub mod scanning;
 mod sfo;
+pub mod common;
 
 fn main() -> eframe::Result {
     let options = eframe::NativeOptions {
