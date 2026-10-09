@@ -85,7 +85,11 @@ pub fn show(ui: &mut egui::Ui, config: &mut Value, devices: &AudioDevices) -> bo
                     let value = &mut config["General"]["volume_slider"];
                     let mut volume = value.as_u64().unwrap_or(100);
                     ui.horizontal(|ui| {
-                        ui.label(format!("{volume}%"));
+                        ui.add_sized(
+                            [48.0, ui.spacing().interact_size.y],
+                            egui::Label::new(format!("{volume}%")),
+                        );
+                        ui.spacing_mut().slider_width = ui.available_width().max(100.0);
                         if ui
                             .add(egui::Slider::new(&mut volume, 0..=500).show_value(false))
                             .changed()

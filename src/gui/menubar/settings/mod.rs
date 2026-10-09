@@ -219,31 +219,34 @@ impl Settings {
                     ui.colored_label(ui.visuals().error_fg_color, error);
                 }
                 if let Some(config) = &mut self.draft {
+                    egui::Panel::bottom("settings_actions")
+                        .frame(egui::Frame::NONE)
+                        .show(ui, |ui| {
+                            ui.with_layout(egui::Layout::right_to_left(egui::Align::TOP), |ui| {
+                                if ui.button("Cancel").clicked() {
+                                    cancel = true;
+                                }
+                                if ui.button("Apply").clicked() {
+                                    save = true;
+                                }
+                                let selection = ui.visuals().selection;
+                                let save_button = egui::Button::new(
+                                    egui::RichText::new("Save").color(selection.stroke.color),
+                                )
+                                .fill(selection.bg_fill);
+                                if ui.add(save_button).clicked() {
+                                    save = true;
+                                    close_after_save = true;
+                                }
+                            });
+                        });
                     egui::ScrollArea::vertical()
                         .id_salt("settings_content")
-                        .max_height((ui.available_height() - 145.0).max(100.0))
+                        .auto_shrink([false, false])
                         .show(ui, |ui| {
                             refresh_devices =
                                 self.selected_tab.show(ui, config, &self.audio_devices);
                         });
-                    ui.separator();
-                    ui.with_layout(egui::Layout::right_to_left(egui::Align::TOP), |ui| {
-                        if ui.button("Cancel").clicked() {
-                            cancel = true;
-                        }
-                        if ui.button("Apply").clicked() {
-                            save = true;
-                        }
-                        let selection = ui.visuals().selection;
-                        let save_button = egui::Button::new(
-                            egui::RichText::new("Save").color(selection.stroke.color),
-                        )
-                        .fill(selection.bg_fill);
-                        if ui.add(save_button).clicked() {
-                            save = true;
-                            close_after_save = true;
-                        }
-                    });
                 } else if ui.button("Cancel").clicked() {
                     cancel = true;
                 }
