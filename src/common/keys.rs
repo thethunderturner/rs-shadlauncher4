@@ -1,7 +1,7 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize)]
-struct Keys {
+#[derive(Debug, Default, Deserialize, Serialize)]
+pub(crate) struct Keys {
     #[serde(rename = "DebugRifKeyset")]
     debug_rif_keyset: Keyset,
 
@@ -15,7 +15,7 @@ struct Keys {
     trophy_key_set: TrophyKeySet,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 struct Keyset {
     coefficient: String,
     exponent1: String,
@@ -27,7 +27,7 @@ struct Keyset {
     public_exponent: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 struct TrophyKeySet {
     release_trophy_key: String,
 }

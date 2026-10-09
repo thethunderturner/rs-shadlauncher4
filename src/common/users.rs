@@ -1,12 +1,12 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize)]
-struct Users {
+#[derive(Debug, Default, Deserialize, Serialize)]
+pub(crate) struct Users {
     commit_hash: String,
     user: Vec<User>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 struct User {
     np_age: u8,
     np_country: String,

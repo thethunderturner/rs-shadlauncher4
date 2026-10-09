@@ -1,17 +1,28 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 
-#[derive(Debug, Deserialize)]
-struct Config {
+#[derive(Debug, Default, Deserialize, Serialize)]
+#[serde(default)]
+pub struct Config {
+    #[serde(rename = "Audio", alias = "audio")]
     audio: Audio,
+    #[serde(rename = "Debug", alias = "debug")]
     debug: Debug,
+    #[serde(rename = "GPU", alias = "gpu")]
     gpu: Gpu,
+    #[serde(rename = "General", alias = "general")]
     general: General,
+    #[serde(rename = "Input", alias = "input")]
     input: Input,
+    #[serde(rename = "Log", alias = "log")]
     log: Log,
+    #[serde(rename = "Network", alias = "network")]
     network: Network,
+    #[serde(rename = "Vulkan", alias = "vulkan")]
     vulkan: Vulkan,
 }
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(default)]
 struct Audio {
     audio_backend: u32,
     openal_hrtf: u32,
@@ -24,14 +35,42 @@ struct Audio {
     sdl_pad_spk_output_device: String,
 }
 
-#[derive(Debug, Deserialize)]
+impl Default for Audio {
+    fn default() -> Self {
+        Self {
+            audio_backend: 0,
+            openal_hrtf: 0,
+            openal_main_output_device: String::from("Default Device"),
+            openal_mic_device: String::from("Default Device"),
+            openal_output_mode: 0,
+            openal_pad_spk_output_device: String::from("Default Device"),
+            sdl_main_output_device: String::from("Default Device"),
+            sdl_mic_device: String::from("Default Device"),
+            sdl_pad_spk_output_device: String::from("Default Device"),
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(default)]
 struct Debug {
     config_version: String,
     debug_dump: bool,
     shader_collect: bool,
 }
 
-#[derive(Debug, Deserialize)]
+impl Default for Debug {
+    fn default() -> Self {
+        Self {
+            config_version: String::new(),
+            debug_dump: false,
+            shader_collect: false,
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(default)]
 struct Gpu {
     copy_gpu_buffers: bool,
     direct_memory_access_enabled: bool,
@@ -56,15 +95,45 @@ struct Gpu {
     window_width: u32,
 }
 
-#[derive(Debug, Deserialize)]
-struct InstallDir {
-    enabled: bool,
-    path: String,
+impl Default for Gpu {
+    fn default() -> Self {
+        Self {
+            copy_gpu_buffers: false,
+            direct_memory_access_enabled: false,
+            dump_shaders: false,
+            fsr_enabled: false,
+            full_screen: false,
+            full_screen_mode: String::from("Windowed"),
+            hdr_allowed: false,
+            inline_fetch_shader: false,
+            internal_screen_height: 720,
+            internal_screen_width: 1280,
+            null_gpu: false,
+            patch_shaders: false,
+            present_mode: String::from("Mailbox"),
+            rcas_attenuation: 250,
+            rcas_enabled: true,
+            readback_linear_images_enabled: false,
+            readbacks_mode: 0,
+            userfaultfd: false,
+            vblank_frequency: 60,
+            window_height: 720,
+            window_width: 1280,
+        }
+    }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
+#[serde(default)]
+struct InstallDir {
+    enabled: bool,
+    path: PathBuf,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(default)]
 struct General {
-    addon_install_dir: String,
+    addon_install_dir: PathBuf,
     big_picture_folder_depth: u32,
     big_picture_scale: u32,
     connected_to_network: bool,
@@ -93,7 +162,42 @@ struct General {
     volume_slider: u32,
 }
 
-#[derive(Debug, Deserialize)]
+impl Default for General {
+    fn default() -> Self {
+        Self {
+            addon_install_dir: PathBuf::new(),
+            big_picture_folder_depth: 2,
+            big_picture_scale: 1000,
+            connected_to_network: false,
+            console_language: 1,
+            dev_kit_mode: false,
+            discord_rpc_enabled: false,
+            enable_upnp: true,
+            extra_dmem_in_mbytes: 0,
+            extra_fmem_in_mbytes: 0,
+            font_dir: String::new(),
+            home_dir: String::new(),
+            install_dirs: Vec::new(),
+            neo_mode: false,
+            psn_signed_in: false,
+            redzone_patches: false,
+            shad_net_enabled: false,
+            shadnet_server: String::from("srv.shadps4.net:31313"),
+            shadnet_webapi_server: String::from("http://srv.shadps4.net:31315"),
+            show_fps_counter: false,
+            show_splash: false,
+            signaling_info: String::new(),
+            sys_modules_dir: String::new(),
+            trophy_notification_duration: 6.0,
+            trophy_notification_side: String::from("right"),
+            trophy_popup_disabled: false,
+            volume_slider: 100,
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(default)]
 struct Input {
     background_controller_input: bool,
     camera_id: i32,
@@ -112,7 +216,30 @@ struct Input {
     use_unified_input_config: bool,
 }
 
-#[derive(Debug, Deserialize)]
+impl Default for Input {
+    fn default() -> Self {
+        Self {
+            background_controller_input: false,
+            camera_id: -1,
+            cursor_hide_timeout: 5,
+            cursor_state: 1,
+            default_controller_id: String::new(),
+            ime_accessibility_enabled: false,
+            ime_url_mail_short_panel: false,
+            is_circle_enter: false,
+            motion_controls_enabled: true,
+            special_pad_class: 1,
+            usb_device_backend: 0,
+            use_keyboard_as_keyboard: false,
+            use_mice_as_mice: false,
+            use_special_pad: false,
+            use_unified_input_config: true,
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(default)]
 struct Log {
     append: bool,
     enable: bool,
@@ -125,7 +252,24 @@ struct Log {
     sync: bool,
 }
 
-#[derive(Debug, Deserialize)]
+impl Default for Log {
+    fn default() -> Self {
+        Self {
+            append: false,
+            enable: true,
+            filter: String::new(),
+            flush_level: String::new(),
+            max_skip_duration: 5000,
+            separate: true,
+            size_limit: 104857600,
+            skip_duplicate: true,
+            sync: true,
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(default)]
 struct Network {
     connected_to_network: bool,
     disable_https: bool,
@@ -137,7 +281,23 @@ struct Network {
     signaling_info: String,
 }
 
-#[derive(Debug, Deserialize)]
+impl Default for Network {
+    fn default() -> Self {
+        Self {
+            connected_to_network: false,
+            disable_https: false,
+            enable_upnp: true,
+            p2p_port: 3658,
+            shad_net_enabled: false,
+            shadnet_server: String::from("srv.shadps4.net:31313"),
+            shadnet_webapi_server: String::from("http://srv.shadps4.net:31315"),
+            signaling_info: String::new(),
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(default)]
 struct Vulkan {
     gpu_id: i32,
     pipeline_cache_archived: bool,
@@ -150,4 +310,22 @@ struct Vulkan {
     vkvalidation_enabled: bool,
     vkvalidation_gpu_enabled: bool,
     vkvalidation_sync_enabled: bool,
+}
+
+impl Default for Vulkan {
+    fn default() -> Self {
+        Self {
+            gpu_id: -1,
+            pipeline_cache_archived: false,
+            pipeline_cache_enabled: false,
+            renderdoc_enabled: false,
+            vkcrash_diagnostic_enabled: false,
+            vkguest_markers: false,
+            vkhost_markers: false,
+            vkvalidation_core_enabled: true,
+            vkvalidation_enabled: false,
+            vkvalidation_gpu_enabled: false,
+            vkvalidation_sync_enabled: false,
+        }
+    }
 }

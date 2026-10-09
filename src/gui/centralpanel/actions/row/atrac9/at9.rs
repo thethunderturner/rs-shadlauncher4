@@ -2,6 +2,7 @@
 use crate::gui::centralpanel::actions::row::atrac9::libatrac9::Atrac9Decoder;
 use std::fs::File;
 use std::io::{self, BufReader, Read, Seek, SeekFrom};
+use std::num::{NonZeroU16, NonZeroU32};
 use std::path::Path;
 
 pub(in crate::gui::centralpanel::actions::row) struct At9 {
@@ -10,8 +11,8 @@ pub(in crate::gui::centralpanel::actions::row) struct At9 {
     encoded: Vec<u8>,
     pcm: Vec<i16>,
     remaining: u64,
-    pub channels: u16,
-    pub sample_rate: u32,
+    pub channels: NonZeroU16,
+    pub sample_rate: NonZeroU32,
 }
 
 fn invalid(message: impl ToString) -> io::Error {
@@ -88,8 +89,10 @@ impl At9 {
             reader,
             encoded: vec![0; info.superframe_size],
             pcm: vec![0; info.channels * info.frame_samples * info.frames_in_superframe],
-            channels: info.channels as u16,
-            sample_rate: info.sampling_rate as u32,
+            channels: NonZeroU16::new(info.channels as u16)
+                .ok_or_else(|| invalid("ATRAC9 channel count is zero"))?,
+            sample_rate: NonZeroU32::new(info.sampling_rate as u32)
+                .ok_or_else(|| invalid("ATRAC9 sample rate is zero"))?,
             decoder,
             remaining,
         })

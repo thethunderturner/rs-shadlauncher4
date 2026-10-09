@@ -1,6 +1,6 @@
 use crate::gui::centralpanel::actions::row::atrac9::at9::At9;
 use crate::scanning::Title;
-use rodio::{OutputStreamBuilder, Sink, buffer::SamplesBuffer};
+use rodio::{DeviceSinkBuilder, Player, buffer::SamplesBuffer};
 use std::path::PathBuf;
 use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender};
 use std::time::Duration;
@@ -39,7 +39,7 @@ impl Audio {
 // the channel and releases them; neither decoding nor device setup blocks egui.
 fn playback_worker(requests: Receiver<Option<Vec<PathBuf>>>) {
     let mut stream = None;
-    let mut sink: Option<Sink> = None;
+    let mut sink: Option<Player> = None;
     let mut audio: Option<At9> = None;
     loop {
         let request = if sink.is_some() {
@@ -72,7 +72,7 @@ fn playback_worker(requests: Receiver<Option<Vec<PathBuf>>>) {
                     }
                 };
                 if stream.is_none() {
-                    match OutputStreamBuilder::open_default_stream() {
+                    match DeviceSinkBuilder::open_default_sink() {
                         Ok(mut output) => {
                             output.log_on_drop(false);
                             stream = Some(output);
@@ -84,7 +84,7 @@ fn playback_worker(requests: Receiver<Option<Vec<PathBuf>>>) {
                     }
                 }
                 if let Some(output) = &stream {
-                    sink = Some(Sink::connect_new(output.mixer()));
+                    sink = Some(Player::connect_new(output.mixer()));
                     audio = Some(decoder);
                 }
             }

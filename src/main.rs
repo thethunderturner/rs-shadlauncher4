@@ -7,7 +7,7 @@ pub mod scanning;
 mod sfo;
 
 fn main() -> eframe::Result {
-    if let Err(error) = common::paths::initialize_user_directory() {
+    if let Err(error) = common::initialize_user_directory() {
         eprintln!("Failed to initialize user directory: {error}");
         std::process::exit(1);
     }
