@@ -1,8 +1,13 @@
+use crate::gui::menubar::settings::helpers::camera_devices::CameraDevices;
 use crate::gui::menubar::settings::helpers::controls::*;
 use eframe::egui;
 use serde_json::Value;
 
-pub(in crate::gui::menubar::settings) fn show(ui: &mut egui::Ui, config: &mut Value) {
+pub(in crate::gui::menubar::settings) fn show(
+    ui: &mut egui::Ui,
+    config: &mut Value,
+    camera_devices: &mut CameraDevices,
+) {
     two_columns(
         ui,
         config,
@@ -59,15 +64,50 @@ pub(in crate::gui::menubar::settings) fn show(ui: &mut egui::Ui, config: &mut Va
                         "Dimensions Toypad",
                     ],
                 );
-                int(
-                    ui,
-                    config,
-                    "Input",
-                    "camera_id",
-                    "Camera ID (-1: none)",
-                    -1..=64,
-                );
+                camera_picker(ui, config, camera_devices);
             });
         },
     );
+}
+
+fn camera_picker(ui: &mut egui::Ui, config: &mut Value, devices: &mut CameraDevices) {
+    devices.ensure_scan(ui.ctx());
+    let mut selected = config["Input"]["camera_id"].as_i64().unwrap_or(-1);
+    let selected_name = if selected == -1 {
+        "None".to_owned()
+    } else {
+        usize::try_from(selected)
+            .ok()
+            .and_then(|index| devices.names().get(index))
+            .cloned()
+            .unwrap_or_else(|| format!("Unavailable camera (ID {selected})"))
+    };
+    ui.horizontal(|ui| {
+        ui.label("Camera");
+        egui::ComboBox::from_id_salt("camera_device")
+            .selected_text(selected_name)
+            .show_ui(ui, |ui| {
+                ui.selectable_value(&mut selected, -1, "None");
+                for (index, name) in devices.names().iter().enumerate() {
+                    ui.selectable_value(&mut selected, index as i64, name);
+                }
+            });
+        if devices.is_scanning() {
+            ui.horizontal(|ui| {
+                ui.spinner();
+                ui.label("Finding cameras");
+            });
+        } else if let Some(error) = devices.error() {
+            ui.colored_label(ui.visuals().error_fg_color, error);
+        } else if devices.names().is_empty() {
+            ui.label("No cameras found.");
+        }
+        if ui
+            .add_enabled(!devices.is_scanning(), egui::Button::new("Refresh"))
+            .clicked()
+        {
+            devices.start_scan(ui.ctx());
+        }
+    });
+    config["Input"]["camera_id"] = Value::from(selected);
 }

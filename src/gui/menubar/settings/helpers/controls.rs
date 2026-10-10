@@ -89,27 +89,6 @@ pub fn uint(
     });
 }
 
-pub fn int(
-    ui: &mut egui::Ui,
-    config: &mut Value,
-    section: &str,
-    key: &str,
-    label: &str,
-    range: std::ops::RangeInclusive<i64>,
-) {
-    let value = field(config, section, key);
-    let mut current = value.as_i64().unwrap_or(0);
-    ui.horizontal(|ui| {
-        ui.label(label);
-        if ui
-            .add(egui::DragValue::new(&mut current).range(range))
-            .changed()
-        {
-            *value = Value::from(current);
-        }
-    });
-}
-
 pub fn decimal(
     ui: &mut egui::Ui,
     config: &mut Value,

@@ -4,6 +4,7 @@ mod windows;
 use crate::gui::menubar::settings::windows::general;
 use eframe::egui;
 use helpers::audio_devices::AudioDevices;
+use helpers::camera_devices::CameraDevices;
 use helpers::gpu_devices::GpuDevices;
 use serde_json::Value;
 use std::path::PathBuf;
@@ -72,13 +73,14 @@ impl SettingsTab {
         config: &mut Value,
         devices: &AudioDevices,
         gpu_devices: &mut GpuDevices,
+        camera_devices: &mut CameraDevices,
     ) -> bool {
         match self {
             Self::General => return general::show(ui, config, devices),
             Self::Frontend => frontend::show(ui, config),
             Self::Graphics => graphics::show(ui, config, gpu_devices),
             Self::User => user::show(ui, config),
-            Self::Input => input::show(ui, config),
+            Self::Input => input::show(ui, config, camera_devices),
             Self::Paths => paths::show(ui, config),
             Self::Log => log::show(ui, config),
             Self::Debug => debug::show(ui, config),
@@ -97,6 +99,7 @@ pub struct Settings {
     error: Option<String>,
     audio_devices: AudioDevices,
     gpu_devices: GpuDevices,
+    camera_devices: CameraDevices,
 }
 
 impl Settings {
@@ -203,6 +206,7 @@ impl Settings {
     }
 
     pub fn show_window(&mut self, ctx: &egui::Context) -> bool {
+        self.camera_devices.poll();
         if !self.open {
             return false;
         }
@@ -259,6 +263,7 @@ impl Settings {
                                 config,
                                 &self.audio_devices,
                                 &mut self.gpu_devices,
+                                &mut self.camera_devices,
                             );
                         });
                 } else if ui.button("Cancel").clicked() {
