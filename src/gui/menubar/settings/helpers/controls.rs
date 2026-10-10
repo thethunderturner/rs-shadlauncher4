@@ -161,11 +161,10 @@ pub fn index(
     *value = Value::from(current);
 }
 
-pub fn path(ui: &mut egui::Ui, config: &mut Value, section: &str, key: &str, label: &str) {
+pub fn path(ui: &mut egui::Ui, config: &mut Value, section: &str, key: &str) {
     let value = field(config, section, key);
     let mut current = value.as_str().unwrap_or("").to_owned();
     ui.horizontal(|ui| {
-        ui.label(label);
         ui.text_edit_singleline(&mut current);
         if ui.button("Browse").clicked() {
             if let Some(folder) = rfd::FileDialog::new().pick_folder() {

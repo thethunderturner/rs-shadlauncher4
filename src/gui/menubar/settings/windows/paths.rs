@@ -9,19 +9,18 @@ pub(in crate::gui::menubar::settings) fn show(ui: &mut egui::Ui, config: &mut Va
         |ui, config| section(ui, "Game Folders", |ui| game_folders(ui, config)),
         |ui, config| {
             section(ui, "DLC Folder", |ui| {
-                path(ui, config, "General", "addon_install_dir", "DLC folder")
+                path(ui, config, "General", "addon_install_dir")
             });
             section(ui, "PS4 Sysmodules", |ui| {
                 path(
                     ui,
                     config,
                     "General",
-                    "sys_modules_dir",
-                    "Sysmodules folder",
+                    "sys_modules_dir"
                 )
             });
             section(ui, "Home Folder", |ui| {
-                path(ui, config, "General", "home_dir", "Home folder")
+                path(ui, config, "General", "home_dir")
             });
         },
     );
