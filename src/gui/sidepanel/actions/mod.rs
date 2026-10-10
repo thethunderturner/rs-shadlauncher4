@@ -1,4 +1,5 @@
 pub mod library;
+pub mod refresh;
 pub mod search;
 
 pub struct SidepanelActions<'a> {

@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use std::{fs, io};
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(default)]
@@ -21,6 +22,24 @@ pub struct Config {
     #[serde(rename = "Vulkan", alias = "vulkan")]
     vulkan: Vulkan,
 }
+
+impl Config {
+    pub fn game_paths() -> io::Result<Vec<PathBuf>> {
+        let path = super::user_directory()?.join("config.json");
+        let config: Self = serde_json::from_slice(&fs::read(path)?).map_err(io::Error::other)?;
+        Ok(config.enabled_game_paths())
+    }
+
+    fn enabled_game_paths(self) -> Vec<PathBuf> {
+        self.general
+            .install_dirs
+            .into_iter()
+            .filter(|dir| dir.enabled && !dir.path.as_os_str().is_empty())
+            .map(|dir| dir.path)
+            .collect()
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(default)]
 struct Audio {

@@ -18,27 +18,33 @@ pub struct LauncherApp {
     pub centralpanel: Centralpanel,
     toolbar: Toolbar,
     scan_rx: Option<Receiver<Result<(Vec<scanning::Title>, Duration), ()>>>,
+    scan_pending: bool,
 }
 
 impl LauncherApp {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         egui_extras::install_image_loaders(&cc.egui_ctx);
-        Self {
+        let mut app = Self {
             menubar: Menubar::default(),
             sidepanel: Sidepanel::default(),
             centralpanel: Centralpanel::default(),
             toolbar: Toolbar::default(),
             scan_rx: None,
-        }
+            scan_pending: false,
+        };
+        app.sidepanel.load_paths();
+        app.start_scan(&cc.egui_ctx);
+        app
     }
 
     fn start_scan(&mut self, ctx: &egui::Context) {
         if self.scan_rx.is_some() {
             return;
         }
-        let Some(games_path) = self.toolbar.games_path().map(|path| path.to_path_buf()) else {
+        if !self.sidepanel.can_refresh() {
             return;
-        };
+        }
+        let games_paths = self.sidepanel.games_paths().to_vec();
         let (tx, scan_rx) = mpsc::channel();
         let ctx = ctx.clone();
         self.centralpanel.start_scan();
@@ -46,7 +52,10 @@ impl LauncherApp {
         std::thread::spawn(move || {
             let titles = std::panic::catch_unwind(|| {
                 let started = Instant::now();
-                let titles = scanning::scan(&games_path);
+                let titles = games_paths
+                    .iter()
+                    .flat_map(|path| scanning::scan(path))
+                    .collect();
                 (titles, started.elapsed())
             })
             .map_err(|_| ());
@@ -72,10 +81,15 @@ impl eframe::App for LauncherApp {
             }
         }
 
+        if self.scan_pending && self.scan_rx.is_none() {
+            self.scan_pending = false;
+            self.start_scan(ui.ctx());
+        }
+
         self.menubar.show(ui);
         let actions = self
             .sidepanel
-            .show(ui, self.scan_rx.is_some(), self.toolbar.can_refresh());
+            .show(ui, self.scan_rx.is_some(), self.sidepanel.can_refresh());
         if let Some(search) = actions.search {
             self.centralpanel.set_search(search);
         }
@@ -85,11 +99,17 @@ impl eframe::App for LauncherApp {
         if actions.refresh_list {
             self.start_scan(ui.ctx());
         }
-        if self.toolbar.show(ui, self.scan_rx.is_some()) {
-            self.start_scan(ui.ctx());
-        }
+        self.toolbar.show(ui);
         self.centralpanel.show(ui);
 
-        self.menubar.show_windows(ui.ctx());
+        if self.menubar.show_windows(ui.ctx()) && self.sidepanel.load_paths() {
+            if self.sidepanel.can_refresh() {
+                self.scan_pending = true;
+            } else {
+                self.scan_rx = None;
+                self.scan_pending = false;
+                self.centralpanel.clear_titles();
+            }
+        }
     }
 }

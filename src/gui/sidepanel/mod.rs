@@ -5,11 +5,14 @@ use crate::gui::sidepanel::actions::library::{Library, LibraryFilter};
 use crate::gui::sidepanel::actions::search::Search;
 use eframe::egui;
 use eframe::egui::Button;
+use std::path::PathBuf;
 
 #[derive(Default)]
 pub struct Sidepanel {
     search: Search,
     library: Library,
+    games_paths: Vec<PathBuf>,
+    error: Option<String>,
 }
 
 impl Sidepanel {
@@ -119,7 +122,7 @@ impl Sidepanel {
                     .on_disabled_hover_text(if scanning {
                         "Wait for the current scan to finish."
                     } else {
-                        "Choose a games folder with Browse first."
+                        "Add a game folder in Settings -> Paths."
                     })
                     .clicked();
                 let _ = ui.add(

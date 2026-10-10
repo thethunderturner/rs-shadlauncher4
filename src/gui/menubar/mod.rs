@@ -41,7 +41,7 @@ impl Default for Menubar {
 }
 
 impl Menubar {
-    pub(super) fn show(&mut self, ui: &mut egui::Ui) {
+    pub fn show(&mut self, ui: &mut egui::Ui) {
         egui::Panel::top("menu_bar").show(ui, |ui| {
             egui::MenuBar::new().ui(ui, |ui| {
                 self.file.show(ui);
@@ -55,9 +55,10 @@ impl Menubar {
         });
     }
 
-    pub(super) fn show_windows(&mut self, ctx: &egui::Context) {
-        self.settings.show_window(ctx);
+    pub fn show_windows(&mut self, ctx: &egui::Context) -> bool {
+        let settings_saved = self.settings.show_window(ctx);
         self.controllers.show_window(ctx);
         self.help.show_window(ctx);
+        settings_saved
     }
 }

@@ -194,9 +194,9 @@ impl Settings {
         }
     }
 
-    pub(super) fn show_window(&mut self, ctx: &egui::Context) {
+    pub fn show_window(&mut self, ctx: &egui::Context) -> bool {
         if !self.open {
-            return;
+            return false;
         }
         let mut open = self.open;
         let mut save = false;
@@ -258,7 +258,8 @@ impl Settings {
                 ctx.request_repaint();
             }
         }
-        if save && self.save() && close_after_save {
+        let saved = save && self.save();
+        if saved && close_after_save {
             open = false;
         }
         if cancel {
@@ -269,6 +270,7 @@ impl Settings {
             self.draft = None;
             self.error = None;
         }
+        saved
     }
 }
 

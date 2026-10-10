@@ -42,6 +42,15 @@ impl Default for Centralpanel {
 }
 
 impl Centralpanel {
+    pub fn clear_titles(&mut self) {
+        self.titles.clear();
+        self.filtered_titles.clear();
+        self.selected_title = None;
+        self.loading = false;
+        self.scan.scan_duration = None;
+        self.scan.scan_failed = false;
+    }
+
     pub fn set_titles(&mut self, titles: Vec<Title>, duration: Duration) {
         self.titles = titles;
         if !self
@@ -91,7 +100,7 @@ impl Centralpanel {
                 );
             } else if self.titles.is_empty() {
                 if self.scan.scan_duration.is_none() {
-                    ui.label("Choose a games folder with Browse above.");
+                    ui.label("Add a game folder in Settings → Paths.");
                 } else {
                     ui.label("No games found in the selected folder.");
                 }
