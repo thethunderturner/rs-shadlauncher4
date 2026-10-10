@@ -188,7 +188,7 @@ pub fn path(ui: &mut egui::Ui, config: &mut Value, section: &str, key: &str, lab
     ui.horizontal(|ui| {
         ui.label(label);
         ui.text_edit_singleline(&mut current);
-        if ui.button("Browse…").clicked() {
+        if ui.button("Browse").clicked() {
             if let Some(folder) = rfd::FileDialog::new().pick_folder() {
                 current = folder.to_string_lossy().into_owned();
             }

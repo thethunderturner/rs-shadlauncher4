@@ -45,7 +45,7 @@ fn game_folders(ui: &mut egui::Ui, config: &mut Value) {
                 if ui.text_edit_singleline(&mut path).changed() {
                     dir["path"] = json!(path);
                 }
-                if ui.button("Browse…").clicked() {
+                if ui.button("Browse").clicked() {
                     if let Some(path) = rfd::FileDialog::new().pick_folder() {
                         dir["path"] = json!(path.to_string_lossy());
                     }

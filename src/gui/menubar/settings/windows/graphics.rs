@@ -65,17 +65,24 @@ pub(in crate::gui::menubar::settings) fn show(
                 check(ui, config, "GPU", "hdr_allowed", "Enable HDR");
                 check(ui, config, "GPU", "fsr_enabled", "Enable FSR");
                 check(ui, config, "GPU", "rcas_enabled", "Enable RCAS sharpening");
-                uint(
-                    ui,
-                    config,
-                    "GPU",
-                    "rcas_attenuation",
-                    "RCAS attenuation",
-                    0..=1000,
-                );
+                rcas_attenuation(ui, config);
             });
         },
     );
+}
+
+fn rcas_attenuation(ui: &mut egui::Ui, config: &mut Value) {
+    let mut value = config["GPU"]["rcas_attenuation"].as_u64().unwrap_or(250);
+    ui.label("RCAS attenuation");
+    ui.horizontal(|ui| {
+        if ui
+            .add(egui::Slider::new(&mut value, 0..=3000).show_value(false))
+            .changed()
+        {
+            config["GPU"]["rcas_attenuation"] = Value::from(value);
+        }
+        ui.label(format!("{:.3}", value as f64 / 1000.0));
+    });
 }
 
 fn graphics_device(ui: &mut egui::Ui, config: &mut Value, devices: &mut GpuDevices) {
@@ -90,7 +97,6 @@ fn graphics_device(ui: &mut egui::Ui, config: &mut Value, devices: &mut GpuDevic
             .unwrap_or_else(|| format!("Unavailable GPU (ID {selected})"))
     };
     ui.horizontal(|ui| {
-        ui.label("Device");
         egui::ComboBox::from_id_salt("graphics_device")
             .selected_text(selected_name)
             .show_ui(ui, |ui| {
@@ -99,22 +105,16 @@ fn graphics_device(ui: &mut egui::Ui, config: &mut Value, devices: &mut GpuDevic
                     ui.selectable_value(&mut selected, index as i64, name);
                 }
             });
+        if devices.is_scanning() {
+            ui.horizontal(|ui| {
+                ui.spinner();
+                ui.label("Searching");
+            });
+        } else if let Some(error) = devices.error() {
+            ui.colored_label(ui.visuals().error_fg_color, error);
+        } else if devices.names().is_empty() {
+            ui.label("No graphics devices found.");
+        }
     });
-    if devices.is_scanning() {
-        ui.horizontal(|ui| {
-            ui.spinner();
-            ui.label("Finding graphics devices…");
-        });
-    } else if let Some(error) = devices.error() {
-        ui.colored_label(ui.visuals().error_fg_color, error);
-    } else if devices.names().is_empty() {
-        ui.label("No graphics devices found.");
-    }
-    if ui
-        .add_enabled(!devices.is_scanning(), egui::Button::new("Refresh devices"))
-        .clicked()
-    {
-        devices.start_scan(ui.ctx());
-    }
     config["Vulkan"]["gpu_id"] = Value::from(selected);
 }
