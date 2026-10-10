@@ -225,7 +225,18 @@ impl Settings {
             .show(ctx, |ui| {
                 ui.horizontal_wrapped(|ui| {
                     for tab in SettingsTab::ALL {
-                        ui.selectable_value(&mut self.selected_tab, tab, tab.label());
+                        let selected = self.selected_tab == tab;
+                        if ui
+                            .add(
+                                egui::Button::image_and_text(tab.icon(), tab.label())
+                                    .image_tint_follows_text_color(true)
+                                    .selected(selected)
+                                    .frame_when_inactive(selected),
+                            )
+                            .clicked()
+                        {
+                            self.selected_tab = tab;
+                        }
                     }
                 });
                 ui.separator();
