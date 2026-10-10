@@ -4,6 +4,7 @@ mod windows;
 use crate::gui::menubar::settings::windows::general;
 use eframe::egui;
 use helpers::audio_devices::AudioDevices;
+use helpers::gpu_devices::GpuDevices;
 use serde_json::Value;
 use std::path::PathBuf;
 use windows::{debug, experimental, frontend, graphics, input, log, paths, user};
@@ -65,11 +66,17 @@ impl SettingsTab {
         }
     }
 
-    fn show(self, ui: &mut egui::Ui, config: &mut Value, devices: &AudioDevices) -> bool {
+    fn show(
+        self,
+        ui: &mut egui::Ui,
+        config: &mut Value,
+        devices: &AudioDevices,
+        gpu_devices: &mut GpuDevices,
+    ) -> bool {
         match self {
             Self::General => return general::show(ui, config, devices),
             Self::Frontend => frontend::show(ui, config),
-            Self::Graphics => graphics::show(ui, config),
+            Self::Graphics => graphics::show(ui, config, gpu_devices),
             Self::User => user::show(ui, config),
             Self::Input => input::show(ui, config),
             Self::Paths => paths::show(ui, config),
@@ -89,6 +96,7 @@ pub struct Settings {
     config_path: Option<PathBuf>,
     error: Option<String>,
     audio_devices: AudioDevices,
+    gpu_devices: GpuDevices,
 }
 
 impl Settings {
@@ -198,6 +206,8 @@ impl Settings {
         if !self.open {
             return false;
         }
+        self.gpu_devices.ensure_scan(ctx);
+        self.gpu_devices.poll();
         let mut open = self.open;
         let mut save = false;
         let mut close_after_save = false;
@@ -244,8 +254,12 @@ impl Settings {
                         .id_salt("settings_content")
                         .auto_shrink([false, false])
                         .show(ui, |ui| {
-                            refresh_devices =
-                                self.selected_tab.show(ui, config, &self.audio_devices);
+                            refresh_devices = self.selected_tab.show(
+                                ui,
+                                config,
+                                &self.audio_devices,
+                                &mut self.gpu_devices,
+                            );
                         });
                 } else if ui.button("Cancel").clicked() {
                     cancel = true;

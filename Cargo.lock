@@ -3171,10 +3171,12 @@ name = "rs-shadlauncher4"
 version = "0.1.0"
 dependencies = [
  "alto",
+ "ash",
  "cc",
  "eframe",
  "egui_extras",
  "image",
+ "objc2-metal 0.3.2",
  "rfd",
  "rodio",
  "sdl3",

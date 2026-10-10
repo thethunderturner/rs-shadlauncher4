@@ -5,6 +5,7 @@ edition = "2024"
 license = "GPL-2"
 
 [dependencies]
+ash = "0.38.0"
 rodio = { version = "0.22.2", default-features = false, features = ["playback"] }
 eframe = { version = "0.36.2", features = ["glow"] }
 egui_extras = { version = "0.36.2", default-features = false, features = ["svg", "image", "file"] }
@@ -17,6 +18,9 @@ alto = "3.0.4"
 
 [build-dependencies]
 cc = "1.6.0"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2-metal = { version = "0.3.2", default-features = false, features = ["MTLDevice"] }
 
 [package.metadata.appimage]
 icon = "src/assets/icon.png"
