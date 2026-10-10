@@ -236,7 +236,7 @@ impl Settings {
                     egui::Panel::bottom("settings_actions")
                         .frame(egui::Frame::NONE)
                         .show(ui, |ui| {
-                            ui.with_layout(egui::Layout::right_to_left(egui::Align::TOP), |ui| {
+                            ui.with_layout(egui::Layout::right_to_left(egui::Align::Max), |ui| {
                                 if ui.button("Cancel").clicked() {
                                     cancel = true;
                                 }
