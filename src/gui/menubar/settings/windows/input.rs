@@ -7,6 +7,22 @@ pub(in crate::gui::menubar::settings) fn show(ui: &mut egui::Ui, config: &mut Va
         ui,
         config,
         |ui, config| {
+            section(ui, "Controller", |ui| {
+                check(
+                    ui,
+                    config,
+                    "Input",
+                    "motion_controls_enabled",
+                    "Enable motion controls",
+                );
+                check(
+                    ui,
+                    config,
+                    "Input",
+                    "background_controller_input",
+                    "Enable background input",
+                );
+            });
             section(ui, "Cursor", |ui| {
                 index(
                     ui,
@@ -26,29 +42,6 @@ pub(in crate::gui::menubar::settings) fn show(ui: &mut egui::Ui, config: &mut Va
                         0..=3600,
                     );
                 }
-            });
-            section(ui, "Controller", |ui| {
-                check(
-                    ui,
-                    config,
-                    "Input",
-                    "background_controller_input",
-                    "Enable background input",
-                );
-                check(
-                    ui,
-                    config,
-                    "Input",
-                    "motion_controls_enabled",
-                    "Enable motion controls",
-                );
-                text(
-                    ui,
-                    config,
-                    "Input",
-                    "default_controller_id",
-                    "Default controller ID",
-                );
             });
         },
         |ui, config| {
@@ -73,23 +66,6 @@ pub(in crate::gui::menubar::settings) fn show(ui: &mut egui::Ui, config: &mut Va
                     "camera_id",
                     "Camera ID (-1: none)",
                     -1..=64,
-                );
-            });
-            section(ui, "Keyboard and Mouse", |ui| {
-                check(
-                    ui,
-                    config,
-                    "Input",
-                    "use_keyboard_as_keyboard",
-                    "Use keyboard as keyboard",
-                );
-                check(ui, config, "Input", "use_mice_as_mice", "Use mice as mice");
-                check(
-                    ui,
-                    config,
-                    "Input",
-                    "use_unified_input_config",
-                    "Use unified input configuration",
                 );
             });
         },
