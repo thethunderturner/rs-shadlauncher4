@@ -64,26 +64,6 @@ pub(in crate::gui::menubar::settings) fn show(ui: &mut egui::Ui, config: &mut Va
                 check(ui, config, "General", "neo_mode", "PS4 Neo mode");
                 check(ui, config, "General", "dev_kit_mode", "Devkit mode");
             });
-            section(ui, "Network", |ui| {
-                check(
-                    ui,
-                    config,
-                    "Network",
-                    "connected_to_network",
-                    "Network connected",
-                );
-                check(ui, config, "Network", "enable_upnp", "Enable UPnP");
-                check(ui, config, "Network", "shad_net_enabled", "Enable shadNet");
-                text(ui, config, "Network", "shadnet_server", "shadNet server");
-                text(
-                    ui,
-                    config,
-                    "Network",
-                    "shadnet_webapi_server",
-                    "Web API server",
-                );
-                text(ui, config, "Network", "signaling_info", "Signaling info");
-            });
         },
     );
 }

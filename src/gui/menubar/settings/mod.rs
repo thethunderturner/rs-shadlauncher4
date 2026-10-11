@@ -1,7 +1,7 @@
 pub mod helpers;
 mod windows;
 
-use crate::gui::menubar::settings::windows::general;
+use crate::gui::menubar::settings::windows::{general, network};
 use eframe::egui;
 use helpers::audio_devices::AudioDevices;
 use helpers::camera_devices::CameraDevices;
@@ -18,6 +18,7 @@ enum SettingsTab {
     Graphics,
     User,
     Input,
+    Network,
     Paths,
     Log,
     Debug,
@@ -25,12 +26,13 @@ enum SettingsTab {
 }
 
 impl SettingsTab {
-    const ALL: [Self; 9] = [
+    const ALL: [Self; 10] = [
         Self::General,
         Self::Frontend,
         Self::Graphics,
         Self::User,
         Self::Input,
+        Self::Network,
         Self::Paths,
         Self::Log,
         Self::Debug,
@@ -44,6 +46,7 @@ impl SettingsTab {
             Self::Graphics => "Graphics",
             Self::User => "User",
             Self::Input => "Input",
+            Self::Network => "Network",
             Self::Paths => "Paths",
             Self::Log => "Log",
             Self::Debug => "Debug",
@@ -58,6 +61,7 @@ impl SettingsTab {
             Self::Graphics => egui::include_image!("../../../assets/menubar/settings/graphics.svg"),
             Self::User => egui::include_image!("../../../assets/menubar/settings/general.svg"),
             Self::Input => egui::include_image!("../../../assets/menubar/settings/input.svg"),
+            Self::Network => egui::include_image!("../../../assets/menubar/settings/network.svg"),
             Self::Paths => egui::include_image!("../../../assets/menubar/settings/paths.svg"),
             Self::Log => egui::include_image!("../../../assets/menubar/settings/log.svg"),
             Self::Debug => egui::include_image!("../../../assets/menubar/settings/debug.svg"),
@@ -81,6 +85,7 @@ impl SettingsTab {
             Self::Graphics => graphics::show(ui, config, gpu_devices),
             Self::User => user::show(ui, config),
             Self::Input => input::show(ui, config, camera_devices),
+            Self::Network => network::show(ui, config),
             Self::Paths => paths::show(ui, config),
             Self::Log => log::show(ui, config),
             Self::Debug => debug::show(ui, config),

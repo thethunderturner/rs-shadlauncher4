@@ -60,7 +60,7 @@ pub fn check(ui: &mut egui::Ui, config: &mut Value, section: &str, key: &str, la
 pub fn text(ui: &mut egui::Ui, config: &mut Value, section: &str, key: &str, label: &str) {
     let value = field(config, section, key);
     let mut current = value.as_str().unwrap_or("").to_owned();
-    ui.horizontal(|ui| {
+    ui.vertical(|ui| {
         ui.label(label);
         if ui.text_edit_singleline(&mut current).changed() {
             *value = Value::String(current);
@@ -148,7 +148,7 @@ pub fn index(
 ) {
     let value = field(config, section, key);
     let mut current = value.as_u64().unwrap_or(0) as usize;
-    ui.horizontal(|ui| {
+    ui.vertical(|ui| {
         ui.label(label);
         egui::ComboBox::from_id_salt((section, key))
             .selected_text(options.get(current).copied().unwrap_or("Unknown"))
@@ -164,7 +164,7 @@ pub fn index(
 pub fn path(ui: &mut egui::Ui, config: &mut Value, section: &str, key: &str) {
     let value = field(config, section, key);
     let mut current = value.as_str().unwrap_or("").to_owned();
-    ui.horizontal(|ui| {
+    ui.vertical(|ui| {
         ui.text_edit_singleline(&mut current);
         if ui.button("Browse").clicked() {
             if let Some(folder) = rfd::FileDialog::new().pick_folder() {
