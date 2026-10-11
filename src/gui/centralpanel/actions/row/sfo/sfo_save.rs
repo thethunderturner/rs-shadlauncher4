@@ -37,20 +37,17 @@ impl SfoSave {
         }
     }
 
-    pub(super) fn show(
-        &mut self,
-        ui: &mut egui::Ui,
-        game_path: &Path,
-        table: &SfoDataTable,
-        editing: bool,
-    ) {
+    pub(super) fn show(&mut self, ui: &mut egui::Ui, game_path: &Path, table: &SfoDataTable, editing: bool) {
         let original = self.original.get_or_insert_with(|| table.clone());
         let changed = original != table;
         let path = game_path.join("sce_sys/param.sfo");
         ui.horizontal(|ui| {
-            if ui.add_enabled(changed && !editing && !self.is_saving(), egui::Button::new("Save to file"))
+            if ui
+                .add_enabled(changed && !editing && !self.is_saving(), egui::Button::new("Save to file"))
                 .on_hover_text(path.display().to_string())
-                .on_disabled_hover_text("Apply your edit before saving. Save becomes available when values have changed.")
+                .on_disabled_hover_text(
+                    "Apply your edit before saving. Save becomes available when values have changed.",
+                )
                 .clicked()
             {
                 let table = table.clone();
@@ -59,7 +56,9 @@ impl SfoSave {
                 self.receiver = Some(receiver);
                 self.result = None;
                 std::thread::spawn(move || {
-                    let result = write_sfo(&path, &table).map(|()| table).map_err(|error| error.to_string());
+                    let result = write_sfo(&path, &table)
+                        .map(|()| table)
+                        .map_err(|error| error.to_string());
                     let _ = sender.send(result);
                     ctx.request_repaint();
                 });
@@ -76,10 +75,7 @@ impl SfoSave {
             }
         });
         if let Some(Err(error)) = &self.result {
-            ui.colored_label(
-                ui.visuals().error_fg_color,
-                format!("Could not save SFO: {error}"),
-            );
+            ui.colored_label(ui.visuals().error_fg_color, format!("Could not save SFO: {error}"));
         }
     }
 }

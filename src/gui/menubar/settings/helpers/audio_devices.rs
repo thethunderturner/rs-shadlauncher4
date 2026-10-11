@@ -8,11 +8,7 @@ pub(in crate::gui::menubar::settings) struct AudioDevices {
 
 impl AudioDevices {
     pub fn scan(backend: u64) -> Self {
-        let result = if backend == 1 {
-            scan_openal()
-        } else {
-            scan_sdl()
-        };
+        let result = if backend == 1 { scan_openal() } else { scan_sdl() };
         match result {
             Ok((outputs, inputs)) => Self {
                 backend,

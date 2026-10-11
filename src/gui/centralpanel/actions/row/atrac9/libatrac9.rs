@@ -56,8 +56,7 @@ impl Atrac9Decoder {
         }
         let _lock = CODEC_LOCK.lock().unwrap_or_else(|error| error.into_inner());
         // SAFETY: allocation returns an owned opaque handle, checked for null.
-        let handle = NonNull::new(unsafe { Atrac9GetHandle() })
-            .ok_or("Could not allocate ATRAC9 decoder")?;
+        let handle = NonNull::new(unsafe { Atrac9GetHandle() }).ok_or("Could not allocate ATRAC9 decoder")?;
         let mut config = *config;
         let mut raw = RawInfo::default();
         // SAFETY: live handle, four configuration bytes, and correctly laid-out output struct.
@@ -99,9 +98,7 @@ impl Atrac9Decoder {
     pub fn decode(&mut self, input: &[u8], output: &mut [i16]) -> Result<(), String> {
         let info = self.info;
         let frame_samples = info.channels * info.frame_samples;
-        if input.len() != info.superframe_size
-            || output.len() != frame_samples * info.frames_in_superframe
-        {
+        if input.len() != info.superframe_size || output.len() != frame_samples * info.frames_in_superframe {
             return Err("Incorrect ATRAC9 buffer size".into());
         }
         let _lock = CODEC_LOCK.lock().unwrap_or_else(|error| error.into_inner());

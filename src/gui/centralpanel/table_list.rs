@@ -55,9 +55,7 @@ impl Centralpanel {
             table
                 .sense(egui::Sense::click())
                 .resizable(true)
-                .cell_layout(egui::Layout::centered_and_justified(
-                    egui::Direction::TopDown,
-                ))
+                .cell_layout(egui::Layout::centered_and_justified(egui::Direction::TopDown))
                 .column(Column::exact(52.0))
                 .column(Column::initial(210.0).at_least(120.0).at_most(300.0))
                 .column(Column::exact(90.0))
@@ -84,13 +82,10 @@ impl Centralpanel {
                                 }
                             };
                             if matches!(column, "name" | "path") {
-                                ui.with_layout(
-                                    egui::Layout::left_to_right(egui::Align::Center),
-                                    |ui| {
-                                        ui.add_space(8.0);
-                                        show_button(ui);
-                                    },
-                                );
+                                ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
+                                    ui.add_space(8.0);
+                                    show_button(ui);
+                                });
                             } else {
                                 show_button(ui);
                             }
@@ -114,18 +109,15 @@ impl Centralpanel {
                         });
                         row.col(|ui| {
                             let name = patch.map_or(title.app.name.as_str(), |p| &p.name);
-                            ui.with_layout(
-                                egui::Layout::left_to_right(egui::Align::Center),
-                                |ui| {
-                                    ui.add_space(8.0);
-                                    ui.add(
-                                        egui::Label::new(name)
-                                            .truncate()
-                                            .halign(egui::Align::LEFT)
-                                            .selectable(false),
-                                    );
-                                },
-                            );
+                            ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
+                                ui.add_space(8.0);
+                                ui.add(
+                                    egui::Label::new(name)
+                                        .truncate()
+                                        .halign(egui::Align::LEFT)
+                                        .selectable(false),
+                                );
+                            });
                         });
                         row.col(|ui| {
                             ui.add(egui::Label::new(&title.serial).selectable(false));
@@ -138,27 +130,22 @@ impl Centralpanel {
                         });
                         row.col(|ui| {
                             ui.add(
-                                egui::Label::new(
-                                    patch.map_or(title.app.version.as_str(), |p| &p.version),
-                                )
-                                .selectable(false),
+                                egui::Label::new(patch.map_or(title.app.version.as_str(), |p| &p.version))
+                                    .selectable(false),
                             );
                         });
                         row.col(|ui| {
                             let path = title.parent_dir.to_string_lossy();
-                            ui.with_layout(
-                                egui::Layout::left_to_right(egui::Align::Center),
-                                |ui| {
-                                    ui.add_space(8.0);
-                                    ui.add(
-                                        egui::Label::new(path.as_ref())
-                                            .truncate()
-                                            .halign(egui::Align::LEFT)
-                                            .selectable(false),
-                                    )
-                                    .on_hover_text(path.as_ref());
-                                },
-                            );
+                            ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
+                                ui.add_space(8.0);
+                                ui.add(
+                                    egui::Label::new(path.as_ref())
+                                        .truncate()
+                                        .halign(egui::Align::LEFT)
+                                        .selectable(false),
+                                )
+                                .on_hover_text(path.as_ref());
+                            });
                         });
                         let response = row.response();
                         if response.clicked() || response.secondary_clicked() {

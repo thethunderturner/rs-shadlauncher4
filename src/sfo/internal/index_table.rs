@@ -13,7 +13,7 @@ use std::io::Read;
 */
 pub struct SfoIndexEntry {
     pub key_offset: u16, // actual key position. So 0x174 (key_table_offset) + 0x14D = 0x2C1. You find null-terminated name of parameter.
-    pub param_fmt: u16, // Format of parameter (UTF-8 special mode, UTF-8 string, 32-bit unsigned integer)
+    pub param_fmt: u16,  // Format of parameter (UTF-8 special mode, UTF-8 string, 32-bit unsigned integer)
     pub param_len: u32, // The actual value currently occupies 6 bytes, including the terminating "\0" for a UTF-8 entry
     pub param_max_len: u32, // The # of bytes that are reserved for this value in the data table
     pub data_offset: u32, // relative to the beginning of the data table (incrementing as table grows)
@@ -37,9 +37,7 @@ impl fmt::Debug for SfoIndexEntry {
 }
 
 pub fn read_index<R: Read>(reader: &mut R, entry_count: u32) -> std::io::Result<SfoIndexTable> {
-    let mut table = SfoIndexTable {
-        entries: Vec::new(),
-    };
+    let mut table = SfoIndexTable { entries: Vec::new() };
 
     for _ in 0..entry_count {
         let mut buffer = [0u8; 16];

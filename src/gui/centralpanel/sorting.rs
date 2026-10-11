@@ -67,14 +67,8 @@ impl Sorting {
                     compare_versions(a, b)
                 }
                 "version" => {
-                    let a = a
-                        .patch
-                        .as_ref()
-                        .map_or(&a.app.version, |patch| &patch.version);
-                    let b = b
-                        .patch
-                        .as_ref()
-                        .map_or(&b.app.version, |patch| &patch.version);
+                    let a = a.patch.as_ref().map_or(&a.app.version, |patch| &patch.version);
+                    let b = b.patch.as_ref().map_or(&b.app.version, |patch| &patch.version);
                     compare_versions(a, b)
                 }
                 "path" => a.parent_dir.cmp(&b.parent_dir),

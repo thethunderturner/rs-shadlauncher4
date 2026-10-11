@@ -25,9 +25,5 @@ fn main() -> eframe::Result {
         ..Default::default()
     };
 
-    eframe::run_native(
-        "rs-shadLauncher4",
-        options,
-        Box::new(|cc| Ok(Box::new(gui::LauncherApp::new(cc)))),
-    )
+    eframe::run_native("rs-shadLauncher4", options, Box::new(|cc| Ok(Box::new(gui::LauncherApp::new(cc)))))
 }

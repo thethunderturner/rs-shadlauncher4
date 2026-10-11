@@ -21,9 +21,7 @@ impl Sidepanel {
                 true
             }
             Err(error) => {
-                self.error = Some(format!(
-                    "Could not load game folders from config.json: {error}"
-                ));
+                self.error = Some(format!("Could not load game folders from config.json: {error}"));
                 false
             }
         }

@@ -52,10 +52,7 @@ impl LauncherApp {
         std::thread::spawn(move || {
             let titles = std::panic::catch_unwind(|| {
                 let started = Instant::now();
-                let titles = games_paths
-                    .iter()
-                    .flat_map(|path| scanning::scan(path))
-                    .collect();
+                let titles = games_paths.iter().flat_map(|path| scanning::scan(path)).collect();
                 (titles, started.elapsed())
             })
             .map_err(|_| ());

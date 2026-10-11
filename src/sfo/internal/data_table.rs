@@ -147,10 +147,7 @@ pub fn read_data_table<R: Read>(
         let key = key_table
             .get_key(entry.key_offset)
             .ok_or_else(|| {
-                Error::new(
-                    ErrorKind::InvalidData,
-                    format!("Invalid key offset: {:#X}", entry.key_offset),
-                )
+                Error::new(ErrorKind::InvalidData, format!("Invalid key offset: {:#X}", entry.key_offset))
             })?
             .to_string();
 
@@ -176,10 +173,7 @@ pub fn read_data_table<R: Read>(
 
                 let string = std::str::from_utf8(bytes)
                     .map_err(|_| {
-                        Error::new(
-                            ErrorKind::InvalidData,
-                            format!("Invalid UTF-8 data for '{}'", key),
-                        )
+                        Error::new(ErrorKind::InvalidData, format!("Invalid UTF-8 data for '{}'", key))
                     })?
                     .to_string();
 
@@ -192,10 +186,7 @@ pub fn read_data_table<R: Read>(
 
                 let string = std::str::from_utf8(bytes)
                     .map_err(|_| {
-                        Error::new(
-                            ErrorKind::InvalidData,
-                            format!("Invalid UTF-8 data for '{}'", key),
-                        )
+                        Error::new(ErrorKind::InvalidData, format!("Invalid UTF-8 data for '{}'", key))
                     })?
                     .to_string();
 

@@ -13,16 +13,8 @@ pub(in crate::gui::menubar::settings) fn show(
         config,
         |ui, config| {
             section(ui, "Controller", |ui| {
-                check(
-                    ui,
-                    &mut config.input.motion_controls_enabled,
-                    "Enable motion controls",
-                );
-                check(
-                    ui,
-                    &mut config.input.background_controller_input,
-                    "Enable background input",
-                );
+                check(ui, &mut config.input.motion_controls_enabled, "Enable motion controls");
+                check(ui, &mut config.input.background_controller_input, "Enable background input");
             });
             section(ui, "Cursor", |ui| {
                 index(
@@ -33,12 +25,7 @@ pub(in crate::gui::menubar::settings) fn show(
                     &["Never", "Idle", "Always"],
                 );
                 if config.input.cursor_state == 1 {
-                    uint(
-                        ui,
-                        &mut config.input.cursor_hide_timeout,
-                        "Idle timeout (seconds)",
-                        0..=3600,
-                    );
+                    uint(ui, &mut config.input.cursor_hide_timeout, "Idle timeout (seconds)", 0..=3600);
                 }
             });
         },

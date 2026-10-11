@@ -8,11 +8,7 @@ pub(in crate::gui::menubar::settings) fn show(ui: &mut egui::Ui, config: &mut Co
         config,
         |ui, config| {
             section(ui, "Trophy Notifications", |ui| {
-                check(
-                    ui,
-                    &mut config.general.trophy_popup_disabled,
-                    "Disable trophy pop-ups",
-                );
+                check(ui, &mut config.general.trophy_popup_disabled, "Disable trophy pop-ups");
                 decimal(
                     ui,
                     &mut config.general.trophy_notification_duration,
@@ -50,9 +46,7 @@ pub(in crate::gui::menubar::settings) fn show(ui: &mut egui::Ui, config: &mut Co
     );
 }
 
-pub(in crate::gui::menubar::settings) fn open_folder(
-    path: std::path::PathBuf,
-) -> std::io::Result<()> {
+pub(in crate::gui::menubar::settings) fn open_folder(path: std::path::PathBuf) -> std::io::Result<()> {
     #[cfg(target_os = "windows")]
     let mut command = std::process::Command::new("explorer");
     #[cfg(target_os = "macos")]

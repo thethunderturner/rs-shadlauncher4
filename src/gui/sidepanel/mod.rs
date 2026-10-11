@@ -16,12 +16,7 @@ pub struct Sidepanel {
 }
 
 impl Sidepanel {
-    pub fn show(
-        &mut self,
-        ui: &mut egui::Ui,
-        scanning: bool,
-        can_refresh: bool,
-    ) -> SidepanelActions<'_> {
+    pub fn show(&mut self, ui: &mut egui::Ui, scanning: bool, can_refresh: bool) -> SidepanelActions<'_> {
         let mut search_changed = false;
         let mut library_changed = false;
         let mut refresh_list = false;
@@ -112,9 +107,7 @@ impl Sidepanel {
                     .add_enabled(
                         !scanning && can_refresh,
                         Button::image_and_text(
-                            egui::include_image!(
-                                "../../assets/centralpanel/refresh/refresh-titles.svg"
-                            ),
+                            egui::include_image!("../../assets/centralpanel/refresh/refresh-titles.svg"),
                             if scanning { "Scanning" } else { "Refresh List" },
                         )
                         .image_tint_follows_text_color(true),
@@ -127,18 +120,14 @@ impl Sidepanel {
                     .clicked();
                 let _ = ui.add(
                     Button::image_and_text(
-                        egui::include_image!(
-                            "../../assets/centralpanel/refresh/refresh-compat.svg"
-                        ),
+                        egui::include_image!("../../assets/centralpanel/refresh/refresh-compat.svg"),
                         "Refresh Compatibility",
                     )
                     .image_tint_follows_text_color(true),
                 );
                 let _ = ui.add(
                     Button::image_and_text(
-                        egui::include_image!(
-                            "../../assets/centralpanel/refresh/refresh-compat.svg"
-                        ),
+                        egui::include_image!("../../assets/centralpanel/refresh/refresh-compat.svg"),
                         "Check for title updates",
                     )
                     .image_tint_follows_text_color(true),

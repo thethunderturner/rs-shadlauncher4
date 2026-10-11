@@ -58,22 +58,11 @@ pub fn uint<T: egui::emath::Numeric>(
     });
 }
 
-pub fn decimal(
-    ui: &mut egui::Ui,
-    value: &mut f64,
-    label: &str,
-    range: std::ops::RangeInclusive<f64>,
-) {
+pub fn decimal(ui: &mut egui::Ui, value: &mut f64, label: &str, range: std::ops::RangeInclusive<f64>) {
     uint(ui, value, label, range);
 }
 
-pub fn choice(
-    ui: &mut egui::Ui,
-    value: &mut String,
-    id: &str,
-    label: &str,
-    options: &[(&str, &str)],
-) {
+pub fn choice(ui: &mut egui::Ui, value: &mut String, id: &str, label: &str, options: &[(&str, &str)]) {
     ui.horizontal(|ui| {
         ui.label(label);
         egui::ComboBox::from_id_salt(id)

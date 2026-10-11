@@ -15,36 +15,15 @@ pub(in crate::gui::menubar::settings) fn show(ui: &mut egui::Ui, config: &mut Co
                     "Readbacks mode",
                     &["Disabled", "Enabled", "Hybrid"],
                 );
-                check(
-                    ui,
-                    &mut config.gpu.readback_linear_images_enabled,
-                    "Read back linear images",
-                );
-                check(
-                    ui,
-                    &mut config.gpu.direct_memory_access_enabled,
-                    "Direct memory access",
-                );
+                check(ui, &mut config.gpu.readback_linear_images_enabled, "Read back linear images");
+                check(ui, &mut config.gpu.direct_memory_access_enabled, "Direct memory access");
                 check(ui, &mut config.gpu.dump_shaders, "Dump shaders");
-                uint(
-                    ui,
-                    &mut config.general.extra_dmem_in_mbytes,
-                    "Additional DMem (MiB)",
-                    0..=65536,
-                );
+                uint(ui, &mut config.general.extra_dmem_in_mbytes, "Additional DMem (MiB)", 0..=65536);
             });
             section(ui, "Shader Cache", |ui| {
-                check(
-                    ui,
-                    &mut config.vulkan.pipeline_cache_enabled,
-                    "Enable shader cache",
-                );
+                check(ui, &mut config.vulkan.pipeline_cache_enabled, "Enable shader cache");
                 if config.vulkan.pipeline_cache_enabled {
-                    check(
-                        ui,
-                        &mut config.vulkan.pipeline_cache_archived,
-                        "Compress shader cache",
-                    );
+                    check(ui, &mut config.vulkan.pipeline_cache_archived, "Compress shader cache");
                 }
             });
         },

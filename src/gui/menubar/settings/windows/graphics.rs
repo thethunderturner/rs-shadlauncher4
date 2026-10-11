@@ -24,10 +24,8 @@ pub(in crate::gui::menubar::settings) fn show(
                         ("Fullscreen", "Fullscreen"),
                     ],
                 );
-                let fullscreen = matches!(
-                    config.gpu.full_screen_mode.as_str(),
-                    "Fullscreen (Borderless)" | "Fullscreen"
-                );
+                let fullscreen =
+                    matches!(config.gpu.full_screen_mode.as_str(), "Fullscreen (Borderless)" | "Fullscreen");
                 config.gpu.full_screen = fullscreen;
                 choice(
                     ui,
@@ -44,12 +42,7 @@ pub(in crate::gui::menubar::settings) fn show(
             section(ui, "Window Size", |ui| {
                 uint(ui, &mut config.gpu.window_width, "Width", 1..=16384);
                 uint(ui, &mut config.gpu.window_height, "Height", 1..=16384);
-                uint(
-                    ui,
-                    &mut config.gpu.vblank_frequency,
-                    "Vblank frequency (Hz)",
-                    1..=1000,
-                );
+                uint(ui, &mut config.gpu.vblank_frequency, "Vblank frequency (Hz)", 1..=1000);
             });
         },
         |ui, config| {

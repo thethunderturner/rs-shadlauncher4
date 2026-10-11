@@ -64,16 +64,8 @@ pub fn show(ui: &mut egui::Ui, config: &mut Config, devices: &AudioDevices) -> b
                         });
                 });
                 section(ui, "Miscellaneous", |ui| {
-                    check(
-                        ui,
-                        &mut config.general.show_splash,
-                        "Show Splash Screen When Launching Game",
-                    );
-                    check(
-                        ui,
-                        &mut config.general.discord_rpc_enabled,
-                        "Discord Rich Presence",
-                    );
+                    check(ui, &mut config.general.show_splash, "Show Splash Screen When Launching Game");
+                    check(ui, &mut config.general.discord_rpc_enabled, "Discord Rich Presence");
                 });
                 section(ui, "Volume", |ui| {
                     let volume = &mut config.general.volume_slider;
@@ -148,12 +140,7 @@ pub fn show(ui: &mut egui::Ui, config: &mut Config, devices: &AudioDevices) -> b
                 if backend == 1 {
                     section(ui, "OpenAL", |ui| {
                         uint(ui, &mut config.audio.openal_hrtf, "HRTF", 0..=2);
-                        uint(
-                            ui,
-                            &mut config.audio.openal_output_mode,
-                            "Output mode",
-                            0..=2,
-                        );
+                        uint(ui, &mut config.audio.openal_output_mode, "Output mode", 0..=2);
                     });
                 }
             });
@@ -168,8 +155,7 @@ fn device(ui: &mut egui::Ui, value: &mut String, id: &str, label: &str, devices:
         if current.is_empty() {
             current = "Default Device".to_owned();
         }
-        let selected = if current == "Default Device" || devices.iter().any(|name| name == &current)
-        {
+        let selected = if current == "Default Device" || devices.iter().any(|name| name == &current) {
             current.clone()
         } else {
             format!("{current} (unavailable)")

@@ -76,12 +76,7 @@ pub fn read_key_table<R: Read>(
         let length = remaining
             .iter()
             .position(|&byte| byte == 0)
-            .ok_or_else(|| {
-                Error::new(
-                    ErrorKind::InvalidData,
-                    "Key table contains a non-terminated key",
-                )
-            })?;
+            .ok_or_else(|| Error::new(ErrorKind::InvalidData, "Key table contains a non-terminated key"))?;
 
         let key = std::str::from_utf8(&remaining[..length])
             .map_err(|_| Error::new(ErrorKind::InvalidData, "Key table contains invalid UTF-8"))?

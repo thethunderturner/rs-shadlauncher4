@@ -104,10 +104,7 @@ impl Assets {
 
     pub fn load_icon(&mut self, title: &Title) -> Option<egui::Image<'static>> {
         let texture = self.texture(title.icon_path.as_deref()?, false)?;
-        Some(
-            egui::Image::new((texture.id(), texture.size_vec2()))
-                .fit_to_exact_size(egui::vec2(40.0, 40.0)),
-        )
+        Some(egui::Image::new((texture.id(), texture.size_vec2())).fit_to_exact_size(egui::vec2(40.0, 40.0)))
     }
 
     pub fn show_background(&mut self, ui: &egui::Ui, title: &Title) {
@@ -134,8 +131,7 @@ impl Assets {
             let top = (1.0 - visible_height) * 0.5;
             egui::Rect::from_min_max(egui::pos2(0.0, top), egui::pos2(1.0, top + visible_height))
         };
-        ui.painter()
-            .image(texture.id(), rect, uv, egui::Color32::WHITE);
+        ui.painter().image(texture.id(), rect, uv, egui::Color32::WHITE);
         ui.painter()
             .rect_filled(rect, 0.0, ui.visuals().panel_fill.gamma_multiply(0.85));
     }

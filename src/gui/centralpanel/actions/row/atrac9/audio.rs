@@ -57,9 +57,7 @@ fn playback_worker(requests: Receiver<Option<Vec<PathBuf>>>) {
                     previous.stop();
                 }
                 audio = None;
-                let Some(path) =
-                    paths.and_then(|paths| paths.into_iter().find(|path| path.is_file()))
-                else {
+                let Some(path) = paths.and_then(|paths| paths.into_iter().find(|path| path.is_file())) else {
                     stream = None;
                     continue;
                 };
@@ -99,11 +97,9 @@ fn playback_worker(requests: Receiver<Option<Vec<PathBuf>>>) {
                 }
                 let Some(decoder) = audio.as_mut() else { break };
                 match decoder.next_buffer() {
-                    Ok(Some(samples)) => player.append(SamplesBuffer::new(
-                        decoder.channels,
-                        decoder.sample_rate,
-                        samples,
-                    )),
+                    Ok(Some(samples)) => {
+                        player.append(SamplesBuffer::new(decoder.channels, decoder.sample_rate, samples))
+                    }
                     Ok(None) => audio = None,
                     Err(error) => {
                         eprintln!("Could not decode snd0.at9: {error}");

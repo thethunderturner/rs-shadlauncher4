@@ -72,18 +72,12 @@ pub fn scan(path: &Path) -> Vec<Title> {
                         let serial = data_table.find_string("TITLE_ID").unwrap(); // serial
                         let name = data_table.find_string("TITLE").unwrap();
                         let system_ver = data_table.find_integer("SYSTEM_VER").unwrap();
-                        let fw = format!(
-                            "{:x}.{:02x}",
-                            (system_ver >> 24) & 0xff,
-                            (system_ver >> 16) & 0xff
-                        );
+                        let fw = format!("{:x}.{:02x}", (system_ver >> 24) & 0xff, (system_ver >> 16) & 0xff);
                         let version = data_table.find_string("APP_VER").unwrap();
                         let category = data_table.find_string("CATEGORY").unwrap();
                         let app_type = data_table.find_integer("APP_TYPE");
-                        let folder_name =
-                            game_dir.file_name().unwrap().to_string_lossy().into_owned();
-                        let is_patch =
-                            folder_name.ends_with("-patch") || folder_name.ends_with("-UPDATE");
+                        let folder_name = game_dir.file_name().unwrap().to_string_lossy().into_owned();
+                        let is_patch = folder_name.ends_with("-patch") || folder_name.ends_with("-UPDATE");
                         let icon = find_icon(&game_dir);
                         let background = find_background(&game_dir);
                         let attribute_bytes = data_table

@@ -25,14 +25,8 @@ impl fmt::Debug for SfoHeader {
         f.debug_struct("SfoHeader")
             .field("magic", &String::from_utf8_lossy(&self.magic[1..]))
             .field("version", &format_args!("{:#010X}", self.version))
-            .field(
-                "key_table_offset",
-                &format_args!("{:#X}", self.key_table_offset),
-            )
-            .field(
-                "data_table_offset",
-                &format_args!("{:#X}", self.data_table_offset),
-            )
+            .field("key_table_offset", &format_args!("{:#X}", self.key_table_offset))
+            .field("data_table_offset", &format_args!("{:#X}", self.data_table_offset))
             .field("index_table_entries", &self.index_table_entries)
             .finish()
     }

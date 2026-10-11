@@ -31,9 +31,7 @@ fn update_bytes(mut bytes: Vec<u8>, table: &SfoDataTable) -> io::Result<Vec<u8>>
         return Err(invalid("Invalid SFO table offsets."));
     }
     if count != table.params.len() {
-        return Err(invalid(
-            "The SFO fields have changed. Re-scan the games before editing.",
-        ));
+        return Err(invalid("The SFO fields have changed. Re-scan the games before editing."));
     }
     let index = read_index(&mut cursor, header.index_table_entries)?;
     let mut updates = Vec::with_capacity(count);
@@ -49,9 +47,7 @@ fn update_bytes(mut bytes: Vec<u8>, table: &SfoDataTable) -> io::Result<Vec<u8>>
             .position(|&byte| byte == 0)
             .ok_or_else(|| invalid("SFO key is not terminated."))?;
         if key_bytes[..key_end] != *param.key.as_bytes() || entry.param_fmt != param.param_fmt {
-            return Err(invalid(
-                "The SFO fields have changed. Re-scan the games before editing.",
-            ));
+            return Err(invalid("The SFO fields have changed. Re-scan the games before editing."));
         }
         let start = data_start
             .checked_add(entry.data_offset as usize)
@@ -65,19 +61,14 @@ fn update_bytes(mut bytes: Vec<u8>, table: &SfoDataTable) -> io::Result<Vec<u8>>
         let value = match (&param.data, entry.param_fmt) {
             (SfoValue::Utf8(text), 0x0004 | 0x0204) => {
                 if text.contains('\0') {
-                    return Err(invalid(format!(
-                        "{} cannot contain a null character.",
-                        param.key
-                    )));
+                    return Err(invalid(format!("{} cannot contain a null character.", param.key)));
                 }
                 let mut value = text.as_bytes().to_vec();
                 value.push(0);
                 value
             }
             (SfoValue::Integer(value), 0x0404) => value.to_le_bytes().to_vec(),
-            (SfoValue::Raw(value), format) if !matches!(format, 0x0004 | 0x0204 | 0x0404) => {
-                value.clone()
-            }
+            (SfoValue::Raw(value), format) if !matches!(format, 0x0004 | 0x0204 | 0x0404) => value.clone(),
             _ => return Err(invalid(format!("{} has the wrong value type.", param.key))),
         };
         if value.len() > entry.param_max_len as usize {
@@ -100,8 +91,7 @@ fn update_bytes(mut bytes: Vec<u8>, table: &SfoDataTable) -> io::Result<Vec<u8>>
         return Err(invalid("Overlapping SFO value ranges."));
     }
     for (length_offset, start, end, value) in updates {
-        bytes[length_offset..length_offset + 4]
-            .copy_from_slice(&(value.len() as u32).to_le_bytes());
+        bytes[length_offset..length_offset + 4].copy_from_slice(&(value.len() as u32).to_le_bytes());
         bytes[start..end].fill(0);
         bytes[start..start + value.len()].copy_from_slice(&value);
     }
@@ -112,10 +102,7 @@ pub fn write_sfo(path: &Path, table: &SfoDataTable) -> io::Result<()> {
     let path = fs::canonicalize(path)?;
     let permissions = fs::metadata(&path)?.permissions();
     if permissions.readonly() {
-        return Err(io::Error::new(
-            io::ErrorKind::PermissionDenied,
-            "The SFO file is read-only.",
-        ));
+        return Err(io::Error::new(io::ErrorKind::PermissionDenied, "The SFO file is read-only."));
     }
     let bytes = update_bytes(fs::read(&path)?, table)?;
     let temp = path.with_file_name(format!(
@@ -123,10 +110,7 @@ pub fn write_sfo(path: &Path, table: &SfoDataTable) -> io::Result<()> {
         std::process::id(),
         NEXT_TEMP.fetch_add(1, Ordering::Relaxed)
     ));
-    let mut file = OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(&temp)?;
+    let mut file = OpenOptions::new().write(true).create_new(true).open(&temp)?;
     let result = (|| {
         file.write_all(&bytes)?;
         file.set_permissions(permissions)?;

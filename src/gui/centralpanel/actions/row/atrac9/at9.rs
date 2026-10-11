@@ -59,14 +59,11 @@ impl At9 {
                     let decoder = Atrac9Decoder::new(&config).map_err(invalid)?;
                     let info = decoder.codec_info();
                     if u16::from_le_bytes(bytes[2..4].try_into().unwrap()) as usize != info.channels
-                        || u32::from_le_bytes(bytes[4..8].try_into().unwrap())
-                            != info.sampling_rate as u32
+                        || u32::from_le_bytes(bytes[4..8].try_into().unwrap()) != info.sampling_rate as u32
                         || u16::from_le_bytes(bytes[12..14].try_into().unwrap()) as usize
                             != info.superframe_size
                     {
-                        return Err(invalid(
-                            "ATRAC9 format does not match the codec configuration",
-                        ));
+                        return Err(invalid("ATRAC9 format does not match the codec configuration"));
                     }
                     format = Some(decoder);
                 }
@@ -107,11 +104,6 @@ impl At9 {
             .decode(&self.encoded, &mut self.pcm)
             .map_err(invalid)?;
         self.remaining -= self.encoded.len() as u64;
-        Ok(Some(
-            self.pcm
-                .iter()
-                .map(|&sample| sample as f32 / 32768.0)
-                .collect(),
-        ))
+        Ok(Some(self.pcm.iter().map(|&sample| sample as f32 / 32768.0).collect()))
     }
 }

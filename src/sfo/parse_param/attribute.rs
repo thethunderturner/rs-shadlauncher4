@@ -3,31 +3,13 @@ const SUPPORTS_NEO: u32 = 0x0080_0000;
 const REQUIRES_VR: u32 = 0x0400_0000;
 
 const FLAGS: &[(u32, &str)] = &[
-    (
-        0x0000_0001,
-        "The application does support the initial user's logout",
-    ),
-    (
-        0x0000_0002,
-        "Enter Button Assignment for the common dialog: Cross button",
-    ),
-    (
-        0x0000_0004,
-        "Menu for Warning Dialog for PS Move is displayed in the option menu",
-    ),
+    (0x0000_0001, "The application does support the initial user's logout"),
+    (0x0000_0002, "Enter Button Assignment for the common dialog: Cross button"),
+    (0x0000_0004, "Menu for Warning Dialog for PS Move is displayed in the option menu"),
     (0x0000_0008, "The application supports Stereoscopic 3D"),
-    (
-        0x0000_0010,
-        "The application is suspended when PS button is pressed (e.g. Amazon Instant Video)",
-    ),
-    (
-        0x0000_0020,
-        "Enter Button Assignment for the common dialog: Assigned by the System Software",
-    ),
-    (
-        0x0000_0040,
-        "The application overwrites the default behavior of the Share Menu",
-    ),
+    (0x0000_0010, "The application is suspended when PS button is pressed (e.g. Amazon Instant Video)"),
+    (0x0000_0020, "Enter Button Assignment for the common dialog: Assigned by the System Software"),
+    (0x0000_0040, "The application overwrites the default behavior of the Share Menu"),
     (
         0x0000_0100,
         "The application is suspended when the special output resolution is set and PS button is pressed",

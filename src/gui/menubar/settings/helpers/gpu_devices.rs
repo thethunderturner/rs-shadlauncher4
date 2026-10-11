@@ -83,8 +83,7 @@ impl GpuDevices {
 #[cfg(not(target_os = "macos"))]
 fn enumerate() -> Result<Vec<String>, String> {
     // Vulkan is loaded at runtime so a missing driver does not stop the launcher from opening.
-    let entry =
-        unsafe { Entry::load() }.map_err(|error| format!("Vulkan is unavailable: {error}"))?;
+    let entry = unsafe { Entry::load() }.map_err(|error| format!("Vulkan is unavailable: {error}"))?;
     let app_info = vk::ApplicationInfo {
         api_version: vk::API_VERSION_1_3,
         ..Default::default()

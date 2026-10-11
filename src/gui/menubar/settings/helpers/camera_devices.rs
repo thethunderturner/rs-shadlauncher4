@@ -119,9 +119,7 @@ fn enumerate() -> Result<Vec<String>, String> {
             if name.is_null() {
                 format!("Unknown camera ({index})")
             } else {
-                unsafe { CStr::from_ptr(name) }
-                    .to_string_lossy()
-                    .into_owned()
+                unsafe { CStr::from_ptr(name) }.to_string_lossy().into_owned()
             }
         })
         .collect();

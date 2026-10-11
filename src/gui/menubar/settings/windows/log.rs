@@ -41,12 +41,7 @@ pub(in crate::gui::menubar::settings) fn show(ui: &mut egui::Ui, config: &mut Co
             section(ui, "Duplicate Lines", |ui| {
                 check(ui, &mut config.log.skip_duplicate, "Skip duplicate lines");
                 if config.log.skip_duplicate {
-                    uint(
-                        ui,
-                        &mut config.log.max_skip_duration,
-                        "Maximum skip duration (ms)",
-                        0..=u32::MAX,
-                    );
+                    uint(ui, &mut config.log.max_skip_duration, "Maximum skip duration (ms)", 0..=u32::MAX);
                 }
             });
         },
@@ -55,12 +50,7 @@ pub(in crate::gui::menubar::settings) fn show(ui: &mut egui::Ui, config: &mut Co
                 check(ui, &mut config.log.append, "Append to existing logs");
                 check(ui, &mut config.log.separate, "Separate log files per game");
                 check(ui, &mut config.log.sync, "Synchronous logging");
-                uint(
-                    ui,
-                    &mut config.log.size_limit,
-                    "Size limit (bytes)",
-                    0..=u64::MAX,
-                );
+                uint(ui, &mut config.log.size_limit, "Size limit (bytes)", 0..=u64::MAX);
                 if ui.button("Open log folder").clicked() {
                     if let Ok(path) = crate::common::user_directory() {
                         let _ = super::user::open_folder(path.join("log"));

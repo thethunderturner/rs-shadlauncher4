@@ -95,12 +95,8 @@ impl SfoViewer {
                 } else if self.tab == Tab::Patch {
                     if let Some(patch) = self.title.patch.as_mut() {
                         ui.push_id(&patch.path, |ui| {
-                            self.patch_save.show(
-                                ui,
-                                &patch.path,
-                                &patch.sfo,
-                                self.patch_edit.is_some(),
-                            );
+                            self.patch_save
+                                .show(ui, &patch.path, &patch.sfo, self.patch_edit.is_some());
                             ui.add_enabled_ui(!self.patch_save.is_saving(), |ui| {
                                 Self::show_sfo_table(ui, &mut patch.sfo, &mut self.patch_edit);
                             });
@@ -117,10 +113,7 @@ impl SfoViewer {
         }
         if let Some(edit) = editing.as_ref() {
             if let Some(error) = &edit.error {
-                ui.colored_label(
-                    ui.visuals().error_fg_color,
-                    format!("{}: {error}", edit.key),
-                );
+                ui.colored_label(ui.visuals().error_fg_color, format!("{}: {error}", edit.key));
             }
         }
         let editor_id = ui.id().with("sfo_value_editor");
@@ -133,12 +126,7 @@ impl SfoViewer {
                 .auto_shrink([false, false])
                 .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
                 .column(Column::exact(270.0))
-                .column(
-                    Column::initial(270.0)
-                        .at_least(160.0)
-                        .resizable(true)
-                        .clip(true),
-                )
+                .column(Column::initial(270.0).at_least(160.0).resizable(true).clip(true))
                 .column(Column::exact(120.0))
                 .header(24.0, |mut header| {
                     header.col(|ui| {
@@ -162,20 +150,17 @@ impl SfoViewer {
                                 .on_hover_text(&param.key);
                         });
                         row.col(|ui| {
-                            if let Some(edit) =
-                                editing.as_mut().filter(|edit| edit.key == param.key)
-                            {
+                            if let Some(edit) = editing.as_mut().filter(|edit| edit.key == param.key) {
                                 let response = ui.add(
                                     egui::TextEdit::singleline(&mut edit.draft)
                                         .id(editor_id.with(&param.key))
                                         .desired_width(f32::INFINITY),
                                 );
-                                let response =
-                                    if matches!(param.key.as_str(), "ATTRIBUTE" | "ATTRIBUTE2") {
-                                        response.on_hover_text(ATTRIBUTE_BYTES_HELP)
-                                    } else {
-                                        response
-                                    };
+                                let response = if matches!(param.key.as_str(), "ATTRIBUTE" | "ATTRIBUTE2") {
+                                    response.on_hover_text(ATTRIBUTE_BYTES_HELP)
+                                } else {
+                                    response
+                                };
                                 if edit.focus {
                                     response.request_focus();
                                     edit.focus = false;
@@ -287,15 +272,14 @@ fn parse_value(key: &str, original: &SfoValue, text: &str) -> Result<SfoValue, S
         }
         SfoValue::Integer(_) => {
             let text = text.trim();
-            let value =
-                if let Some(hex) = text.strip_prefix("0x").or_else(|| text.strip_prefix("0X")) {
-                    u32::from_str_radix(hex, 16)
-                } else {
-                    text.parse::<u32>()
-                };
-            value.map(SfoValue::Integer).map_err(|_| {
-                "Enter a whole number from 0 to 4294967295 (decimal or 0x hex).".into()
-            })
+            let value = if let Some(hex) = text.strip_prefix("0x").or_else(|| text.strip_prefix("0X")) {
+                u32::from_str_radix(hex, 16)
+            } else {
+                text.parse::<u32>()
+            };
+            value
+                .map(SfoValue::Integer)
+                .map_err(|_| "Enter a whole number from 0 to 4294967295 (decimal or 0x hex).".into())
         }
         SfoValue::Raw(_) => {
             let text = text.trim();
@@ -303,10 +287,7 @@ fn parse_value(key: &str, original: &SfoValue, text: &str) -> Result<SfoValue, S
                 .strip_prefix("0x")
                 .or_else(|| text.strip_prefix("0X"))
                 .unwrap_or(text);
-            let hex: String = text
-                .chars()
-                .filter(|ch| !ch.is_ascii_whitespace())
-                .collect();
+            let hex: String = text.chars().filter(|ch| !ch.is_ascii_whitespace()).collect();
             if hex.len() % 2 != 0 || !hex.bytes().all(|byte| byte.is_ascii_hexdigit()) {
                 return Err("Enter pairs of hex digits, for example 00 AB FF.".into());
             }
