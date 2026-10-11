@@ -1,6 +1,7 @@
 use super::sfo_save::SfoSave;
 use crate::scanning::Title;
 use crate::sfo::internal::data_table::{SfoDataTable, SfoValue};
+use crate::sfo::parse_param::{app_type, attribute, attribute2, category};
 use eframe::egui;
 use egui_extras::{Column, TableBuilder};
 use std::path::PathBuf;
@@ -15,9 +16,10 @@ pub struct SfoViewer {
     app_save: SfoSave,
     patch_save: SfoSave,
     saved: Vec<(PathBuf, SfoDataTable)>,
+    details: Option<(Tab, String)>,
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Tab {
     App,
     Patch,
@@ -35,6 +37,7 @@ impl Default for SfoViewer {
             app_save: SfoSave::default(),
             patch_save: SfoSave::default(),
             saved: Vec::new(),
+            details: None,
         }
     }
 }
@@ -45,6 +48,7 @@ impl SfoViewer {
         self.patch_edit = None;
         self.app_save = SfoSave::default();
         self.patch_save = SfoSave::default();
+        self.details = None;
     }
 
     pub(crate) fn is_saving(&self) -> bool {
@@ -67,6 +71,7 @@ impl SfoViewer {
         if !self.open {
             return;
         }
+        let previous_tab = self.tab;
         egui::Window::new(&self.sfo_title)
             .id(egui::Id::new("sfo_viewer"))
             .open(&mut self.open)
@@ -89,7 +94,13 @@ impl SfoViewer {
                             self.app_edit.is_some(),
                         );
                         ui.add_enabled_ui(!self.app_save.is_saving(), |ui| {
-                            Self::show_sfo_table(ui, &mut self.title.app.sfo, &mut self.app_edit);
+                            Self::show_sfo_table(
+                                ui,
+                                &mut self.title.app.sfo,
+                                &mut self.app_edit,
+                                Tab::App,
+                                &mut self.details,
+                            );
                         });
                     });
                 } else if self.tab == Tab::Patch {
@@ -98,15 +109,62 @@ impl SfoViewer {
                             self.patch_save
                                 .show(ui, &patch.path, &patch.sfo, self.patch_edit.is_some());
                             ui.add_enabled_ui(!self.patch_save.is_saving(), |ui| {
-                                Self::show_sfo_table(ui, &mut patch.sfo, &mut self.patch_edit);
+                                Self::show_sfo_table(
+                                    ui,
+                                    &mut patch.sfo,
+                                    &mut self.patch_edit,
+                                    Tab::Patch,
+                                    &mut self.details,
+                                );
                             });
                         });
                     }
                 }
             });
+        if self.tab != previous_tab {
+            self.details = None;
+        }
+        if let Some((tab, key)) = self.details.clone() {
+            let sfo = match tab {
+                Tab::App => Some(&self.title.app.sfo),
+                Tab::Patch => self.title.patch.as_ref().map(|patch| &patch.sfo),
+            };
+            if let Some(value) = sfo.and_then(|sfo| sfo.find_param(&key)) {
+                let mut open = true;
+                egui::Window::new(format!("{key} details"))
+                    .id(egui::Id::new("sfo_field_details"))
+                    .open(&mut open)
+                    .default_width(480.0)
+                    .show(ctx, |ui| {
+                        ui.label(format!("Value: {}", value_text(&key, value)));
+                        ui.separator();
+                        let descriptions = descriptions(&key, value);
+                        if descriptions.is_empty() {
+                            ui.label("No documented description for this value.");
+                        } else {
+                            egui::ScrollArea::vertical().max_height(300.0).show(ui, |ui| {
+                                for description in descriptions {
+                                    ui.label(format!("• {description}"));
+                                }
+                            });
+                        }
+                    });
+                if !open {
+                    self.details = None;
+                }
+            } else {
+                self.details = None;
+            }
+        }
     }
 
-    fn show_sfo_table(ui: &mut egui::Ui, sfo: &mut SfoDataTable, editing: &mut Option<SfoEdit>) {
+    fn show_sfo_table(
+        ui: &mut egui::Ui,
+        sfo: &mut SfoDataTable,
+        editing: &mut Option<SfoEdit>,
+        tab: Tab,
+        details: &mut Option<(Tab, String)>,
+    ) {
         if sfo.params.is_empty() {
             ui.label("This SFO contains no fields.");
             return;
@@ -118,7 +176,7 @@ impl SfoViewer {
         }
         let editor_id = ui.id().with("sfo_value_editor");
         egui::ScrollArea::horizontal().show(ui, |ui| {
-            ui.set_min_width(680.0);
+            ui.set_min_width(750.0);
             TableBuilder::new(ui)
                 .id_salt("sfo_table")
                 .striped(true)
@@ -127,7 +185,7 @@ impl SfoViewer {
                 .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
                 .column(Column::exact(270.0))
                 .column(Column::initial(270.0).at_least(160.0).resizable(true).clip(true))
-                .column(Column::exact(120.0))
+                .column(Column::exact(210.0))
                 .header(24.0, |mut header| {
                     header.col(|ui| {
                         ui.strong("Key");
@@ -187,6 +245,13 @@ impl SfoViewer {
                             }
                         });
                         row.col(|ui| {
+                            if matches!(
+                                param.key.as_str(),
+                                "ATTRIBUTE" | "ATTRIBUTE2" | "APP_TYPE" | "CATEGORY"
+                            ) && ui.button("Details").clicked()
+                            {
+                                *details = Some((tab, param.key.clone()));
+                            }
                             if is_editing {
                                 apply |= ui.button("Apply").clicked();
                                 cancel |= ui.button("Cancel").clicked();
@@ -234,6 +299,29 @@ struct SfoEdit {
 }
 
 const ATTRIBUTE_BYTES_HELP: &str = "Enter four hexadecimal bytes in file order (little endian)";
+
+fn descriptions(key: &str, value: &SfoValue) -> Vec<String> {
+    match (key, value) {
+        ("ATTRIBUTE", SfoValue::Integer(value)) => attribute::description(value.to_le_bytes()),
+        ("ATTRIBUTE2", SfoValue::Integer(value)) => attribute2::description(value.to_le_bytes()),
+        ("APP_TYPE", SfoValue::Integer(value)) => app_type::description(value.to_le_bytes()),
+        ("CATEGORY", SfoValue::Utf8(value)) => category::description(value),
+        _ => Vec::new(),
+    }
+}
+
+#[cfg(test)]
+mod description_tests {
+    use super::{SfoValue, descriptions};
+
+    #[test]
+    fn shows_descriptions_for_all_supported_fields() {
+        assert!(!descriptions("ATTRIBUTE", &SfoValue::Integer(0x4000)).is_empty());
+        assert!(!descriptions("ATTRIBUTE2", &SfoValue::Integer(0x2)).is_empty());
+        assert_eq!(descriptions("APP_TYPE", &SfoValue::Integer(3)), vec!["Demo App"]);
+        assert_eq!(descriptions("CATEGORY", &SfoValue::Utf8("gd".into())), vec!["Game Digital Application"]);
+    }
+}
 
 fn value_text(key: &str, value: &SfoValue) -> String {
     match value {
