@@ -25,6 +25,7 @@ const FLAGS: &[(u32, &str)] = &[
     (0x8000_0000, "Display Location (?)"),
 ];
 
+// https://www.psdevwiki.com/ps4/Param.sfo#ATTRIBUTE
 // Undocumented bits are ignored; the original bytes are not modified.
 pub fn description(bytes: [u8; 4]) -> Vec<String> {
     let value = u32::from_le_bytes(bytes);

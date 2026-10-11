@@ -12,6 +12,7 @@ const FLAGS: &[(u32, &str)] = &[
     (0x0000_1000, "The application supports Team on team tournament with an old SDK (SDK 4500 or older)"),
 ];
 
+// https://www.psdevwiki.com/ps4/Param.sfo#ATTRIBUTE2
 // Undocumented bits are ignored; the original bytes are not modified.
 pub fn description(bytes: [u8; 4]) -> Vec<String> {
     let value = u32::from_le_bytes(bytes);
