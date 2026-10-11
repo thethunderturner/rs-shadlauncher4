@@ -1,5 +1,5 @@
-use crate::gui::centralpanel::actions::scan::Scan;
 use crate::gui::centralpanel::actions::Actions;
+use crate::gui::centralpanel::actions::scan::Scan;
 use crate::gui::centralpanel::sorting::Sorting;
 use crate::gui::sidepanel::actions::library::LibraryFilter;
 use crate::scanning::Title;

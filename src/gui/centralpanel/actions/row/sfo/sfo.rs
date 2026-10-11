@@ -321,7 +321,7 @@ fn descriptions(key: &str, value: &SfoValue) -> Vec<String> {
 
 #[cfg(test)]
 mod description_tests {
-    use super::{descriptions, SfoValue};
+    use super::{SfoValue, descriptions};
 
     #[test]
     fn shows_descriptions_for_all_supported_fields() {
