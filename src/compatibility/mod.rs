@@ -5,6 +5,7 @@ use std::time::Duration;
 
 const RELEASE_ASSET_URL: &str = "https://github.com/shadps4-compatibility/shadps4-game-compatibility/releases/latest/download/compatibility_data.json";
 
+#[derive(Default, Clone, Debug)]
 pub struct Compatibility {
     pub status: Status,
 }
@@ -23,7 +24,7 @@ impl Compatibility {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Status {
     #[default]
     Unknown,
@@ -41,6 +42,17 @@ pub struct DownloadProgress {
 }
 
 impl Status {
+    pub const fn label(self) -> &'static str {
+        match self {
+            Self::Unknown => "Unknown",
+            Self::Nothing => "Nothing",
+            Self::Boots => "Boots",
+            Self::Menus => "Menus",
+            Self::Ingame => "Ingame",
+            Self::Playable => "Playable",
+        }
+    }
+
     pub fn color(self) -> Color32 {
         match self {
             Self::Unknown => Color32::BLACK,

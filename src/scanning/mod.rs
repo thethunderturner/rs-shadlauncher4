@@ -1,3 +1,4 @@
+use crate::compatibility::Compatibility;
 use crate::sfo::internal::data_table::SfoDataTable;
 use crate::sfo::parse_param::attribute;
 use crate::sfo::parse_param::attribute::{supports_neo, supports_vr};
@@ -12,7 +13,7 @@ pub struct Title {
     pub background_path: Option<PathBuf>,
     pub parent_dir: PathBuf,
     pub serial: String,
-    pub compatibility: Option<String>,
+    pub compatibility: Compatibility,
     pub publisher_id: String,
     pub playtime: String,
     pub supports_vr: bool,
@@ -107,7 +108,7 @@ pub fn scan(path: &Path) -> Vec<Title> {
                                 background_path: background,
                                 parent_dir: parent,
                                 serial,
-                                compatibility: None,
+                                compatibility: Compatibility::default(),
                                 publisher_id: data_table.find_string("CONTENT_ID").unwrap(),
                                 playtime: String::new(),
                                 supports_vr: supports_vr(attribute_bytes),

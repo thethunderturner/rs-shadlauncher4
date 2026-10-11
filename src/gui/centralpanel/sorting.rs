@@ -60,6 +60,7 @@ impl Sorting {
                     let b = b.patch.as_ref().map_or(&b.app.name, |patch| &patch.name);
                     a.to_lowercase().cmp(&b.to_lowercase())
                 }
+                "compatibility" => a.compatibility.status.cmp(&b.compatibility.status),
                 "serial" => a.serial.cmp(&b.serial),
                 "firmware" => {
                     let a = a.patch.as_ref().map_or(&a.app.fw, |patch| &patch.fw);

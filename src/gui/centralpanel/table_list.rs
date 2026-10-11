@@ -58,6 +58,7 @@ impl Centralpanel {
                 .cell_layout(egui::Layout::centered_and_justified(egui::Direction::TopDown))
                 .column(Column::exact(52.0))
                 .column(Column::initial(210.0).at_least(120.0).at_most(300.0))
+                .column(Column::exact(120.0))
                 .column(Column::exact(90.0))
                 .column(Column::exact(75.0))
                 .column(Column::exact(75.0))
@@ -66,6 +67,7 @@ impl Centralpanel {
                     for (column, label) in [
                         ("icon", "Icon"),
                         ("name", "Name"),
+                        ("compatibility", "Compatibility"),
                         ("serial", "Serial"),
                         ("firmware", "Firmware"),
                         ("version", "Version"),
@@ -117,6 +119,36 @@ impl Centralpanel {
                                         .halign(egui::Align::LEFT)
                                         .selectable(false),
                                 );
+                            });
+                        });
+                        row.col(|ui| {
+                            let label = title.compatibility.status.label();
+                            let font_id = egui::TextStyle::Body.resolve(ui.style());
+                            let text_width = ui
+                                .painter()
+                                .layout_no_wrap(label.to_owned(), font_id, ui.visuals().text_color())
+                                .size()
+                                .x;
+                            let group_width = 12.0 + ui.spacing().item_spacing.x + text_width;
+                            let leading_space = ((ui.available_width() - group_width) / 2.0).max(0.0);
+                            ui.horizontal_centered(|ui| {
+                                ui.add_space(leading_space);
+                                let (rect, _) =
+                                    ui.allocate_exact_size(egui::vec2(12.0, 12.0), egui::Sense::hover());
+                                ui.painter().circle_filled(
+                                    rect.center(),
+                                    5.0,
+                                    title.compatibility.status.color(),
+                                );
+                                ui.painter().circle_stroke(
+                                    rect.center(),
+                                    5.0,
+                                    egui::Stroke::new(
+                                        1.0,
+                                        ui.visuals().widgets.noninteractive.fg_stroke.color,
+                                    ),
+                                );
+                                ui.add(egui::Label::new(label).selectable(false));
                             });
                         });
                         row.col(|ui| {
