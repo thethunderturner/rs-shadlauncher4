@@ -1,3 +1,4 @@
+use crate::gui::centralpanel::table_list::region_from_content_id;
 use crate::scanning::Title;
 use eframe::egui;
 use std::cmp::Ordering;
@@ -62,6 +63,9 @@ impl Sorting {
                 }
                 "compatibility" => a.compatibility.status.cmp(&b.compatibility.status),
                 "serial" => a.serial.cmp(&b.serial),
+                "region" => {
+                    region_from_content_id(&a.publisher_id).cmp(region_from_content_id(&b.publisher_id))
+                }
                 "firmware" => {
                     let a = a.patch.as_ref().map_or(&a.app.fw, |patch| &patch.fw);
                     let b = b.patch.as_ref().map_or(&b.app.fw, |patch| &patch.fw);

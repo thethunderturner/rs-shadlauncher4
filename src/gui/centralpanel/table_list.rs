@@ -56,19 +56,21 @@ impl Centralpanel {
                 .sense(egui::Sense::click())
                 .resizable(true)
                 .cell_layout(egui::Layout::centered_and_justified(egui::Direction::TopDown))
-                .column(Column::exact(52.0))
-                .column(Column::initial(210.0).at_least(120.0).at_most(300.0))
-                .column(Column::exact(120.0))
-                .column(Column::exact(90.0))
-                .column(Column::exact(75.0))
-                .column(Column::exact(75.0))
-                .column(Column::remainder().at_least(320.0))
+                .column(Column::exact(52.0)) // icon
+                .column(Column::initial(210.0).at_least(120.0).at_most(300.0)) // name
+                .column(Column::exact(120.0)) // compatibility
+                .column(Column::exact(90.0)) // serial
+                .column(Column::exact(75.0)) // region
+                .column(Column::exact(75.0)) // fw
+                .column(Column::exact(75.0)) // version
+                .column(Column::remainder().at_least(320.0)) // path
                 .header(24.0, |mut header| {
                     for (column, label) in [
                         ("icon", "Icon"),
                         ("name", "Name"),
                         ("compatibility", "Compatibility"),
                         ("serial", "Serial"),
+                        ("region", "Region"),
                         ("firmware", "Firmware"),
                         ("version", "Version"),
                         ("path", "Path"),
@@ -131,11 +133,16 @@ impl Centralpanel {
                                     5.0,
                                     title.compatibility.status.color(),
                                 );
-                                ui.add(egui::Label::new(title.compatibility.status.label()).selectable(false));
+                                ui.add(
+                                    egui::Label::new(title.compatibility.status.label()).selectable(false),
+                                );
                             });
                         });
                         row.col(|ui| {
                             ui.add(egui::Label::new(&title.serial).selectable(false));
+                        });
+                        row.col(|ui| {
+                            show_row_region(ui, &title.publisher_id);
                         });
                         row.col(|ui| {
                             ui.add(
@@ -192,6 +199,35 @@ impl Centralpanel {
     }
 }
 
+pub(super) fn region_from_content_id(content_id: &str) -> &'static str {
+    match content_id.get(..2) {
+        Some("UP" | "UB" | "UT" | "US") => "USA",
+        Some("EP" | "EB") => "Europe",
+        Some("JP" | "JB") => "Japan",
+        Some("HP" | "HB") => "Asia",
+        Some("IP") => "World",
+        _ => "Unknown",
+    }
+}
+
+fn show_row_region(ui: &mut egui::Ui, content_id: &str) {
+    let region = region_from_content_id(content_id);
+    let flag = match region {
+        "USA" => egui::include_image!("../../assets/centralpanel/regions/us.svg"),
+        "Europe" => egui::include_image!("../../assets/centralpanel/regions/eu.svg"),
+        "Japan" => egui::include_image!("../../assets/centralpanel/regions/jp.svg"),
+        "Asia" => egui::include_image!("../../assets/centralpanel/regions/cn.svg"),
+        "World" => egui::include_image!("../../assets/centralpanel/regions/wr.svg"),
+        _ => egui::include_image!("../../assets/centralpanel/regions/xx.svg"),
+    };
+    ui.add(
+        egui::Image::new(flag)
+            .fit_to_exact_size(egui::vec2(24.0, 18.0))
+            .alt_text(region),
+    )
+    .on_hover_text(region);
+}
+
 fn show_row_menu(ui: &mut egui::Ui, title: &Title, actions: &mut Row) {
     ui.menu_button("Launch", |ui| {
         let _ = ui.button("Launch with game specific configs (default)");
@@ -240,4 +276,29 @@ fn show_row_menu(ui: &mut egui::Ui, title: &Title, actions: &mut Row) {
     ui.menu_button("ZAR compression", |ui| {
         let _ = ui.button("TODO");
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::region_from_content_id;
+
+    #[test]
+    fn maps_content_id_prefix_to_region() {
+        for (prefix, region) in [
+            ("UP", "USA"),
+            ("UB", "USA"),
+            ("UT", "USA"),
+            ("US", "USA"),
+            ("EP", "Europe"),
+            ("EB", "Europe"),
+            ("JP", "Japan"),
+            ("JB", "Japan"),
+            ("HP", "Asia"),
+            ("IP", "World"),
+            ("", "Unknown"),
+            ("XP", "Unknown"),
+        ] {
+            assert_eq!(region_from_content_id(&format!("{prefix}123")), region);
+        }
+    }
 }
