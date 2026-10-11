@@ -37,15 +37,15 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            cmake \ 
-            libasound2-dev\ 
+            cmake \
+            libasound2-dev \
             libopenal1 \
-            libx11-dev \ 
-            libxext-dev \ 
-            libxrandr-dev \ 
+            libx11-dev \
+            libxext-dev \
+            libxrandr-dev \
             libxcursor-dev \
-            libxfixes-dev \ 
-            libxi-dev \ 
+            libxfixes-dev \
+            libxi-dev \
             libxss-dev \
             libxtst-dev \
             libxkbcommon-dev \
