@@ -100,7 +100,7 @@ impl Centralpanel {
                 );
             } else if self.titles.is_empty() {
                 if self.scan.scan_duration.is_none() {
-                    ui.label("Add a game folder in Settings → Paths.");
+                    ui.label("Add a game folder in Settings -> Paths.");
                 } else {
                     ui.label("No games found in the selected folder.");
                 }
