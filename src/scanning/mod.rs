@@ -44,7 +44,18 @@ pub struct Patch {
     pub sfo: SfoDataTable,
 }
 
-pub fn scan(path: &Path, compatibility: &Database) -> Vec<Title> {
+pub fn count_directories(path: &Path) -> usize {
+    fs::read_dir(path)
+        .map(|entries| {
+            entries
+                .filter_map(Result::ok)
+                .filter(|entry| entry.path().is_dir())
+                .count()
+        })
+        .unwrap_or(0)
+}
+
+pub fn scan(path: &Path, compatibility: &Database, mut on_progress: impl FnMut()) -> Vec<Title> {
     let mut list: Vec<Title> = Vec::new();
     let mut patches: HashMap<String, Patch> = HashMap::new();
     match fs::read_dir(path) {
@@ -59,6 +70,7 @@ pub fn scan(path: &Path, compatibility: &Database) -> Vec<Title> {
 
                         let sfo_path = game_dir.join("sce_sys").join("param.sfo");
                         if !sfo_path.is_file() {
+                            on_progress();
                             continue;
                         }
 
@@ -66,6 +78,7 @@ pub fn scan(path: &Path, compatibility: &Database) -> Vec<Title> {
                             Ok(sfo) => sfo.data_table,
                             Err(error) => {
                                 eprintln!("Skipping {}: {error}", sfo_path.display());
+                                on_progress();
                                 continue;
                             }
                         };
@@ -126,6 +139,7 @@ pub fn scan(path: &Path, compatibility: &Database) -> Vec<Title> {
                                 patch: None,
                             });
                         }
+                        on_progress();
                     }
                     Err(e) => eprintln!("Error: {}", e),
                 }

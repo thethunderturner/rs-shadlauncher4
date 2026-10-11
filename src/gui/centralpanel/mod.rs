@@ -1,5 +1,5 @@
-use crate::gui::centralpanel::actions::Actions;
 use crate::gui::centralpanel::actions::scan::Scan;
+use crate::gui::centralpanel::actions::Actions;
 use crate::gui::centralpanel::sorting::Sorting;
 use crate::gui::sidepanel::actions::library::LibraryFilter;
 use crate::scanning::Title;
@@ -72,7 +72,7 @@ impl Centralpanel {
         egui::Panel::bottom("titles_footer")
             .resizable(false)
             .show(ui, |ui| {
-                let shown = if self.loading || self.scan.scan_failed {
+                let shown = if self.scan.scan_failed {
                     0
                 } else {
                     self.filtered_titles.len()
@@ -85,15 +85,12 @@ impl Centralpanel {
                 }
             });
         egui::CentralPanel::default().show(ui, |ui| {
-            if self.loading {
-                ui.horizontal(|ui| {
-                    ui.spinner();
-                    ui.label("Scanning titles");
-                });
-            } else if self.scan.scan_failed {
+            if self.scan.scan_failed {
                 ui.colored_label(ui.visuals().error_fg_color, "Could not scan the games folder.");
             } else if self.titles.is_empty() {
-                if self.scan.scan_duration.is_none() {
+                if self.loading {
+                    ui.label("Scanning game folders…");
+                } else if self.scan.scan_duration.is_none() {
                     ui.label("Add a game folder in Settings -> Paths.");
                 } else {
                     ui.label("No games found in the selected folder.");
