@@ -1,11 +1,13 @@
-use serde_json::Value;
-use crate::gui::menubar::settings::{Settings};
+use crate::common::config::Config;
+use crate::gui::menubar::settings::Settings;
 use crate::gui::menubar::settings::helpers::audio_devices::AudioDevices;
+use serde_json::Value;
 
 impl Settings {
     pub fn load(&mut self) {
         self.error = None;
         self.draft = None;
+        self.original = None;
         match crate::common::user_directory() {
             Ok(dir) => {
                 let path = dir.join("config.json");
@@ -22,15 +24,19 @@ impl Settings {
                         {
                             self.error =
                                 Some("Frontend settings must be a JSON object.".to_owned());
-                        } else if let Err(error) =
-                            serde_json::from_value::<crate::common::config::Config>(value.clone())
-                        {
-                            self.error = Some(format!("Could not read config.json: {error}"));
                         } else {
-                            self.audio_devices = AudioDevices::scan(
-                                value["Audio"]["audio_backend"].as_u64().unwrap_or(0),
-                            );
-                            self.draft = Some(value);
+                            match serde_json::from_value::<Config>(value.clone()) {
+                                Ok(config) => {
+                                    self.audio_devices =
+                                        AudioDevices::scan(config.audio.audio_backend as u64);
+                                    self.original = Some(value);
+                                    self.draft = Some(config);
+                                }
+                                Err(error) => {
+                                    self.error =
+                                        Some(format!("Could not read config.json: {error}"))
+                                }
+                            }
                         }
                     }
                     Ok(_) => {
@@ -48,9 +54,16 @@ impl Settings {
         let (Some(path), Some(draft)) = (&self.config_path, &self.draft) else {
             return false;
         };
-        let result = serde_json::from_value::<crate::common::config::Config>(draft.clone())
+        let result = serde_json::to_value(draft)
             .map_err(|error| error.to_string())
-            .and_then(|_| serde_json::to_vec_pretty(draft).map_err(|error| error.to_string()))
+            .and_then(|known| {
+                let mut merged = self
+                    .original
+                    .clone()
+                    .unwrap_or_else(|| serde_json::json!({}));
+                merge_known(&mut merged, known);
+                serde_json::to_vec_pretty(&merged).map_err(|error| error.to_string())
+            })
             .and_then(|mut bytes| {
                 bytes.push(b'\n');
                 std::fs::write(path, bytes).map_err(|error| error.to_string())
@@ -74,6 +87,7 @@ fn normalize_sections(config: &mut Value) {
     };
     for (old, new) in [
         ("audio", "Audio"),
+        ("frontend", "Frontend"),
         ("debug", "Debug"),
         ("gpu", "GPU"),
         ("general", "General"),
@@ -95,5 +109,40 @@ fn normalize_sections(config: &mut Value) {
                 root.insert(new.to_owned(), value);
             }
         }
+    }
+}
+
+fn merge_known(original: &mut Value, known: Value) {
+    match (original, known) {
+        (Value::Object(original), Value::Object(known)) => {
+            for (key, value) in known {
+                merge_known(original.entry(key).or_insert(Value::Null), value);
+            }
+        }
+        (original, known) => *original = known,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{merge_known, normalize_sections};
+    use crate::common::config::Config;
+    use serde_json::{Value, json};
+
+    #[test]
+    fn typed_edit_preserves_unrecognized_config_keys() {
+        let mut original = json!({
+            "network": {"shad_net_enabled": false, "future_option": 42},
+            "CustomSection": {"keep": true}
+        });
+        normalize_sections(&mut original);
+        let mut config: Config = serde_json::from_value(original.clone()).unwrap();
+        config.network.shad_net_enabled = true;
+        merge_known(&mut original, serde_json::to_value(config).unwrap());
+
+        assert_eq!(original["Network"]["shad_net_enabled"], Value::Bool(true));
+        assert_eq!(original["Network"]["future_option"], json!(42));
+        assert_eq!(original["CustomSection"]["keep"], Value::Bool(true));
+        assert!(original.get("network").is_none());
     }
 }

@@ -1,9 +1,9 @@
+use crate::common::config::Config;
 use crate::gui::menubar::settings::helpers::audio_devices::AudioDevices;
 use crate::gui::menubar::settings::helpers::controls::{check, section, two_columns, uint};
 use eframe::egui;
-use serde_json::Value;
 
-const LANGUAGES: &[(&str, u64)] = &[
+const LANGUAGES: &[(&str, u32)] = &[
     ("Arabic", 21),
     ("Czech", 23),
     ("Danish", 14),
@@ -37,7 +37,7 @@ const LANGUAGES: &[(&str, u64)] = &[
     ("Vietnamese", 28),
 ];
 
-pub fn show(ui: &mut egui::Ui, config: &mut Value, devices: &AudioDevices) -> bool {
+pub fn show(ui: &mut egui::Ui, config: &mut Config, devices: &AudioDevices) -> bool {
     let mut refresh = false;
     two_columns(
         ui,
@@ -48,54 +48,42 @@ pub fn show(ui: &mut egui::Ui, config: &mut Value, devices: &AudioDevices) -> bo
                 ui.set_min_width(ui.available_width());
                 ui.set_min_height(280.0);
                 section(ui, "Console Language", |ui| {
-                    let value = &mut config["General"]["console_language"];
-                    let mut current = value.as_u64().unwrap_or(1);
+                    let current = &mut config.general.console_language;
                     egui::ComboBox::from_id_salt("console_language")
                         .width(ui.available_width())
                         .selected_text(
                             LANGUAGES
                                 .iter()
-                                .find(|(_, id)| *id == current)
+                                .find(|(_, id)| id == current)
                                 .map_or("Unknown", |(name, _)| name),
                         )
                         .show_ui(ui, |ui| {
                             for (name, id) in LANGUAGES {
-                                ui.selectable_value(&mut current, *id, *name);
+                                ui.selectable_value(current, *id, *name);
                             }
                         });
-                    *value = Value::from(current);
                 });
                 section(ui, "Miscellaneous", |ui| {
                     check(
                         ui,
-                        config,
-                        "General",
-                        "show_splash",
+                        &mut config.general.show_splash,
                         "Show Splash Screen When Launching Game",
                     );
                     check(
                         ui,
-                        config,
-                        "General",
-                        "discord_rpc_enabled",
+                        &mut config.general.discord_rpc_enabled,
                         "Discord Rich Presence",
                     );
                 });
                 section(ui, "Volume", |ui| {
-                    let value = &mut config["General"]["volume_slider"];
-                    let mut volume = value.as_u64().unwrap_or(100);
+                    let volume = &mut config.general.volume_slider;
                     ui.horizontal(|ui| {
                         ui.add_sized(
                             [48.0, ui.spacing().interact_size.y],
                             egui::Label::new(format!("{volume}%")),
                         );
                         ui.spacing_mut().slider_width = ui.available_width().max(100.0);
-                        if ui
-                            .add(egui::Slider::new(&mut volume, 0..=500).show_value(false))
-                            .changed()
-                        {
-                            *value = Value::from(volume);
-                        }
+                        ui.add(egui::Slider::new(volume, 0..=500).show_value(false));
                     });
                 });
             });
@@ -106,40 +94,47 @@ pub fn show(ui: &mut egui::Ui, config: &mut Value, devices: &AudioDevices) -> bo
                 ui.set_min_width(ui.available_width());
                 ui.set_min_height(280.0);
                 section(ui, "Audio Backend", |ui| {
-                    let value = &mut config["Audio"]["audio_backend"];
-                    let mut current = value.as_u64().unwrap_or(0);
+                    let current = &mut config.audio.audio_backend;
                     egui::ComboBox::from_id_salt("audio_backend")
                         .width(ui.available_width())
-                        .selected_text(if current == 1 { "OpenAL" } else { "SDL" })
+                        .selected_text(if *current == 1 { "OpenAL" } else { "SDL" })
                         .show_ui(ui, |ui| {
-                            ui.selectable_value(&mut current, 0, "SDL");
-                            ui.selectable_value(&mut current, 1, "OpenAL");
+                            ui.selectable_value(current, 0, "SDL");
+                            ui.selectable_value(current, 1, "OpenAL");
                         });
-                    *value = Value::from(current);
                 });
 
-                let backend = config["Audio"]["audio_backend"].as_u64().unwrap_or(0);
-                let prefix = if backend == 1 { "openal" } else { "sdl" };
+                let backend = config.audio.audio_backend;
+
                 device(
                     ui,
-                    config,
-                    prefix,
+                    if backend == 1 {
+                        &mut config.audio.openal_main_output_device
+                    } else {
+                        &mut config.audio.sdl_main_output_device
+                    },
                     "main_output_device",
                     "Audio Device (general)",
                     &devices.outputs,
                 );
                 device(
                     ui,
-                    config,
-                    prefix,
+                    if backend == 1 {
+                        &mut config.audio.openal_pad_spk_output_device
+                    } else {
+                        &mut config.audio.sdl_pad_spk_output_device
+                    },
                     "pad_spk_output_device",
                     "Audio Device (DS4 speaker)",
                     &devices.outputs,
                 );
                 device(
                     ui,
-                    config,
-                    prefix,
+                    if backend == 1 {
+                        &mut config.audio.openal_mic_device
+                    } else {
+                        &mut config.audio.sdl_mic_device
+                    },
                     "mic_device",
                     "Mic Device",
                     &devices.inputs,
@@ -152,12 +147,10 @@ pub fn show(ui: &mut egui::Ui, config: &mut Value, devices: &AudioDevices) -> bo
                 }
                 if backend == 1 {
                     section(ui, "OpenAL", |ui| {
-                        uint(ui, config, "Audio", "openal_hrtf", "HRTF", 0..=2);
+                        uint(ui, &mut config.audio.openal_hrtf, "HRTF", 0..=2);
                         uint(
                             ui,
-                            config,
-                            "Audio",
-                            "openal_output_mode",
+                            &mut config.audio.openal_output_mode,
                             "Output mode",
                             0..=2,
                         );
@@ -169,18 +162,9 @@ pub fn show(ui: &mut egui::Ui, config: &mut Value, devices: &AudioDevices) -> bo
     refresh
 }
 
-fn device(
-    ui: &mut egui::Ui,
-    config: &mut Value,
-    prefix: &str,
-    suffix: &str,
-    label: &str,
-    devices: &[String],
-) {
-    let key = format!("{prefix}_{suffix}");
+fn device(ui: &mut egui::Ui, value: &mut String, id: &str, label: &str, devices: &[String]) {
     section(ui, label, |ui| {
-        let value = &mut config["Audio"][key.as_str()];
-        let mut current = value.as_str().unwrap_or("Default Device").to_owned();
+        let mut current = value.clone();
         if current.is_empty() {
             current = "Default Device".to_owned();
         }
@@ -190,7 +174,7 @@ fn device(
         } else {
             format!("{current} (unavailable)")
         };
-        egui::ComboBox::from_id_salt(("audio_device", key.as_str()))
+        egui::ComboBox::from_id_salt(("audio_device", id))
             .width(ui.available_width())
             .selected_text(selected)
             .show_ui(ui, |ui| {
@@ -199,6 +183,6 @@ fn device(
                     ui.selectable_value(&mut current, name.clone(), name);
                 }
             });
-        *value = Value::String(current);
+        *value = current;
     });
 }

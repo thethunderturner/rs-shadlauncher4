@@ -1,11 +1,11 @@
+use crate::common::config::Config;
 use crate::gui::menubar::settings::helpers::camera_devices::CameraDevices;
 use crate::gui::menubar::settings::helpers::controls::*;
 use eframe::egui;
-use serde_json::Value;
 
 pub(in crate::gui::menubar::settings) fn show(
     ui: &mut egui::Ui,
-    config: &mut Value,
+    config: &mut Config,
     camera_devices: &mut CameraDevices,
 ) {
     two_columns(
@@ -15,34 +15,27 @@ pub(in crate::gui::menubar::settings) fn show(
             section(ui, "Controller", |ui| {
                 check(
                     ui,
-                    config,
-                    "Input",
-                    "motion_controls_enabled",
+                    &mut config.input.motion_controls_enabled,
                     "Enable motion controls",
                 );
                 check(
                     ui,
-                    config,
-                    "Input",
-                    "background_controller_input",
+                    &mut config.input.background_controller_input,
                     "Enable background input",
                 );
             });
             section(ui, "Cursor", |ui| {
                 index(
                     ui,
-                    config,
-                    "Input",
+                    &mut config.input.cursor_state,
                     "cursor_state",
                     "Hide cursor",
                     &["Never", "Idle", "Always"],
                 );
-                if config["Input"]["cursor_state"].as_u64() == Some(1) {
+                if config.input.cursor_state == 1 {
                     uint(
                         ui,
-                        config,
-                        "Input",
-                        "cursor_hide_timeout",
+                        &mut config.input.cursor_hide_timeout,
                         "Idle timeout (seconds)",
                         0..=3600,
                     );
@@ -53,8 +46,7 @@ pub(in crate::gui::menubar::settings) fn show(
             section(ui, "Devices", |ui| {
                 index(
                     ui,
-                    config,
-                    "Input",
+                    &mut config.input.usb_device_backend,
                     "usb_device_backend",
                     "USB device",
                     &[
@@ -70,13 +62,13 @@ pub(in crate::gui::menubar::settings) fn show(
     );
 }
 
-fn camera_picker(ui: &mut egui::Ui, config: &mut Value, devices: &mut CameraDevices) {
+fn camera_picker(ui: &mut egui::Ui, config: &mut Config, devices: &mut CameraDevices) {
     devices.ensure_scan(ui.ctx());
-    let mut selected = config["Input"]["camera_id"].as_i64().unwrap_or(-1);
-    let selected_name = if selected == -1 {
+    let selected = &mut config.input.camera_id;
+    let selected_name = if *selected == -1 {
         "None".to_owned()
     } else {
-        usize::try_from(selected)
+        usize::try_from(*selected)
             .ok()
             .and_then(|index| devices.names().get(index))
             .cloned()
@@ -88,9 +80,9 @@ fn camera_picker(ui: &mut egui::Ui, config: &mut Value, devices: &mut CameraDevi
             egui::ComboBox::from_id_salt("camera_device")
                 .selected_text(selected_name)
                 .show_ui(ui, |ui| {
-                    ui.selectable_value(&mut selected, -1, "None");
+                    ui.selectable_value(selected, -1, "None");
                     for (index, name) in devices.names().iter().enumerate() {
-                        ui.selectable_value(&mut selected, index as i64, name);
+                        ui.selectable_value(selected, index as i32, name);
                     }
                 });
             if devices.is_scanning() {
@@ -111,5 +103,4 @@ fn camera_picker(ui: &mut egui::Ui, config: &mut Value, devices: &mut CameraDevi
             }
         });
     });
-    config["Input"]["camera_id"] = Value::from(selected);
 }

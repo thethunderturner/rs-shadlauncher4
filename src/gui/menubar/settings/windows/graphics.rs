@@ -1,11 +1,11 @@
+use crate::common::config::Config;
 use crate::gui::menubar::settings::helpers::controls::*;
 use crate::gui::menubar::settings::helpers::gpu_devices::GpuDevices;
 use eframe::egui;
-use serde_json::Value;
 
 pub(in crate::gui::menubar::settings) fn show(
     ui: &mut egui::Ui,
-    config: &mut Value,
+    config: &mut Config,
     gpu_devices: &mut GpuDevices,
 ) {
     two_columns(
@@ -15,8 +15,7 @@ pub(in crate::gui::menubar::settings) fn show(
             section(ui, "Display Mode", |ui| {
                 choice(
                     ui,
-                    config,
-                    "GPU",
+                    &mut config.gpu.full_screen_mode,
                     "full_screen_mode",
                     "Mode",
                     &[
@@ -26,14 +25,13 @@ pub(in crate::gui::menubar::settings) fn show(
                     ],
                 );
                 let fullscreen = matches!(
-                    config["GPU"]["full_screen_mode"].as_str(),
-                    Some("Fullscreen (Borderless)" | "Fullscreen")
+                    config.gpu.full_screen_mode.as_str(),
+                    "Fullscreen (Borderless)" | "Fullscreen"
                 );
-                config["GPU"]["full_screen"] = Value::Bool(fullscreen);
+                config.gpu.full_screen = fullscreen;
                 choice(
                     ui,
-                    config,
-                    "GPU",
+                    &mut config.gpu.present_mode,
                     "present_mode",
                     "Present mode",
                     &[
@@ -44,13 +42,11 @@ pub(in crate::gui::menubar::settings) fn show(
                 );
             });
             section(ui, "Window Size", |ui| {
-                uint(ui, config, "GPU", "window_width", "Width", 1..=16384);
-                uint(ui, config, "GPU", "window_height", "Height", 1..=16384);
+                uint(ui, &mut config.gpu.window_width, "Width", 1..=16384);
+                uint(ui, &mut config.gpu.window_height, "Height", 1..=16384);
                 uint(
                     ui,
-                    config,
-                    "GPU",
-                    "vblank_frequency",
+                    &mut config.gpu.vblank_frequency,
                     "Vblank frequency (Hz)",
                     1..=1000,
                 );
@@ -59,38 +55,33 @@ pub(in crate::gui::menubar::settings) fn show(
         |ui, config| {
             section(ui, "Graphics Device", |ui| {
                 graphics_device(ui, config, gpu_devices);
-                check(ui, config, "GPU", "null_gpu", "Enable Null GPU");
+                check(ui, &mut config.gpu.null_gpu, "Enable Null GPU");
             });
             section(ui, "Upscaling and Color", |ui| {
-                check(ui, config, "GPU", "hdr_allowed", "Enable HDR");
-                check(ui, config, "GPU", "fsr_enabled", "Enable FSR");
-                check(ui, config, "GPU", "rcas_enabled", "Enable RCAS sharpening");
+                check(ui, &mut config.gpu.hdr_allowed, "Enable HDR");
+                check(ui, &mut config.gpu.fsr_enabled, "Enable FSR");
+                check(ui, &mut config.gpu.rcas_enabled, "Enable RCAS sharpening");
                 rcas_attenuation(ui, config);
             });
         },
     );
 }
 
-fn rcas_attenuation(ui: &mut egui::Ui, config: &mut Value) {
-    let mut value = config["GPU"]["rcas_attenuation"].as_u64().unwrap_or(250);
+fn rcas_attenuation(ui: &mut egui::Ui, config: &mut Config) {
+    let value = &mut config.gpu.rcas_attenuation;
     ui.label("RCAS attenuation");
     ui.horizontal(|ui| {
-        if ui
-            .add(egui::Slider::new(&mut value, 0..=3000).show_value(false))
-            .changed()
-        {
-            config["GPU"]["rcas_attenuation"] = Value::from(value);
-        }
-        ui.label(format!("{:.3}", value as f64 / 1000.0));
+        ui.add(egui::Slider::new(value, 0..=3000).show_value(false));
+        ui.label(format!("{:.3}", *value as f64 / 1000.0));
     });
 }
 
-fn graphics_device(ui: &mut egui::Ui, config: &mut Value, devices: &mut GpuDevices) {
-    let mut selected = config["Vulkan"]["gpu_id"].as_i64().unwrap_or(-1);
-    let selected_name = if selected == -1 {
+fn graphics_device(ui: &mut egui::Ui, config: &mut Config, devices: &mut GpuDevices) {
+    let selected = &mut config.vulkan.gpu_id;
+    let selected_name = if *selected == -1 {
         "Auto Select".to_owned()
     } else {
-        usize::try_from(selected)
+        usize::try_from(*selected)
             .ok()
             .and_then(|index| devices.names().get(index))
             .cloned()
@@ -100,9 +91,9 @@ fn graphics_device(ui: &mut egui::Ui, config: &mut Value, devices: &mut GpuDevic
         egui::ComboBox::from_id_salt("graphics_device")
             .selected_text(selected_name)
             .show_ui(ui, |ui| {
-                ui.selectable_value(&mut selected, -1, "Auto Select");
+                ui.selectable_value(selected, -1, "Auto Select");
                 for (index, name) in devices.names().iter().enumerate() {
-                    ui.selectable_value(&mut selected, index as i64, name);
+                    ui.selectable_value(selected, index as i32, name);
                 }
             });
         if devices.is_scanning() {
@@ -116,5 +107,4 @@ fn graphics_device(ui: &mut egui::Ui, config: &mut Value, devices: &mut GpuDevic
             ui.label("No graphics devices found.");
         }
     });
-    config["Vulkan"]["gpu_id"] = Value::from(selected);
 }

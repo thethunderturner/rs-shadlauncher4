@@ -1,8 +1,8 @@
+use crate::common::config::Config;
 use crate::gui::menubar::settings::helpers::controls::*;
 use eframe::egui;
-use serde_json::Value;
 
-pub(in crate::gui::menubar::settings) fn show(ui: &mut egui::Ui, config: &mut Value) {
+pub(in crate::gui::menubar::settings) fn show(ui: &mut egui::Ui, config: &mut Config) {
     two_columns(
         ui,
         config,
@@ -10,23 +10,18 @@ pub(in crate::gui::menubar::settings) fn show(ui: &mut egui::Ui, config: &mut Va
             section(ui, "Trophy Notifications", |ui| {
                 check(
                     ui,
-                    config,
-                    "General",
-                    "trophy_popup_disabled",
+                    &mut config.general.trophy_popup_disabled,
                     "Disable trophy pop-ups",
                 );
                 decimal(
                     ui,
-                    config,
-                    "General",
-                    "trophy_notification_duration",
+                    &mut config.general.trophy_notification_duration,
                     "Duration (seconds)",
                     0.0..=60.0,
                 );
                 choice(
                     ui,
-                    config,
-                    "General",
+                    &mut config.general.trophy_notification_side,
                     "trophy_notification_side",
                     "Position",
                     &[

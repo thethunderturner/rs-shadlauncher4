@@ -1,6 +1,7 @@
 pub mod helpers;
 mod windows;
 
+use crate::common::config::Config;
 use crate::gui::menubar::settings::windows::{general, network};
 use eframe::egui;
 use helpers::audio_devices::AudioDevices;
@@ -74,7 +75,7 @@ impl SettingsTab {
     fn show(
         self,
         ui: &mut egui::Ui,
-        config: &mut Value,
+        config: &mut Config,
         devices: &AudioDevices,
         gpu_devices: &mut GpuDevices,
         camera_devices: &mut CameraDevices,
@@ -99,7 +100,8 @@ impl SettingsTab {
 pub struct Settings {
     open: bool,
     selected_tab: SettingsTab,
-    draft: Option<Value>,
+    draft: Option<Config>,
+    original: Option<Value>,
     config_path: Option<PathBuf>,
     error: Option<String>,
     audio_devices: AudioDevices,
@@ -114,12 +116,9 @@ impl Settings {
                 if !self.open {
                     self.load();
                     if let Some(config) = &self.draft {
-                        if let Some(home) = config["Frontend"]["home_tab"].as_str() {
-                            if let Some(tab) =
-                                SettingsTab::ALL.iter().find(|tab| tab.label() == home)
-                            {
-                                self.selected_tab = *tab;
-                            }
+                        let home = config.frontend.home_tab.as_str();
+                        if let Some(tab) = SettingsTab::ALL.iter().find(|tab| tab.label() == home) {
+                            self.selected_tab = *tab;
                         }
                     }
                 }
@@ -223,7 +222,7 @@ impl Settings {
                 }
             });
         if let Some(config) = &self.draft {
-            let backend = config["Audio"]["audio_backend"].as_u64().unwrap_or(0);
+            let backend = config.audio.audio_backend as u64;
             if refresh_devices || backend != self.audio_devices.backend {
                 self.audio_devices = AudioDevices::scan(backend);
                 ctx.request_repaint();
@@ -239,6 +238,7 @@ impl Settings {
         self.open = open;
         if !open {
             self.draft = None;
+            self.original = None;
             self.error = None;
         }
         saved

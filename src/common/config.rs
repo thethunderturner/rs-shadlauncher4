@@ -6,21 +6,54 @@ use std::{fs, io};
 #[serde(default)]
 pub struct Config {
     #[serde(rename = "Audio", alias = "audio")]
-    audio: Audio,
+    pub audio: Audio,
+    #[serde(rename = "Frontend", alias = "frontend")]
+    pub frontend: Frontend,
     #[serde(rename = "Debug", alias = "debug")]
-    debug: Debug,
+    pub debug: Debug,
     #[serde(rename = "GPU", alias = "gpu")]
-    gpu: Gpu,
+    pub gpu: Gpu,
     #[serde(rename = "General", alias = "general")]
-    general: General,
+    pub general: General,
     #[serde(rename = "Input", alias = "input")]
-    input: Input,
+    pub input: Input,
     #[serde(rename = "Log", alias = "log")]
-    log: Log,
+    pub log: Log,
     #[serde(rename = "Network", alias = "network")]
-    network: Network,
+    pub network: Network,
     #[serde(rename = "Vulkan", alias = "vulkan")]
-    vulkan: Vulkan,
+    pub vulkan: Vulkan,
+}
+
+// QT saves these in a .ini file. I can try saving it in the config.json, not sure if this will cause issues down the road
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(default)]
+pub struct Frontend {
+    pub show_background_image: bool,
+    pub background_image_opacity: u32,
+    pub play_background_music: bool,
+    pub background_music_volume: u32,
+    pub show_compatibility: bool,
+    pub check_compatibility_at_startup: bool,
+    pub check_for_updates: bool,
+    pub show_change_log: bool,
+    pub home_tab: String,
+}
+
+impl Default for Frontend {
+    fn default() -> Self {
+        Self {
+            show_background_image: false,
+            background_image_opacity: 100,
+            play_background_music: false,
+            background_music_volume: 100,
+            show_compatibility: false,
+            check_compatibility_at_startup: false,
+            check_for_updates: false,
+            show_change_log: false,
+            home_tab: "General".to_owned(),
+        }
+    }
 }
 
 impl Config {
@@ -42,16 +75,16 @@ impl Config {
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(default)]
-struct Audio {
-    audio_backend: u32,
-    openal_hrtf: u32,
-    openal_main_output_device: String,
-    openal_mic_device: String,
-    openal_output_mode: u32,
-    openal_pad_spk_output_device: String,
-    sdl_main_output_device: String,
-    sdl_mic_device: String,
-    sdl_pad_spk_output_device: String,
+pub struct Audio {
+    pub audio_backend: u32,
+    pub openal_hrtf: u32,
+    pub openal_main_output_device: String,
+    pub openal_mic_device: String,
+    pub openal_output_mode: u32,
+    pub openal_pad_spk_output_device: String,
+    pub sdl_main_output_device: String,
+    pub sdl_mic_device: String,
+    pub sdl_pad_spk_output_device: String,
 }
 
 impl Default for Audio {
@@ -72,10 +105,10 @@ impl Default for Audio {
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(default)]
-struct Debug {
-    config_version: String,
-    debug_dump: bool,
-    shader_collect: bool,
+pub struct Debug {
+    pub config_version: String,
+    pub debug_dump: bool,
+    pub shader_collect: bool,
 }
 
 impl Default for Debug {
@@ -90,28 +123,28 @@ impl Default for Debug {
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(default)]
-struct Gpu {
-    copy_gpu_buffers: bool,
-    direct_memory_access_enabled: bool,
-    dump_shaders: bool,
-    fsr_enabled: bool,
-    full_screen: bool,
-    full_screen_mode: String,
-    hdr_allowed: bool,
-    inline_fetch_shader: bool,
-    internal_screen_height: u32,
-    internal_screen_width: u32,
-    null_gpu: bool,
-    patch_shaders: bool,
-    present_mode: String,
-    rcas_attenuation: u32,
-    rcas_enabled: bool,
-    readback_linear_images_enabled: bool,
-    readbacks_mode: u32,
-    userfaultfd: bool,
-    vblank_frequency: u32,
-    window_height: u32,
-    window_width: u32,
+pub struct Gpu {
+    pub copy_gpu_buffers: bool,
+    pub direct_memory_access_enabled: bool,
+    pub dump_shaders: bool,
+    pub fsr_enabled: bool,
+    pub full_screen: bool,
+    pub full_screen_mode: String,
+    pub hdr_allowed: bool,
+    pub inline_fetch_shader: bool,
+    pub internal_screen_height: u32,
+    pub internal_screen_width: u32,
+    pub null_gpu: bool,
+    pub patch_shaders: bool,
+    pub present_mode: String,
+    pub rcas_attenuation: u32,
+    pub rcas_enabled: bool,
+    pub readback_linear_images_enabled: bool,
+    pub readbacks_mode: u32,
+    pub userfaultfd: bool,
+    pub vblank_frequency: u32,
+    pub window_height: u32,
+    pub window_width: u32,
 }
 
 impl Default for Gpu {
@@ -144,41 +177,41 @@ impl Default for Gpu {
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 #[serde(default)]
-struct InstallDir {
-    enabled: bool,
-    path: PathBuf,
+pub struct InstallDir {
+    pub enabled: bool,
+    pub path: PathBuf,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(default)]
-struct General {
-    addon_install_dir: PathBuf,
-    big_picture_folder_depth: u32,
-    big_picture_scale: u32,
-    connected_to_network: bool,
-    console_language: u32,
-    dev_kit_mode: bool,
-    discord_rpc_enabled: bool,
-    enable_upnp: bool,
-    extra_dmem_in_mbytes: u32,
-    extra_fmem_in_mbytes: u32,
-    font_dir: String,
-    home_dir: String,
-    install_dirs: Vec<InstallDir>,
-    neo_mode: bool,
-    psn_signed_in: bool,
-    redzone_patches: bool,
-    shad_net_enabled: bool,
-    shadnet_server: String,
-    shadnet_webapi_server: String,
-    show_fps_counter: bool,
-    show_splash: bool,
-    signaling_info: String,
-    sys_modules_dir: String,
-    trophy_notification_duration: f64,
-    trophy_notification_side: String,
-    trophy_popup_disabled: bool,
-    volume_slider: u32,
+pub struct General {
+    pub addon_install_dir: PathBuf,
+    pub big_picture_folder_depth: u32,
+    pub big_picture_scale: u32,
+    pub connected_to_network: bool,
+    pub console_language: u32,
+    pub dev_kit_mode: bool,
+    pub discord_rpc_enabled: bool,
+    pub enable_upnp: bool,
+    pub extra_dmem_in_mbytes: u32,
+    pub extra_fmem_in_mbytes: u32,
+    pub font_dir: String,
+    pub home_dir: String,
+    pub install_dirs: Vec<InstallDir>,
+    pub neo_mode: bool,
+    pub psn_signed_in: bool,
+    pub redzone_patches: bool,
+    pub shad_net_enabled: bool,
+    pub shadnet_server: String,
+    pub shadnet_webapi_server: String,
+    pub show_fps_counter: bool,
+    pub show_splash: bool,
+    pub signaling_info: String,
+    pub sys_modules_dir: String,
+    pub trophy_notification_duration: f64,
+    pub trophy_notification_side: String,
+    pub trophy_popup_disabled: bool,
+    pub volume_slider: u32,
 }
 
 impl Default for General {
@@ -217,22 +250,22 @@ impl Default for General {
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(default)]
-struct Input {
-    background_controller_input: bool,
-    camera_id: i32,
-    cursor_hide_timeout: u32,
-    cursor_state: u32,
-    default_controller_id: String,
-    ime_accessibility_enabled: bool,
-    ime_url_mail_short_panel: bool,
-    is_circle_enter: bool,
-    motion_controls_enabled: bool,
-    special_pad_class: u32,
-    usb_device_backend: u32,
-    use_keyboard_as_keyboard: bool,
-    use_mice_as_mice: bool,
-    use_special_pad: bool,
-    use_unified_input_config: bool,
+pub struct Input {
+    pub background_controller_input: bool,
+    pub camera_id: i32,
+    pub cursor_hide_timeout: u32,
+    pub cursor_state: u32,
+    pub default_controller_id: String,
+    pub ime_accessibility_enabled: bool,
+    pub ime_url_mail_short_panel: bool,
+    pub is_circle_enter: bool,
+    pub motion_controls_enabled: bool,
+    pub special_pad_class: u32,
+    pub usb_device_backend: u32,
+    pub use_keyboard_as_keyboard: bool,
+    pub use_mice_as_mice: bool,
+    pub use_special_pad: bool,
+    pub use_unified_input_config: bool,
 }
 
 impl Default for Input {
@@ -259,16 +292,16 @@ impl Default for Input {
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(default)]
-struct Log {
-    append: bool,
-    enable: bool,
-    filter: String,
-    flush_level: String,
-    max_skip_duration: u32,
-    separate: bool,
-    size_limit: u64,
-    skip_duplicate: bool,
-    sync: bool,
+pub struct Log {
+    pub append: bool,
+    pub enable: bool,
+    pub filter: String,
+    pub flush_level: String,
+    pub max_skip_duration: u32,
+    pub separate: bool,
+    pub size_limit: u64,
+    pub skip_duplicate: bool,
+    pub sync: bool,
 }
 
 impl Default for Log {
@@ -289,15 +322,15 @@ impl Default for Log {
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(default)]
-struct Network {
-    connected_to_network: bool,
-    disable_https: bool,
-    enable_upnp: bool,
-    p2p_port: u32,
-    shad_net_enabled: bool,
-    shadnet_server: String,
-    shadnet_webapi_server: String,
-    signaling_info: String,
+pub struct Network {
+    pub connected_to_network: bool,
+    pub disable_https: bool,
+    pub enable_upnp: bool,
+    pub p2p_port: u32,
+    pub shad_net_enabled: bool,
+    pub shadnet_server: String,
+    pub shadnet_webapi_server: String,
+    pub signaling_info: String,
 }
 
 impl Default for Network {
@@ -317,18 +350,18 @@ impl Default for Network {
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(default)]
-struct Vulkan {
-    gpu_id: i32,
-    pipeline_cache_archived: bool,
-    pipeline_cache_enabled: bool,
-    renderdoc_enabled: bool,
-    vkcrash_diagnostic_enabled: bool,
-    vkguest_markers: bool,
-    vkhost_markers: bool,
-    vkvalidation_core_enabled: bool,
-    vkvalidation_enabled: bool,
-    vkvalidation_gpu_enabled: bool,
-    vkvalidation_sync_enabled: bool,
+pub struct Vulkan {
+    pub gpu_id: i32,
+    pub pipeline_cache_archived: bool,
+    pub pipeline_cache_enabled: bool,
+    pub renderdoc_enabled: bool,
+    pub vkcrash_diagnostic_enabled: bool,
+    pub vkguest_markers: bool,
+    pub vkhost_markers: bool,
+    pub vkvalidation_core_enabled: bool,
+    pub vkvalidation_enabled: bool,
+    pub vkvalidation_gpu_enabled: bool,
+    pub vkvalidation_sync_enabled: bool,
 }
 
 impl Default for Vulkan {

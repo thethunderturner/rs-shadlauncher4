@@ -1,15 +1,15 @@
+use crate::common::config::Config;
 use crate::gui::menubar::settings::helpers::controls::*;
 use eframe::egui;
-use serde_json::Value;
 
-pub(in crate::gui::menubar::settings) fn show(ui: &mut egui::Ui, config: &mut Value) {
+pub(in crate::gui::menubar::settings) fn show(ui: &mut egui::Ui, config: &mut Config) {
     two_columns(
         ui,
         config,
         |ui, config| {
             section(ui, "Logging", |ui| {
-                check(ui, config, "Log", "enable", "Enable logging");
-                text(ui, config, "Log", "filter", "Log filter");
+                check(ui, &mut config.log.enable, "Enable logging");
+                text(ui, &mut config.log.filter, "Log filter");
                 ui.menu_button("Log filter presets", |ui| {
                     for (label, filter) in [
                         ("Default", "*:Info"),
@@ -18,15 +18,14 @@ pub(in crate::gui::menubar::settings) fn show(ui: &mut egui::Ui, config: &mut Va
                         ("Trace", "*:Trace"),
                     ] {
                         if ui.button(label).clicked() {
-                            config["Log"]["filter"] = Value::String(filter.to_owned());
+                            config.log.filter = filter.to_owned();
                             ui.close();
                         }
                     }
                 });
                 choice(
                     ui,
-                    config,
-                    "Log",
+                    &mut config.log.flush_level,
                     "flush_level",
                     "Flush level",
                     &[
@@ -40,29 +39,25 @@ pub(in crate::gui::menubar::settings) fn show(ui: &mut egui::Ui, config: &mut Va
                 );
             });
             section(ui, "Duplicate Lines", |ui| {
-                check(ui, config, "Log", "skip_duplicate", "Skip duplicate lines");
-                if config["Log"]["skip_duplicate"].as_bool() == Some(true) {
+                check(ui, &mut config.log.skip_duplicate, "Skip duplicate lines");
+                if config.log.skip_duplicate {
                     uint(
                         ui,
-                        config,
-                        "Log",
-                        "max_skip_duration",
+                        &mut config.log.max_skip_duration,
                         "Maximum skip duration (ms)",
-                        0..=u32::MAX as u64,
+                        0..=u32::MAX,
                     );
                 }
             });
         },
         |ui, config| {
             section(ui, "Log Files", |ui| {
-                check(ui, config, "Log", "append", "Append to existing logs");
-                check(ui, config, "Log", "separate", "Separate log files per game");
-                check(ui, config, "Log", "sync", "Synchronous logging");
+                check(ui, &mut config.log.append, "Append to existing logs");
+                check(ui, &mut config.log.separate, "Separate log files per game");
+                check(ui, &mut config.log.sync, "Synchronous logging");
                 uint(
                     ui,
-                    config,
-                    "Log",
-                    "size_limit",
+                    &mut config.log.size_limit,
                     "Size limit (bytes)",
                     0..=u64::MAX,
                 );
