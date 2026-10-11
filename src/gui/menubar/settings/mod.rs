@@ -157,70 +157,77 @@ impl Settings {
         let mut close_after_save = false;
         let mut cancel = false;
         let mut refresh_devices = false;
-        egui::Window::new("Settings")
-            .id(egui::Id::new("settings_window"))
-            .open(&mut open)
-            .default_size([900.0, 600.0])
-            .min_size([900.0, 600.0])
-            .show(ctx, |ui| {
-                ui.horizontal_wrapped(|ui| {
-                    for tab in SettingsTab::ALL {
-                        let selected = self.selected_tab == tab;
-                        if ui
-                            .add(
-                                egui::Button::image_and_text(tab.icon(), tab.label())
-                                    .image_tint_follows_text_color(true)
-                                    .selected(selected)
-                                    .frame_when_inactive(selected),
-                            )
-                            .clicked()
-                        {
-                            self.selected_tab = tab;
+        ctx.show_viewport_immediate(
+            egui::ViewportId::from_hash_of("settings_window"),
+            egui::ViewportBuilder::default()
+                .with_title("Settings")
+                .with_inner_size([900.0, 600.0])
+                .with_min_inner_size([900.0, 600.0]),
+            |viewport_ui, _| {
+                egui::CentralPanel::default().show(viewport_ui, |ui| {
+                    ui.horizontal_wrapped(|ui| {
+                        for tab in SettingsTab::ALL {
+                            let selected = self.selected_tab == tab;
+                            if ui
+                                .add(
+                                    egui::Button::image_and_text(tab.icon(), tab.label())
+                                        .image_tint_follows_text_color(true)
+                                        .selected(selected)
+                                        .frame_when_inactive(selected),
+                                )
+                                .clicked()
+                            {
+                                self.selected_tab = tab;
+                            }
                         }
+                    });
+                    ui.separator();
+                    if let Some(error) = &self.error {
+                        ui.colored_label(ui.visuals().error_fg_color, error);
+                    }
+                    if let Some(config) = &mut self.draft {
+                        egui::Panel::bottom("settings_actions")
+                            .frame(egui::Frame::NONE)
+                            .show(ui, |ui| {
+                                ui.with_layout(egui::Layout::right_to_left(egui::Align::Max), |ui| {
+                                    if ui.button("Cancel").clicked() {
+                                        cancel = true;
+                                    }
+                                    if ui.button("Apply").clicked() {
+                                        save = true;
+                                    }
+                                    let selection = ui.visuals().selection;
+                                    let save_button = egui::Button::new(
+                                        egui::RichText::new("Save").color(selection.stroke.color),
+                                    )
+                                    .fill(selection.bg_fill);
+                                    if ui.add(save_button).clicked() {
+                                        save = true;
+                                        close_after_save = true;
+                                    }
+                                });
+                            });
+                        egui::ScrollArea::vertical()
+                            .id_salt("settings_content")
+                            .auto_shrink([false, false])
+                            .show(ui, |ui| {
+                                refresh_devices = self.selected_tab.show(
+                                    ui,
+                                    config,
+                                    &self.audio_devices,
+                                    &mut self.gpu_devices,
+                                    &mut self.camera_devices,
+                                );
+                            });
+                    } else if ui.button("Cancel").clicked() {
+                        cancel = true;
                     }
                 });
-                ui.separator();
-                if let Some(error) = &self.error {
-                    ui.colored_label(ui.visuals().error_fg_color, error);
+                if viewport_ui.input(|input| input.viewport().close_requested()) {
+                    open = false;
                 }
-                if let Some(config) = &mut self.draft {
-                    egui::Panel::bottom("settings_actions")
-                        .frame(egui::Frame::NONE)
-                        .show(ui, |ui| {
-                            ui.with_layout(egui::Layout::right_to_left(egui::Align::Max), |ui| {
-                                if ui.button("Cancel").clicked() {
-                                    cancel = true;
-                                }
-                                if ui.button("Apply").clicked() {
-                                    save = true;
-                                }
-                                let selection = ui.visuals().selection;
-                                let save_button = egui::Button::new(
-                                    egui::RichText::new("Save").color(selection.stroke.color),
-                                )
-                                .fill(selection.bg_fill);
-                                if ui.add(save_button).clicked() {
-                                    save = true;
-                                    close_after_save = true;
-                                }
-                            });
-                        });
-                    egui::ScrollArea::vertical()
-                        .id_salt("settings_content")
-                        .auto_shrink([false, false])
-                        .show(ui, |ui| {
-                            refresh_devices = self.selected_tab.show(
-                                ui,
-                                config,
-                                &self.audio_devices,
-                                &mut self.gpu_devices,
-                                &mut self.camera_devices,
-                            );
-                        });
-                } else if ui.button("Cancel").clicked() {
-                    cancel = true;
-                }
-            });
+            },
+        );
         if let Some(config) = &self.draft {
             let backend = config.audio.audio_backend as u64;
             if refresh_devices || backend != self.audio_devices.backend {

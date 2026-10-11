@@ -72,90 +72,99 @@ impl SfoViewer {
             return;
         }
         let previous_tab = self.tab;
-        egui::Window::new(&self.sfo_title)
-            .id(egui::Id::new("sfo_viewer"))
-            .open(&mut self.open)
-            .default_size([800.0, 500.0])
-            .min_width(320.0)
-            .show(ctx, |ui| {
-                ui.horizontal(|ui| {
-                    ui.selectable_value(&mut self.tab, Tab::App, "App");
-                    if self.title.patch.is_some() {
-                        ui.selectable_value(&mut self.tab, Tab::Patch, "Patch");
-                    }
-                });
-                ui.separator();
-                if self.tab == Tab::App {
-                    ui.push_id(&self.title.app.path, |ui| {
-                        self.app_save.show(
-                            ui,
-                            &self.title.app.path,
-                            &self.title.app.sfo,
-                            self.app_edit.is_some(),
-                        );
-                        ui.add_enabled_ui(!self.app_save.is_saving(), |ui| {
-                            Self::show_sfo_table(
-                                ui,
-                                &mut self.title.app.sfo,
-                                &mut self.app_edit,
-                                Tab::App,
-                                &mut self.details,
-                            );
-                        });
+        let mut open = self.open;
+        ctx.show_viewport_immediate(
+            egui::ViewportId::from_hash_of("sfo_viewer"),
+            egui::ViewportBuilder::default()
+                .with_title(&self.sfo_title)
+                .with_inner_size([800.0, 500.0])
+                .with_min_inner_size([320.0, 240.0]),
+            |viewport_ui, _| {
+                egui::CentralPanel::default().show(viewport_ui, |ui| {
+                    ui.horizontal(|ui| {
+                        ui.selectable_value(&mut self.tab, Tab::App, "App");
+                        if self.title.patch.is_some() {
+                            ui.selectable_value(&mut self.tab, Tab::Patch, "Patch");
+                        }
                     });
-                } else if self.tab == Tab::Patch {
-                    if let Some(patch) = self.title.patch.as_mut() {
-                        ui.push_id(&patch.path, |ui| {
-                            self.patch_save
-                                .show(ui, &patch.path, &patch.sfo, self.patch_edit.is_some());
-                            ui.add_enabled_ui(!self.patch_save.is_saving(), |ui| {
+                    ui.separator();
+                    if self.tab == Tab::App {
+                        ui.push_id(&self.title.app.path, |ui| {
+                            self.app_save.show(
+                                ui,
+                                &self.title.app.path,
+                                &self.title.app.sfo,
+                                self.app_edit.is_some(),
+                            );
+                            ui.add_enabled_ui(!self.app_save.is_saving(), |ui| {
                                 Self::show_sfo_table(
                                     ui,
-                                    &mut patch.sfo,
-                                    &mut self.patch_edit,
-                                    Tab::Patch,
+                                    &mut self.title.app.sfo,
+                                    &mut self.app_edit,
+                                    Tab::App,
                                     &mut self.details,
                                 );
                             });
                         });
-                    }
-                }
-            });
-        if self.tab != previous_tab {
-            self.details = None;
-        }
-        if let Some((tab, key)) = self.details.clone() {
-            let sfo = match tab {
-                Tab::App => Some(&self.title.app.sfo),
-                Tab::Patch => self.title.patch.as_ref().map(|patch| &patch.sfo),
-            };
-            if let Some(value) = sfo.and_then(|sfo| sfo.find_param(&key)) {
-                let mut open = true;
-                egui::Window::new(format!("{key} details"))
-                    .id(egui::Id::new("sfo_field_details"))
-                    .open(&mut open)
-                    .default_width(480.0)
-                    .show(ctx, |ui| {
-                        ui.label(format!("Value: {}", value_text(&key, value)));
-                        ui.separator();
-                        let descriptions = descriptions(&key, value);
-                        if descriptions.is_empty() {
-                            ui.label("No documented description for this value.");
-                        } else {
-                            egui::ScrollArea::vertical().max_height(300.0).show(ui, |ui| {
-                                for description in descriptions {
-                                    ui.label(format!("• {description}"));
-                                }
+                    } else if self.tab == Tab::Patch {
+                        if let Some(patch) = self.title.patch.as_mut() {
+                            ui.push_id(&patch.path, |ui| {
+                                self.patch_save
+                                    .show(ui, &patch.path, &patch.sfo, self.patch_edit.is_some());
+                                ui.add_enabled_ui(!self.patch_save.is_saving(), |ui| {
+                                    Self::show_sfo_table(
+                                        ui,
+                                        &mut patch.sfo,
+                                        &mut self.patch_edit,
+                                        Tab::Patch,
+                                        &mut self.details,
+                                    );
+                                });
                             });
                         }
-                    });
-                if !open {
+                    }
+                });
+                if viewport_ui.input(|input| input.viewport().close_requested()) {
+                    open = false;
+                }
+                if self.tab != previous_tab {
                     self.details = None;
                 }
-            } else {
-                self.details = None;
-            }
-        }
+                if let Some((tab, key)) = self.details.clone() {
+                    let sfo = match tab {
+                        Tab::App => Some(&self.title.app.sfo),
+                        Tab::Patch => self.title.patch.as_ref().map(|patch| &patch.sfo),
+                    };
+                    if let Some(value) = sfo.and_then(|sfo| sfo.find_param(&key)) {
+                        let mut open = true;
+                        egui::Window::new(format!("{key} details"))
+                            .id(egui::Id::new("sfo_field_details"))
+                            .open(&mut open)
+                            .default_width(480.0)
+                            .show(viewport_ui.ctx(), |ui| {
+                                ui.label(format!("Value: {}", value_text(&key, value)));
+                                ui.separator();
+                                let descriptions = descriptions(&key, value);
+                                if descriptions.is_empty() {
+                                    ui.label("No documented description for this value.");
+                                } else {
+                                    egui::ScrollArea::vertical().max_height(300.0).show(ui, |ui| {
+                                        for description in descriptions {
+                                            ui.label(format!("• {description}"));
+                                        }
+                                    });
+                                }
+                            });
+                        if !open {
+                            self.details = None;
+                        }
+                    } else {
+                        self.details = None;
+                    }
+                }
+            },
+        );
+        self.open = open;
     }
 
     fn show_sfo_table(
@@ -312,7 +321,7 @@ fn descriptions(key: &str, value: &SfoValue) -> Vec<String> {
 
 #[cfg(test)]
 mod description_tests {
-    use super::{SfoValue, descriptions};
+    use super::{descriptions, SfoValue};
 
     #[test]
     fn shows_descriptions_for_all_supported_fields() {
