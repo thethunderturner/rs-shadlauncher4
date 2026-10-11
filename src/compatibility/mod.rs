@@ -1,4 +1,8 @@
 use eframe::egui::Color32;
+use serde::Deserialize;
+use std::collections::HashMap;
+use std::fs;
+use std::io;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
@@ -8,6 +12,51 @@ const RELEASE_ASSET_URL: &str = "https://github.com/shadps4-compatibility/shadps
 #[derive(Default, Clone, Debug)]
 pub struct Compatibility {
     pub status: Status,
+}
+
+#[derive(Default)]
+pub struct Database {
+    titles: HashMap<String, HashMap<String, Report>>,
+}
+
+#[derive(Deserialize)]
+struct Report {
+    status: String,
+}
+
+impl Database {
+    pub fn load() -> Result<Self, String> {
+        let path = crate::common::user_directory()
+            .map_err(|error| format!("Could not locate user directory: {error}"))?
+            .join("compatibility_data.json");
+        let bytes = match fs::read(&path) {
+            Ok(bytes) => bytes,
+            Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(Self::default()),
+            Err(error) => return Err(format!("Could not read {}: {error}", path.display())),
+        };
+        Self::from_bytes(&bytes).map_err(|error| format!("Could not parse {}: {error}", path.display()))
+    }
+
+    fn from_bytes(bytes: &[u8]) -> serde_json::Result<Self> {
+        let titles = serde_json::from_slice(bytes)?;
+        Ok(Self { titles })
+    }
+
+    pub fn status_for(&self, serial: &str, os: &str) -> Status {
+        self.titles
+            .get(serial)
+            .and_then(|reports| reports.get(os))
+            .map_or(Status::Unknown, |report| Status::from_report(&report.status))
+    }
+}
+
+pub fn current_os_key() -> &'static str {
+    match std::env::consts::OS {
+        "linux" => "os-linux",
+        "windows" => "os-windows",
+        "macos" => "os-macOS",
+        _ => "os-unknown",
+    }
 }
 
 impl Compatibility {
@@ -42,6 +91,17 @@ pub struct DownloadProgress {
 }
 
 impl Status {
+    fn from_report(value: &str) -> Self {
+        match value {
+            "status-nothing" => Self::Nothing,
+            "status-boots" => Self::Boots,
+            "status-menus" => Self::Menus,
+            "status-ingame" => Self::Ingame,
+            "status-playable" => Self::Playable,
+            _ => Self::Unknown,
+        }
+    }
+
     pub const fn label(self) -> &'static str {
         match self {
             Self::Unknown => "Unknown",

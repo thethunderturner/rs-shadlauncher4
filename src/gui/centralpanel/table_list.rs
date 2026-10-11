@@ -122,17 +122,8 @@ impl Centralpanel {
                             });
                         });
                         row.col(|ui| {
-                            let label = title.compatibility.status.label();
-                            let font_id = egui::TextStyle::Body.resolve(ui.style());
-                            let text_width = ui
-                                .painter()
-                                .layout_no_wrap(label.to_owned(), font_id, ui.visuals().text_color())
-                                .size()
-                                .x;
-                            let group_width = 12.0 + ui.spacing().item_spacing.x + text_width;
-                            let leading_space = ((ui.available_width() - group_width) / 2.0).max(0.0);
-                            ui.horizontal_centered(|ui| {
-                                ui.add_space(leading_space);
+                            ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
+                                ui.add_space(8.0);
                                 let (rect, _) =
                                     ui.allocate_exact_size(egui::vec2(12.0, 12.0), egui::Sense::hover());
                                 ui.painter().circle_filled(
@@ -140,15 +131,7 @@ impl Centralpanel {
                                     5.0,
                                     title.compatibility.status.color(),
                                 );
-                                ui.painter().circle_stroke(
-                                    rect.center(),
-                                    5.0,
-                                    egui::Stroke::new(
-                                        1.0,
-                                        ui.visuals().widgets.noninteractive.fg_stroke.color,
-                                    ),
-                                );
-                                ui.add(egui::Label::new(label).selectable(false));
+                                ui.add(egui::Label::new(title.compatibility.status.label()).selectable(false));
                             });
                         });
                         row.col(|ui| {

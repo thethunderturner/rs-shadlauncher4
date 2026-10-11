@@ -1,4 +1,4 @@
-use crate::compatibility::DownloadProgress;
+use crate::compatibility::{Database, DownloadProgress};
 use crate::gui::centralpanel::Centralpanel;
 use crate::gui::menubar::Menubar;
 use crate::gui::sidepanel::Sidepanel;
@@ -68,7 +68,14 @@ impl LauncherApp {
         std::thread::spawn(move || {
             let titles = std::panic::catch_unwind(|| {
                 let started = Instant::now();
-                let titles = games_paths.iter().flat_map(|path| scanning::scan(path)).collect();
+                let compatibility = Database::load().unwrap_or_else(|error| {
+                    eprintln!("{error}");
+                    Database::default()
+                });
+                let titles = games_paths
+                    .iter()
+                    .flat_map(|path| scanning::scan(path, &compatibility))
+                    .collect();
                 (titles, started.elapsed())
             })
             .map_err(|_| ());
@@ -91,6 +98,7 @@ impl eframe::App for LauncherApp {
                     }
                     Ok(CompatibilityDownloadEvent::Finished(Ok(()))) => {
                         self.compatibility_window = None;
+                        self.scan_pending = true;
                         download_finished = true;
                         break;
                     }

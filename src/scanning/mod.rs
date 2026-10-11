@@ -1,4 +1,4 @@
-use crate::compatibility::Compatibility;
+use crate::compatibility::{self, Compatibility, Database};
 use crate::sfo::internal::data_table::SfoDataTable;
 use crate::sfo::parse_param::attribute;
 use crate::sfo::parse_param::attribute::{supports_neo, supports_vr};
@@ -44,7 +44,7 @@ pub struct Patch {
     pub sfo: SfoDataTable,
 }
 
-pub fn scan(path: &Path) -> Vec<Title> {
+pub fn scan(path: &Path, compatibility: &Database) -> Vec<Title> {
     let mut list: Vec<Title> = Vec::new();
     let mut patches: HashMap<String, Patch> = HashMap::new();
     match fs::read_dir(path) {
@@ -103,12 +103,13 @@ pub fn scan(path: &Path) -> Vec<Title> {
                                 patches.insert(serial, patch);
                             }
                         } else {
+                            let status = compatibility.status_for(&serial, compatibility::current_os_key());
                             list.push(Title {
                                 icon_path: icon,
                                 background_path: background,
                                 parent_dir: parent,
                                 serial,
-                                compatibility: Compatibility::default(),
+                                compatibility: Compatibility::new(status),
                                 publisher_id: data_table.find_string("CONTENT_ID").unwrap(),
                                 playtime: String::new(),
                                 supports_vr: supports_vr(attribute_bytes),
