@@ -22,8 +22,23 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install ALSA development libraries
-        run: sudo apt-get update && sudo apt-get install -y libasound2-dev
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake \ 
+            libasound2-dev\ 
+            libopenal1 \
+            libx11-dev \ 
+            libxext-dev \ 
+            libxrandr-dev \ 
+            libxcursor-dev \
+            libxfixes-dev \ 
+            libxi-dev \ 
+            libxss-dev \
+            libxtst-dev \
+            libxkbcommon-dev \
+            libwayland-dev
 
       - name: Format files
         run: cargo fmt
