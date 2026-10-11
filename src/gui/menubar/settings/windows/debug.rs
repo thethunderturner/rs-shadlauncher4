@@ -7,20 +7,17 @@ pub(in crate::gui::menubar::settings) fn show(ui: &mut egui::Ui, config: &mut Co
         ui,
         config,
         |ui, config| {
-            section(ui, "Debugging", |ui| {
-                check(ui, &mut config.debug.debug_dump, "Enable debug dumping");
-                check(ui, &mut config.debug.shader_collect, "Collect shaders");
-                check(ui, &mut config.gpu.copy_gpu_buffers, "Copy GPU buffers");
-            });
-            section(ui, "RenderDoc", |ui| {
+            section(ui, "General", |ui| {
+                check(ui, &mut config.gpu.dump_shaders, "Enable Shaders Dumpng");
+                check(ui, &mut config.debug.debug_dump, "Enable Debug Dumping");
                 check(
                     ui,
                     &mut config.vulkan.renderdoc_enabled,
-                    "Enable RenderDoc debugging",
+                    "Enable RenderDoc Debugging",
                 );
+                check(ui, &mut config.gpu.copy_gpu_buffers, "Copy GPU buffers");
+                check(ui, &mut config.debug.shader_collect, "Collect shaders");
             });
-        },
-        |ui, config| {
             section(ui, "Vulkan Validation", |ui| {
                 check(
                     ui,
@@ -28,35 +25,40 @@ pub(in crate::gui::menubar::settings) fn show(ui: &mut egui::Ui, config: &mut Co
                     "Enable validation layers",
                 );
                 if config.vulkan.vkvalidation_enabled {
-                    check(
-                        ui,
-                        &mut config.vulkan.vkvalidation_sync_enabled,
-                        "Sync validation",
-                    );
-                    check(
-                        ui,
-                        &mut config.vulkan.vkvalidation_core_enabled,
-                        "Core validation",
-                    );
-                    check(
-                        ui,
-                        &mut config.vulkan.vkvalidation_gpu_enabled,
-                        "GPU assisted validation",
-                    );
+                    section(ui, "Validation Layers", |ui| {
+                        check(
+                            ui,
+                            &mut config.vulkan.vkvalidation_core_enabled,
+                            "Enable Core Validation",
+                        );
+                        check(
+                            ui,
+                            &mut config.vulkan.vkvalidation_sync_enabled,
+                            "Enable Sync Validation",
+                        );
+                        check(
+                            ui,
+                            &mut config.vulkan.vkvalidation_gpu_enabled,
+                            "Enable GPU-Assisted Validation",
+                        );
+                    });
                 }
             });
-            section(ui, "Diagnostics and Markers", |ui| {
+        },
+        |ui, config| {
+            section(ui, "Advanced", |ui| {
+                check(ui, &mut config.debug.shader_collect, "Collect Shaders");
                 check(
                     ui,
                     &mut config.vulkan.vkcrash_diagnostic_enabled,
-                    "Crash diagnostics",
+                    "Enable Crash Diagnostics",
                 );
                 check(
                     ui,
                     &mut config.vulkan.vkguest_markers,
-                    "Guest debug markers",
+                    "Guest Debug Markers",
                 );
-                check(ui, &mut config.vulkan.vkhost_markers, "Host debug markers");
+                check(ui, &mut config.vulkan.vkhost_markers, "Host Debug Markers");
             });
         },
     );
