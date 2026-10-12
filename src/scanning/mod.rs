@@ -116,13 +116,14 @@ pub fn scan(path: &Path, compatibility: &Database, mut on_progress: impl FnMut()
                                 patches.insert(serial, patch);
                             }
                         } else {
-                            let status = compatibility.status_for(&serial, compatibility::current_os_key());
+                            let report =
+                                compatibility.compatibility_for(&serial, compatibility::current_os_key());
                             list.push(Title {
                                 icon_path: icon,
                                 background_path: background,
                                 parent_dir: parent,
                                 serial,
-                                compatibility: Compatibility::new(status),
+                                compatibility: report,
                                 publisher_id: data_table.find_string("CONTENT_ID").unwrap(),
                                 playtime: String::new(),
                                 supports_vr: supports_vr(attribute_bytes),

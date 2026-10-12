@@ -1,5 +1,5 @@
-use crate::gui::centralpanel::Centralpanel;
 use crate::gui::centralpanel::actions::row::Row;
+use crate::gui::centralpanel::Centralpanel;
 use crate::gui::sidepanel::actions::library::LibraryFilter;
 use crate::scanning::Title;
 use eframe::egui;
@@ -47,7 +47,7 @@ impl Centralpanel {
         let mut clicked_title = None;
         let reset_scroll = std::mem::take(&mut self.reset_scroll);
         egui::ScrollArea::horizontal().show(ui, |ui| {
-            ui.set_min_width(1120.0);
+            ui.set_min_width(1160.0);
             let mut table = TableBuilder::new(ui);
             if reset_scroll {
                 table = table.vertical_scroll_offset(0.0);
@@ -58,7 +58,7 @@ impl Centralpanel {
                 .cell_layout(egui::Layout::centered_and_justified(egui::Direction::TopDown))
                 .column(Column::exact(52.0)) // icon
                 .column(Column::initial(210.0).at_least(120.0).at_most(300.0)) // name
-                .column(Column::exact(120.0)) // compatibility
+                .column(Column::exact(160.0)) // compatibility
                 .column(Column::exact(90.0)) // serial
                 .column(Column::exact(75.0)) // region
                 .column(Column::exact(75.0)) // fw
@@ -101,6 +101,7 @@ impl Centralpanel {
                         let index = self.filtered_titles[row.index()];
                         let title = &self.titles[index];
                         let patch = title.patch.as_ref();
+                        let version = patch.map_or(title.app.version.as_str(), |p| &p.version);
                         row.set_selected(self.selected_title.as_ref() == Some(&title.app.path));
 
                         row.col(|ui| {
@@ -124,6 +125,16 @@ impl Centralpanel {
                             });
                         });
                         row.col(|ui| {
+                            let status = title.compatibility.status.label();
+                            let status_text = match title
+                                .compatibility
+                                .version
+                                .as_deref()
+                                .filter(|version| !version.is_empty())
+                            {
+                                Some(version) => format!("{status} ({version})"),
+                                None => status.to_owned(),
+                            };
                             ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
                                 ui.add_space(8.0);
                                 let (rect, _) =
@@ -133,9 +144,7 @@ impl Centralpanel {
                                     5.0,
                                     title.compatibility.status.color(),
                                 );
-                                ui.add(
-                                    egui::Label::new(title.compatibility.status.label()).selectable(false),
-                                );
+                                ui.add(egui::Label::new(status_text).selectable(false));
                             });
                         });
                         row.col(|ui| {
@@ -151,10 +160,7 @@ impl Centralpanel {
                             );
                         });
                         row.col(|ui| {
-                            ui.add(
-                                egui::Label::new(patch.map_or(title.app.version.as_str(), |p| &p.version))
-                                    .selectable(false),
-                            );
+                            ui.add(egui::Label::new(version).selectable(false));
                         });
                         row.col(|ui| {
                             let path = title.parent_dir.to_string_lossy();

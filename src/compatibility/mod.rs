@@ -12,6 +12,7 @@ const RELEASE_ASSET_URL: &str = "https://github.com/shadps4-compatibility/shadps
 #[derive(Default, Clone, Debug)]
 pub struct Compatibility {
     pub status: Status,
+    pub version: Option<String>,
 }
 
 #[derive(Default)]
@@ -22,6 +23,7 @@ pub struct Database {
 #[derive(Deserialize)]
 struct Report {
     status: String,
+    version: Option<String>,
 }
 
 impl Database {
@@ -42,11 +44,14 @@ impl Database {
         Ok(Self { titles })
     }
 
-    pub fn status_for(&self, serial: &str, os: &str) -> Status {
+    pub fn compatibility_for(&self, serial: &str, os: &str) -> Compatibility {
         self.titles
             .get(serial)
             .and_then(|reports| reports.get(os))
-            .map_or(Status::Unknown, |report| Status::from_report(&report.status))
+            .map_or_else(Compatibility::default, |report| Compatibility {
+                status: Status::from_report(&report.status),
+                version: report.version.clone(),
+            })
     }
 }
 
@@ -60,10 +65,6 @@ pub fn current_os_key() -> &'static str {
 }
 
 impl Compatibility {
-    pub fn new(status: Status) -> Self {
-        Self { status }
-    }
-
     pub fn status(&self) -> Status {
         self.status
     }
