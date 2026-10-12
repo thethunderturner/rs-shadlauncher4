@@ -1,3 +1,5 @@
+pub mod actions;
+
 use eframe::egui;
 
 #[derive(Default)]
