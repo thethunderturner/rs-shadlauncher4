@@ -1,5 +1,5 @@
-use crate::gui::centralpanel::actions::row::Row;
 use crate::gui::centralpanel::Centralpanel;
+use crate::gui::centralpanel::actions::row::Row;
 use crate::gui::sidepanel::actions::library::LibraryFilter;
 use crate::scanning::Title;
 use eframe::egui;

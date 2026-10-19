@@ -18,13 +18,24 @@ enum CompatibilityDownloadEvent {
     Finished(Result<(), String>),
 }
 
+#[derive(Clone, Copy)]
+enum ScanPhase {
+    Folders,
+    Artwork,
+}
+
 enum ScanEvent {
-    Progress { checked: usize, total: usize },
+    Progress {
+        checked: usize,
+        total: usize,
+        phase: ScanPhase,
+    },
     Finished(Result<(Vec<scanning::Title>, Duration), ()>),
 }
 
 #[derive(Default)]
 struct ScanWindow {
+    phase: Option<ScanPhase>,
     checked: usize,
     total: Option<usize>,
     error: Option<String>,
@@ -63,11 +74,11 @@ impl LauncherApp {
             compatibility_window: None,
         };
         app.sidepanel.load_paths();
-        app.start_scan(&cc.egui_ctx);
+        app.start_scan(&cc.egui_ctx, false);
         app
     }
 
-    fn start_scan(&mut self, ctx: &egui::Context) {
+    fn start_scan(&mut self, ctx: &egui::Context, force: bool) {
         if self.scan_rx.is_some() {
             return;
         }
@@ -83,16 +94,31 @@ impl LauncherApp {
         std::thread::spawn(move || {
             let titles = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 let started = Instant::now();
-                let total = games_paths
-                    .iter()
-                    .map(|path| scanning::count_directories(path))
-                    .sum();
-                let _ = tx.send(ScanEvent::Progress { checked: 0, total });
-                ctx.request_repaint();
                 let compatibility = Database::load().unwrap_or_else(|error| {
                     eprintln!("{error}");
                     Database::default()
                 });
+                let cache_dir = crate::common::user_directory()
+                    .ok()
+                    .map(|dir| dir.join("cache/library"));
+                if !force {
+                    if let Some(titles) = cache_dir
+                        .as_ref()
+                        .and_then(|dir| scanning::cache::load(dir, &games_paths, &compatibility))
+                    {
+                        return (titles, started.elapsed());
+                    }
+                }
+                let total = games_paths
+                    .iter()
+                    .map(|path| scanning::count_directories(path))
+                    .sum();
+                let _ = tx.send(ScanEvent::Progress {
+                    checked: 0,
+                    total,
+                    phase: ScanPhase::Folders,
+                });
+                ctx.request_repaint();
                 let mut titles = Vec::new();
                 let mut checked = 0;
                 let mut last_update = Instant::now();
@@ -100,11 +126,41 @@ impl LauncherApp {
                     titles.extend(scanning::scan(path, &compatibility, || {
                         checked += 1;
                         if last_update.elapsed() >= Duration::from_millis(50) || checked == total {
-                            let _ = tx.send(ScanEvent::Progress { checked, total });
+                            let _ = tx.send(ScanEvent::Progress {
+                                checked,
+                                total,
+                                phase: ScanPhase::Folders,
+                            });
                             ctx.request_repaint();
                             last_update = Instant::now();
                         }
                     }));
+                }
+                if let Some(dir) =
+                    cache_dir.filter(|_| games_paths.iter().all(|path| std::fs::read_dir(path).is_ok()))
+                {
+                    let total = titles.len();
+                    let mut checked = 0;
+                    let _ = tx.send(ScanEvent::Progress {
+                        checked,
+                        total,
+                        phase: ScanPhase::Artwork,
+                    });
+                    ctx.request_repaint();
+                    if let Err(error) = scanning::cache::save(&dir, &games_paths, &mut titles, || {
+                        checked += 1;
+                        if last_update.elapsed() >= Duration::from_millis(50) || checked == total {
+                            let _ = tx.send(ScanEvent::Progress {
+                                checked,
+                                total,
+                                phase: ScanPhase::Artwork,
+                            });
+                            ctx.request_repaint();
+                            last_update = Instant::now();
+                        }
+                    }) {
+                        eprintln!("Could not cache game library: {error}");
+                    }
                 }
                 (titles, started.elapsed())
             }))
@@ -157,8 +213,13 @@ impl eframe::App for LauncherApp {
         if let Some(scan_rx) = &self.scan_rx {
             loop {
                 match scan_rx.try_recv() {
-                    Ok(ScanEvent::Progress { checked, total }) => {
+                    Ok(ScanEvent::Progress {
+                        checked,
+                        total,
+                        phase,
+                    }) => {
                         if let Some(window) = &mut self.scan_window {
+                            window.phase = Some(phase);
                             window.checked = checked;
                             window.total = Some(total);
                         }
@@ -187,7 +248,7 @@ impl eframe::App for LauncherApp {
 
         if self.scan_pending && self.scan_rx.is_none() {
             self.scan_pending = false;
-            self.start_scan(ui.ctx());
+            self.start_scan(ui.ctx(), true);
         }
 
         self.menubar.show(ui);
@@ -205,7 +266,7 @@ impl eframe::App for LauncherApp {
         }
         let refresh_compatibility = actions.refresh_compatibility;
         if actions.refresh_list {
-            self.start_scan(ui.ctx());
+            self.start_scan(ui.ctx(), true);
         }
         if refresh_compatibility && self.compatibility_rx.is_none() {
             self.compatibility_window = Some(CompatibilityDownloadWindow::default());
@@ -273,7 +334,7 @@ impl eframe::App for LauncherApp {
         }
         if let Some(window) = &self.scan_window {
             let mut close = false;
-            egui::Window::new("Scanning Titles")
+            egui::Window::new("Loading Titles")
                 .id(egui::Id::new("scan_progress_window"))
                 .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::ZERO)
                 .collapsible(false)
@@ -286,7 +347,11 @@ impl eframe::App for LauncherApp {
                             close = true;
                         }
                     } else {
-                        ui.label("Checking game folders…");
+                        ui.label(match window.phase {
+                            Some(ScanPhase::Folders) => "Scanning game folders…",
+                            Some(ScanPhase::Artwork) => "Caching game artwork…",
+                            None => "Loading game library…",
+                        });
                         let fraction = window
                             .total
                             .filter(|&total| total > 0)
@@ -300,7 +365,12 @@ impl eframe::App for LauncherApp {
                             bar
                         });
                         if let Some(total) = window.total {
-                            ui.label(format!("{} / {total} directories checked", window.checked));
+                            let unit = match window.phase {
+                                Some(ScanPhase::Folders) => "folders checked",
+                                Some(ScanPhase::Artwork) => "games cached",
+                                None => "items loaded",
+                            };
+                            ui.label(format!("{} / {total} {unit}", window.checked));
                         }
                     }
                 });

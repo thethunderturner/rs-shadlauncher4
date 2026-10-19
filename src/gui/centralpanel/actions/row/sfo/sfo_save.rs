@@ -57,7 +57,10 @@ impl SfoSave {
                 self.result = None;
                 std::thread::spawn(move || {
                     let result = write_sfo(&path, &table)
-                        .map(|()| table)
+                        .map(|()| {
+                            crate::scanning::cache::invalidate();
+                            table
+                        })
                         .map_err(|error| error.to_string());
                     let _ = sender.send(result);
                     ctx.request_repaint();

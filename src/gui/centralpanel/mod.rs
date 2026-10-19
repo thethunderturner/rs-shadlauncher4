@@ -79,7 +79,7 @@ impl Centralpanel {
                 };
                 if let Some(duration) = self.scan.scan_duration {
                     ui.label(format!("{shown} Titles Shown ({} ms)", duration.as_millis()))
-                        .on_hover_text("Time spent scanning the games folder.");
+                        .on_hover_text("Time spent loading the game library.");
                 } else {
                     ui.label(format!("{shown} Titles Shown"));
                 }
@@ -89,7 +89,7 @@ impl Centralpanel {
                 ui.colored_label(ui.visuals().error_fg_color, "Could not scan the games folder.");
             } else if self.titles.is_empty() {
                 if self.loading {
-                    ui.label("Scanning game folders…");
+                    ui.label("Loading game library…");
                 } else if self.scan.scan_duration.is_none() {
                     ui.label("Add a game folder in Settings -> Paths.");
                 } else {

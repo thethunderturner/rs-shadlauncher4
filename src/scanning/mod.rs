@@ -1,3 +1,5 @@
+pub mod cache;
+
 use crate::compatibility::{self, Compatibility, Database};
 use crate::sfo::internal::data_table::SfoDataTable;
 use crate::sfo::parse_param::attribute;
@@ -7,12 +9,13 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct Title {
     pub icon_path: Option<PathBuf>,
     pub background_path: Option<PathBuf>,
     pub parent_dir: PathBuf,
     pub serial: String,
+    #[serde(skip)]
     pub compatibility: Compatibility,
     pub publisher_id: String,
     pub playtime: String,
@@ -22,7 +25,7 @@ pub struct Title {
     pub patch: Option<Patch>, // Maybe a title doesn't have a patch
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct App {
     pub name: String, // Keeping the name here, because some titles change names between versions
     pub fw: String,
@@ -33,7 +36,7 @@ pub struct App {
     pub sfo: SfoDataTable,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Patch {
     pub name: String, // Keeping the name here, because some titles change names between versions
     pub fw: String,
