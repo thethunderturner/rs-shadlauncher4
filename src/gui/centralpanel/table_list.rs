@@ -58,8 +58,8 @@ impl Centralpanel {
                 .cell_layout(egui::Layout::centered_and_justified(egui::Direction::TopDown))
                 .column(Column::exact(52.0)) // icon
                 .column(Column::initial(210.0).at_least(120.0).at_most(300.0)) // name
-                .column(Column::exact(160.0)) // compatibility status
-                .column(Column::exact(160.0)) // compatibility version
+                .column(Column::exact(100.0)) // compatibility status
+                .column(Column::exact(100.0)) // compatibility version
                 .column(Column::exact(90.0)) // serial
                 .column(Column::exact(75.0)) // region
                 .column(Column::exact(75.0)) // fw
@@ -69,8 +69,8 @@ impl Centralpanel {
                     for (column, label) in [
                         ("icon", "Icon"),
                         ("name", "Name"),
-                        ("compatibility_status", "Compatibility status"),
-                        ("compatibility_version", "Compatibility version"),
+                        ("compatibility_status", "Status"),
+                        ("compatibility_version", "Milestone"),
                         ("serial", "Serial"),
                         ("region", "Region"),
                         ("firmware", "Firmware"),
@@ -142,12 +142,17 @@ impl Centralpanel {
                             });
                         });
                         row.col(|ui| {
-                            ui.add(
-                                egui::Label::new(
-                                    title.compatibility.version.as_deref().unwrap_or_default(),
-                                )
-                                .selectable(false),
-                            );
+                            if title.compatibility.version.is_some(){
+                                ui.add(
+                                    egui::Label::new(
+                                        title.compatibility.version.as_deref().unwrap(),
+                                    ).selectable(false),
+                                );
+                            } else {
+                                ui.add(egui::Label::new(
+                                    egui::RichText::new("None").italics(),
+                                ).selectable(false));
+                            }
                         });
                         row.col(|ui| {
                             ui.add(egui::Label::new(&title.serial).selectable(false));
