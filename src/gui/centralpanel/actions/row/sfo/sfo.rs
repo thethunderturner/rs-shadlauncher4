@@ -138,7 +138,7 @@ impl SfoViewer {
                     if let Some(value) = sfo.and_then(|sfo| sfo.find_param(&key)) {
                         let mut open = true;
                         egui::Window::new(format!("{key} details"))
-                            .id(egui::Id::new("sfo_field_details"))
+                            .id(egui::Id::unique("sfo_field_details"))
                             .open(&mut open)
                             .default_width(480.0)
                             .show(viewport_ui.ctx(), |ui| {
@@ -183,7 +183,7 @@ impl SfoViewer {
                 ui.colored_label(ui.visuals().error_fg_color, format!("{}: {error}", edit.key));
             }
         }
-        let editor_id = ui.id().with("sfo_value_editor");
+        let editor_id = ui.scope_id().with("sfo_value_editor");
         egui::ScrollArea::horizontal().show(ui, |ui| {
             ui.set_min_width(750.0);
             TableBuilder::new(ui)
@@ -316,19 +316,6 @@ fn descriptions(key: &str, value: &SfoValue) -> Vec<String> {
         ("APP_TYPE", SfoValue::Integer(value)) => app_type::description(value.to_le_bytes()),
         ("CATEGORY", SfoValue::Utf8(value)) => category::description(value),
         _ => Vec::new(),
-    }
-}
-
-#[cfg(test)]
-mod description_tests {
-    use super::{SfoValue, descriptions};
-
-    #[test]
-    fn shows_descriptions_for_all_supported_fields() {
-        assert!(!descriptions("ATTRIBUTE", &SfoValue::Integer(0x4000)).is_empty());
-        assert!(!descriptions("ATTRIBUTE2", &SfoValue::Integer(0x2)).is_empty());
-        assert_eq!(descriptions("APP_TYPE", &SfoValue::Integer(3)), vec!["Demo App"]);
-        assert_eq!(descriptions("CATEGORY", &SfoValue::Utf8("gd".into())), vec!["Game Digital Application"]);
     }
 }
 

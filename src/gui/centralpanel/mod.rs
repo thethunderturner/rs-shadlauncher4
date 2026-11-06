@@ -89,7 +89,7 @@ impl Centralpanel {
                 ui.colored_label(ui.visuals().error_fg_color, "Could not scan the games folder.");
             } else if self.titles.is_empty() {
                 if self.loading {
-                    ui.label("Loading game library…");
+                    ui.label("Loading game library");
                 } else if self.scan.scan_duration.is_none() {
                     ui.label("Add a game folder in Settings -> Paths.");
                 } else {

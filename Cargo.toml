@@ -6,9 +6,9 @@ license = "GPL-2"
 
 [dependencies]
 ash = "0.38.0"
-rodio = { version = "0.22.2", default-features = false, features = ["playback"] }
-eframe = { version = "0.36.2", features = ["glow"] }
-egui_extras = { version = "0.36.2", default-features = false, features = ["svg", "image", "file"] }
+rodio = { version = "0.23.0", default-features = false, features = ["playback"] }
+eframe = { version = "0.37.0", features = ["glow"] }
+egui_extras = { version = "0.37.0", default-features = false, features = ["svg", "image", "file"] }
 image = { version = "0.25.10", default-features = false, features = ["png"] }
 rfd = "0.17.2"
 serde = { version = "1.0.229", features = ["derive"] }

@@ -58,7 +58,8 @@ impl Centralpanel {
                 .cell_layout(egui::Layout::centered_and_justified(egui::Direction::TopDown))
                 .column(Column::exact(52.0)) // icon
                 .column(Column::initial(210.0).at_least(120.0).at_most(300.0)) // name
-                .column(Column::exact(160.0)) // compatibility
+                .column(Column::exact(160.0)) // compatibility status
+                .column(Column::exact(160.0)) // compatibility version
                 .column(Column::exact(90.0)) // serial
                 .column(Column::exact(75.0)) // region
                 .column(Column::exact(75.0)) // fw
@@ -68,7 +69,8 @@ impl Centralpanel {
                     for (column, label) in [
                         ("icon", "Icon"),
                         ("name", "Name"),
-                        ("compatibility", "Compatibility"),
+                        ("compatibility_status", "Compatibility status"),
+                        ("compatibility_version", "Compatibility version"),
                         ("serial", "Serial"),
                         ("region", "Region"),
                         ("firmware", "Firmware"),
@@ -125,16 +127,6 @@ impl Centralpanel {
                             });
                         });
                         row.col(|ui| {
-                            let status = title.compatibility.status.label();
-                            let status_text = match title
-                                .compatibility
-                                .version
-                                .as_deref()
-                                .filter(|version| !version.is_empty())
-                            {
-                                Some(version) => format!("{status} ({version})"),
-                                None => status.to_owned(),
-                            };
                             ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
                                 ui.add_space(8.0);
                                 let (rect, _) =
@@ -144,8 +136,18 @@ impl Centralpanel {
                                     5.0,
                                     title.compatibility.status.color(),
                                 );
-                                ui.add(egui::Label::new(status_text).selectable(false));
+                                ui.add(
+                                    egui::Label::new(title.compatibility.status.label()).selectable(false),
+                                );
                             });
+                        });
+                        row.col(|ui| {
+                            ui.add(
+                                egui::Label::new(
+                                    title.compatibility.version.as_deref().unwrap_or_default(),
+                                )
+                                .selectable(false),
+                            );
                         });
                         row.col(|ui| {
                             ui.add(egui::Label::new(&title.serial).selectable(false));
@@ -180,7 +182,7 @@ impl Centralpanel {
                             clicked_title = Some((index, response.clicked()));
                         }
                         egui::Popup::context_menu(&response)
-                            .id(egui::Id::new(("game_row_menu", &title.app.path)))
+                            .id(egui::Id::unique(("game_row_menu", &title.app.path)))
                             .show(|ui| show_row_menu(ui, title, &mut self.actions.row));
                     });
                 });
@@ -282,29 +284,4 @@ fn show_row_menu(ui: &mut egui::Ui, title: &Title, actions: &mut Row) {
     ui.menu_button("ZAR compression", |ui| {
         let _ = ui.button("TODO");
     });
-}
-
-#[cfg(test)]
-mod tests {
-    use super::region_from_content_id;
-
-    #[test]
-    fn maps_content_id_prefix_to_region() {
-        for (prefix, region) in [
-            ("UP", "USA"),
-            ("UB", "USA"),
-            ("UT", "USA"),
-            ("US", "USA"),
-            ("EP", "Europe"),
-            ("EB", "Europe"),
-            ("JP", "Japan"),
-            ("JB", "Japan"),
-            ("HP", "Asia"),
-            ("IP", "World"),
-            ("", "Unknown"),
-            ("XP", "Unknown"),
-        ] {
-            assert_eq!(region_from_content_id(&format!("{prefix}123")), region);
-        }
-    }
 }

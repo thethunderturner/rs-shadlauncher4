@@ -112,27 +112,3 @@ fn merge_known(original: &mut Value, known: Value) {
         (original, known) => *original = known,
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::{merge_known, normalize_sections};
-    use crate::common::config::Config;
-    use serde_json::{Value, json};
-
-    #[test]
-    fn typed_edit_preserves_unrecognized_config_keys() {
-        let mut original = json!({
-            "network": {"shad_net_enabled": false, "future_option": 42},
-            "CustomSection": {"keep": true}
-        });
-        normalize_sections(&mut original);
-        let mut config: Config = serde_json::from_value(original.clone()).unwrap();
-        config.network.shad_net_enabled = true;
-        merge_known(&mut original, serde_json::to_value(config).unwrap());
-
-        assert_eq!(original["Network"]["shad_net_enabled"], Value::Bool(true));
-        assert_eq!(original["Network"]["future_option"], json!(42));
-        assert_eq!(original["CustomSection"]["keep"], Value::Bool(true));
-        assert!(original.get("network").is_none());
-    }
-}

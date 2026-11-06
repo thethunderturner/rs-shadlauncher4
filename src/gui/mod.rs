@@ -285,7 +285,7 @@ impl eframe::App for LauncherApp {
         if let Some(window) = &self.compatibility_window {
             let mut close = false;
             egui::Window::new("Refresh Compatibility")
-                .id(egui::Id::new("compatibility_download_window"))
+                .id(egui::Id::unique("compatibility_download_window"))
                 .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::ZERO)
                 .collapsible(false)
                 .resizable(false)
@@ -297,7 +297,7 @@ impl eframe::App for LauncherApp {
                             close = true;
                         }
                     } else {
-                        ui.label("Downloading compatibility data…");
+                        ui.label("Downloading compatibility data");
                         let fraction = window.progress.and_then(|progress| {
                             progress
                                 .total
@@ -335,7 +335,7 @@ impl eframe::App for LauncherApp {
         if let Some(window) = &self.scan_window {
             let mut close = false;
             egui::Window::new("Loading Titles")
-                .id(egui::Id::new("scan_progress_window"))
+                .id(egui::Id::unique("scan_progress_window"))
                 .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::ZERO)
                 .collapsible(false)
                 .resizable(false)
@@ -348,9 +348,9 @@ impl eframe::App for LauncherApp {
                         }
                     } else {
                         ui.label(match window.phase {
-                            Some(ScanPhase::Folders) => "Scanning game folders…",
-                            Some(ScanPhase::Artwork) => "Caching game artwork…",
-                            None => "Loading game library…",
+                            Some(ScanPhase::Folders) => "Scanning game folders",
+                            Some(ScanPhase::Artwork) => "Caching game artwork",
+                            None => "Loading game library",
                         });
                         let fraction = window
                             .total
