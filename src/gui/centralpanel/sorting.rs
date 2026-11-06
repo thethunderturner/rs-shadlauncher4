@@ -61,7 +61,13 @@ impl Sorting {
                     let b = b.patch.as_ref().map_or(&b.app.name, |patch| &patch.name);
                     a.to_lowercase().cmp(&b.to_lowercase())
                 }
-                "compatibility" => a.compatibility.status.cmp(&b.compatibility.status),
+                "compatibility" | "compatibility_status" => {
+                    a.compatibility.status.cmp(&b.compatibility.status)
+                }
+                "compatibility_version" => compare_versions(
+                    a.compatibility.version.as_deref().unwrap_or_default(),
+                    b.compatibility.version.as_deref().unwrap_or_default(),
+                ),
                 "serial" => a.serial.cmp(&b.serial),
                 "region" => {
                     region_from_content_id(&a.publisher_id).cmp(region_from_content_id(&b.publisher_id))
