@@ -1,0 +1,93 @@
+use crate::config::emulator::Config;
+use crate::gui::menubar::settings::Settings;
+use eframe::egui;
+use eframe::egui::ImageSource;
+
+#[derive(Clone, Copy)]
+pub enum Action {
+    RefreshTitles,
+    RefreshCompatibility,
+}
+
+#[derive(Default)]
+pub struct Toolbar {
+    settings: Settings,
+}
+
+impl Toolbar {
+    pub fn show(
+        &mut self,
+        ui: &mut egui::Ui,
+        loading: bool,
+        compatibility_message: Option<&str>,
+        config: &mut Config,
+    ) -> Option<Action> {
+        let mut action = None;
+        egui::Panel::top("toolbar").show(ui, |ui| {
+            ui.horizontal_top(|ui| {
+                ui.group(|ui| {
+                    ui.horizontal(|ui| {
+                        button(ui, "Play", egui::include_image!("../assets/toolbar/play.svg"));
+                        button(ui, "Pause", egui::include_image!("../assets/toolbar/pause.svg"));
+                        button(ui, "Stop", egui::include_image!("../assets/toolbar/stop.svg"));
+                        button(ui, "Restart", egui::include_image!("../assets/toolbar/restart.svg"));
+                    });
+                });
+                ui.add(egui::Separator::default().vertical().shrink(8.0));
+                ui.group(|ui| {
+                    ui.horizontal(|ui| {
+                        if button(
+                            ui,
+                            "Refresh Titles",
+                            egui::include_image!("../assets/toolbar/refresh-titles.svg"),
+                        )
+                        .clicked()
+                        {
+                            if !loading {
+                                action = Some(Action::RefreshTitles);
+                            }
+                        };
+                        if ui
+                            .add_enabled_ui(!loading, |ui| {
+                                button(
+                                    ui,
+                                    "Refresh Compatibility",
+                                    egui::include_image!("../assets/toolbar/refresh-compatibility.svg"),
+                                )
+                            })
+                            .inner
+                            .clicked()
+                        {
+                            action = Some(Action::RefreshCompatibility);
+                        }
+                    });
+                });
+                ui.add(egui::Separator::default().vertical().shrink(8.0));
+                ui.group(|ui| {
+                    if button(ui, "Settings", egui::include_image!("../assets/settings.svg")).clicked() {
+                        if !self.settings.open {
+                            self.settings.window.begin_edit(config);
+                        }
+                        self.settings.open = true;
+                    };
+                });
+                // Keep feedback in the same row: a second row makes the vertical
+                // separators inherit the larger panel height on every frame.
+                if let Some(message) = compatibility_message {
+                    ui.add(egui::Label::new(message).truncate())
+                        .on_hover_text(message);
+                }
+            });
+        });
+        self.settings
+            .window
+            .show(ui, &mut self.settings.open, config, false);
+        action
+    }
+}
+
+fn button(ui: &mut egui::Ui, hover: &str, image: ImageSource) -> egui::response::Response {
+    let size = egui::vec2(48.0, 48.0);
+    ui.add(egui::Button::image(egui::Image::new(image).fit_to_exact_size(size)))
+        .on_hover_text(hover)
+}

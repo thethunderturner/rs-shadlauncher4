@@ -1,19 +1,16 @@
 fn main() {
-    let directory = "externals/libatrac9/C/src";
-    println!("cargo:rerun-if-changed={directory}");
-    let mut files: Vec<_> = std::fs::read_dir(directory)
-        .unwrap()
-        .map(|entry| entry.unwrap().path())
-        .filter(|path| path.extension().is_some_and(|ext| ext == "c"))
-        .collect();
-    files.sort();
-    cc::Build::new()
-        .files(files)
-        .include(directory)
-        .define("_USE_MATH_DEFINES", None)
-        .warnings(false)
-        .compile("atrac9");
-    if std::env::var("CARGO_CFG_TARGET_FAMILY").as_deref() == Ok("unix") {
+    let source = "externals/libatrac9/C/src";
+    println!("cargo:rerun-if-changed={source}");
+    let mut build = cc::Build::new();
+    build.include(source).warnings(false);
+    for entry in std::fs::read_dir(source).expect("bundled libatrac9 source missing") {
+        let path = entry.unwrap().path();
+        if path.extension().is_some_and(|extension| extension == "c") {
+            build.file(path);
+        }
+    }
+    build.compile("atrac9");
+    if std::env::var("CARGO_CFG_UNIX").is_ok() {
         println!("cargo:rustc-link-lib=m");
     }
 }
