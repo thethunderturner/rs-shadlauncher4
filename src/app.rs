@@ -1,5 +1,6 @@
 use crate::config::emulator::Config;
 use crate::gui::Gui;
+use crate::gui::toolbar::Action;
 use eframe::egui;
 
 pub mod state;
@@ -32,8 +33,8 @@ impl eframe::App for App {
             self.gui.update_search(&self.state.titles, self.state.load_ms);
         }
         match self.gui.show(ui, &self.state, &mut self.config) {
-            Some(crate::gui::toolbar::Action::RefreshTitles) => self.state.load(ui.ctx(), true),
-            Some(crate::gui::toolbar::Action::RefreshCompatibility) => {
+            Some(Action::RefreshTitles) => self.state.load(ui.ctx(), true),
+            Some(Action::RefreshCompatibility) => {
                 self.state.refresh_compatibility(ui.ctx())
             }
             None => {}
