@@ -24,6 +24,8 @@ pub struct Config {
     pub network: Network,
     #[serde(rename = "Vulkan", alias = "vulkan")]
     pub vulkan: Vulkan,
+    #[serde(rename = "Other", alias = "other")]
+    pub other: Other,
 }
 
 impl Config {
@@ -127,11 +129,11 @@ pub struct Frontend {
 impl Default for Frontend {
     fn default() -> Self {
         Self {
-            show_background_image: true,
-            background_image_opacity: 10,
-            play_background_music: true,
-            background_music_volume: 20,
-            show_compatibility: true,
+            show_background_image: false,
+            background_image_opacity: 100,
+            play_background_music: false,
+            background_music_volume: 100,
+            show_compatibility: false,
             check_compatibility_at_startup: false,
             check_for_updates: false,
             show_change_log: false,
@@ -415,6 +417,24 @@ impl Default for Vulkan {
             vkvalidation_enabled: false,
             vkvalidation_gpu_enabled: false,
             vkvalidation_sync_enabled: false,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(default)]
+pub struct Other {
+    pub version_path: PathBuf,
+    pub pkg_install_dir: PathBuf,
+    pub localization: u32
+}
+
+impl Default for Other {
+    fn default() -> Self {
+        Self {
+            version_path: user_directory().unwrap().join("versions"),
+            pkg_install_dir: PathBuf::new(),
+            localization: 1, // English US
         }
     }
 }
