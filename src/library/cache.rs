@@ -18,12 +18,9 @@ impl Db {
 
     pub fn load_titles(&self) -> rusqlite::Result<Vec<Title>> {
         let mut statement = self.conn.prepare(
-            "SELECT titles.serial, parent_dir, name, publisher_id, version, fw,
-                    app_type, category, app_path, patch_path, icon,
-                    supports_vr, supports_neo,
-                    COALESCE(c.status, titles.compatibility), playtime, c.milestone
-             FROM titles LEFT JOIN compatibility c ON titles.serial = c.serial
-             ORDER BY name COLLATE NOCASE, titles.serial",
+            "SELECT titles.serial, parent_dir, name, publisher_id, version, fw, app_type, category, app_path, patch_path, icon, supports_vr, supports_neo, COALESCE(c.status, titles.compatibility), playtime, c.milestone
+                 FROM titles LEFT JOIN compatibility c ON titles.serial = c.serial
+                 ORDER BY name COLLATE NOCASE, titles.serial",
         )?;
         statement
             .query_map([], |row| {
@@ -63,14 +60,8 @@ impl Db {
         let transaction = self.conn.transaction()?;
         {
             let mut statement = transaction.prepare(
-                "INSERT INTO Titles(
-                      serial, parent_dir, NAME, publisher_id, VERSION, fw,
-                      app_type, category, app_path, patch_path, icon,
-                      background, supports_vr, supports_neo, compatibility, playtime
-                      ) VALUES(
-                      ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8,
-                      ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16
-                      )
+                "INSERT INTO Titles(serial, parent_dir, NAME, publisher_id, VERSION, fw, app_type, category, app_path, patch_path, icon, background, supports_vr, supports_neo, compatibility, playtime)
+                     VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)
                      ON Conflict(serial) do UPDATE SET
                       parent_dir = excluded.parent_dir,
                       NAME = excluded.NAME,
