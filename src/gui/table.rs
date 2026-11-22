@@ -11,6 +11,7 @@ use egui_extras::{Column, TableBuilder};
 #[derive(Default)]
 pub struct Table {
     selected: Option<usize>, // selected title index
+    column: Option<Column>,  // clicked column
     background: Option<egui::TextureHandle>,
     sorting: Sorting,
     sound: Player,
@@ -20,7 +21,13 @@ impl Table {
     pub fn show(&mut self, ui: &mut Ui, state: &mut State) {
         egui::CentralPanel::default().show(ui, |ui| {
             if state.loaded_titles.loaded_titles.is_empty() {
-                if !state.config.general.install_dirs.iter().any(|directory| directory.enabled) {
+                if !state
+                    .config
+                    .general
+                    .install_dirs
+                    .iter()
+                    .any(|directory| directory.enabled)
+                {
                     ui.label("Add or enable a game folder in Settings -> Paths.");
                     return;
                 }
@@ -36,15 +43,19 @@ impl Table {
             self.show_background(ui, state);
             table_visuals(ui);
             let ctx = ui.ctx().clone();
-            TableBuilder::new(ui)
+            let mut table = TableBuilder::new(ui)
                 .striped(true)
                 .resizable(true)
                 .sense(egui::Sense::click())
                 .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
                 .column(Column::exact(60.0)) // icon
-                .column(Column::initial(210.0).at_least(120.0).at_most(300.0)) // name
-                .column(Column::exact(100.0)) // compatibility status
-                .column(Column::exact(100.0)) // milestone
+                .column(Column::initial(210.0).at_least(120.0).at_most(300.0)); // name
+            if state.launcher.show_compatibility {
+                table = table
+                    .column(Column::exact(100.0)) // compatibility status
+                    .column(Column::exact(100.0)); // milestone
+            }
+            table
                 .column(Column::exact(90.0)) // serial
                 .column(Column::exact(75.0)) // region
                 .column(Column::exact(75.0)) // fw
@@ -52,7 +63,7 @@ impl Table {
                 .column(Column::exact(75.0)) // features (eg VR, Neo)
                 .column(Column::remainder().at_least(320.0)) // path
                 .header(28.0, |mut header| {
-                    for (_column, label, _sortable) in [
+                    for (column, label, sortable) in [
                         ("icon", "Icon", false),
                         ("name", "Name", true),
                         ("status", "Status", true),
@@ -64,10 +75,23 @@ impl Table {
                         ("features", "Features", false),
                         ("path", "Path", true),
                     ] {
+                        if !state.launcher.show_compatibility && matches!(column, "status" | "milestone") {
+                            continue;
+                        }
                         header.col(|ui| {
                             ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
                                 ui.add_space(8.0);
-                                ui.add(egui::Label::new(label).truncate().selectable(false));
+                                if sortable {
+                                    if ui.add(self.sorting.header(column, label)).clicked() {
+                                        self.sorting.select_column(column);
+                                        self.sorting.sort(
+                                            &state.loaded_titles.loaded_titles,
+                                            &mut state.visible_indices,
+                                        );
+                                    }
+                                } else {
+                                    ui.add(egui::Label::new(label).truncate().selectable(false));
+                                }
                             });
                         });
                     }
@@ -96,12 +120,14 @@ impl Table {
                         row.col(|ui| {
                             RowWidget::label(ui, &title.name);
                         });
-                        row.col(|ui| {
-                            RowWidget::label(ui, loaded.compatibility.as_deref().unwrap_or("Unknown"));
-                        });
-                        row.col(|ui| {
-                            RowWidget::label(ui, title.milestone.as_deref().unwrap_or("Unknown"));
-                        });
+                        if state.launcher.show_compatibility {
+                            row.col(|ui| {
+                                RowWidget::label(ui, loaded.compatibility.as_deref().unwrap_or("Unknown"));
+                            });
+                            row.col(|ui| {
+                                RowWidget::label(ui, title.milestone.as_deref().unwrap_or("Unknown"));
+                            });
+                        }
                         row.col(|ui| {
                             RowWidget::label(ui, &title.serial);
                         });
