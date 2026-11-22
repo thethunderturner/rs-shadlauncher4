@@ -63,7 +63,7 @@ impl Db {
             .query_map([], |row| {
                 let custom_config_dir = user_directory()
                     .map_err(|error| rusqlite::Error::ToSqlConversionFailure(Box::new(error)))?
-                    .join("custom_config");
+                    .join("custom_configs");
                 Ok(LoadedTitle {
                     title: Title {
                         serial: row.get(0)?,

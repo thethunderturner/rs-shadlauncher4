@@ -114,6 +114,14 @@ impl Table {
                             }
                         });
                         row.col(|ui| {
+                            if loaded.has_custom_config {
+                                ui.add(
+                                    egui::Image::new(egui::include_image!("../assets/settings.svg"))
+                                        .fit_to_exact_size(egui::vec2(24.0, 24.0))
+                                        .alt_text("Game-specific settings"),
+                                )
+                                    .on_hover_text("Game-specific settings");
+                            }
                             RowWidget::label(ui, &title.name);
                         });
                         if state.launcher.show_compatibility {
