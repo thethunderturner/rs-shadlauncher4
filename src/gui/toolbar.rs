@@ -1,13 +1,7 @@
-use crate::config::emulator::Config;
+use crate::app::State;
 use crate::gui::menubar::settings::Settings;
 use eframe::egui;
 use eframe::egui::ImageSource;
-
-#[derive(Clone, Copy)]
-pub enum Action {
-    RefreshTitles,
-    RefreshCompatibility,
-}
 
 #[derive(Default)]
 pub struct Toolbar {
@@ -15,8 +9,7 @@ pub struct Toolbar {
 }
 
 impl Toolbar {
-    pub fn show(&mut self, ui: &mut egui::Ui, config: &mut Config) -> Option<Action> {
-        let mut action = None;
+    pub fn show(&mut self, ui: &mut egui::Ui, state: &mut State) {
         egui::Panel::top("toolbar").show(ui, |ui| {
             ui.horizontal_top(|ui| {
                 ui.group(|ui| {
@@ -47,16 +40,14 @@ impl Toolbar {
                             })
                             .inner
                             .clicked()
-                        {
-                            action = Some(Action::RefreshCompatibility);
-                        }
+                        {}
                     });
                 });
                 ui.add(egui::Separator::default().vertical().shrink(8.0));
                 ui.group(|ui| {
                     if button(ui, "Settings", egui::include_image!("../assets/settings.svg")).clicked() {
                         if !self.settings.open {
-                            self.settings.window.begin_edit(config);
+                            self.settings.window.begin_edit(state);
                         }
                         self.settings.open = true;
                     };
@@ -65,8 +56,7 @@ impl Toolbar {
         });
         self.settings
             .window
-            .show(ui, &mut self.settings.open, config, false);
-        action
+            .show(ui, &mut self.settings.open, state, false);
     }
 }
 

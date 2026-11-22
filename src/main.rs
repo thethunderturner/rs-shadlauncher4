@@ -8,6 +8,7 @@ pub mod gui;
 pub mod library;
 pub mod localization;
 pub mod sfo;
+pub mod themes;
 pub mod versions;
 
 fn main() -> eframe::Result {

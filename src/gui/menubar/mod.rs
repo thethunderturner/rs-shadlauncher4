@@ -1,3 +1,4 @@
+use crate::app::State;
 use crate::config::emulator::Config;
 use controllers::Controllers;
 use eframe::egui;
@@ -28,11 +29,11 @@ pub struct MenuBar {
 }
 
 impl MenuBar {
-    pub fn show(&mut self, ui: &mut egui::Ui, config: &mut Config) {
+    pub fn show(&mut self, ui: &mut egui::Ui, state: &mut State) {
         egui::Panel::top("menubar").show(ui, |ui| {
             egui::MenuBar::new().ui(ui, |ui| {
                 self.file.show(ui);
-                self.settings.show(ui, config);
+                self.settings.show(ui, state);
                 self.controllers.show(ui);
                 self.manage.show(ui);
                 self.utilities.show(ui);

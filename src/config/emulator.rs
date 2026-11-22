@@ -8,8 +8,6 @@ use std::{fs, io};
 pub struct Config {
     #[serde(rename = "Audio", alias = "audio")]
     pub audio: Audio,
-    #[serde(rename = "Frontend", alias = "frontend")]
-    pub frontend: Frontend,
     #[serde(rename = "Debug", alias = "debug")]
     pub debug: Debug,
     #[serde(rename = "GPU", alias = "gpu")]
@@ -24,8 +22,6 @@ pub struct Config {
     pub network: Network,
     #[serde(rename = "Vulkan", alias = "vulkan")]
     pub vulkan: Vulkan,
-    #[serde(rename = "Other", alias = "other")]
-    pub other: Other,
 }
 
 impl Config {
@@ -68,10 +64,16 @@ impl Config {
         let config: Self = serde_json::from_slice(&fs::read(path)?).map_err(io::Error::other)?;
         Ok(config)
     }
-    pub fn load() -> io::Result<Self> {
-        let path = user_directory()?.join("config.json");
-        let config: Self = serde_json::from_slice(&fs::read(path)?).map_err(io::Error::other)?;
-        Ok(config)
+    pub fn load() -> Self {
+        let result = (|| -> io::Result<Self> {
+            let path = user_directory()?.join("config.json");
+            serde_json::from_slice(&fs::read(path)?).map_err(io::Error::other)
+        })();
+
+        result.unwrap_or_else(|error| {
+            eprintln!("Failed to load configuration: {error}");
+            Self::default()
+        })
     }
 
     pub fn save(&self) -> io::Result<()> {
@@ -107,37 +109,6 @@ impl Default for Audio {
             sdl_main_output_device: String::from("Default Device"),
             sdl_mic_device: String::from("Default Device"),
             sdl_pad_spk_output_device: String::from("Default Device"),
-        }
-    }
-}
-
-// QT saves these in a .ini file. I can try saving it in the config.json, not sure if this will cause issues down the road
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(default)]
-pub struct Frontend {
-    pub show_background_image: bool,
-    pub background_image_opacity: u32,
-    pub play_background_music: bool,
-    pub background_music_volume: u32,
-    pub show_compatibility: bool,
-    pub check_compatibility_at_startup: bool,
-    pub check_for_updates: bool,
-    pub show_change_log: bool,
-    pub home_tab: String,
-}
-
-impl Default for Frontend {
-    fn default() -> Self {
-        Self {
-            show_background_image: false,
-            background_image_opacity: 100,
-            play_background_music: false,
-            background_music_volume: 100,
-            show_compatibility: false,
-            check_compatibility_at_startup: false,
-            check_for_updates: false,
-            show_change_log: false,
-            home_tab: "General".to_owned(),
         }
     }
 }
@@ -417,24 +388,6 @@ impl Default for Vulkan {
             vkvalidation_enabled: false,
             vkvalidation_gpu_enabled: false,
             vkvalidation_sync_enabled: false,
-        }
-    }
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(default)]
-pub struct Other {
-    pub version_path: PathBuf,
-    pub pkg_install_dir: PathBuf,
-    pub localization: u32,
-}
-
-impl Default for Other {
-    fn default() -> Self {
-        Self {
-            version_path: user_directory().unwrap().join("versions"),
-            pkg_install_dir: PathBuf::new(),
-            localization: 1, // English US
         }
     }
 }

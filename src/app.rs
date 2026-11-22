@@ -1,6 +1,7 @@
 use crate::config::emulator::Config;
+use crate::config::launcher::Launcher;
 use crate::gui::Gui;
-use crate::library::cache::{LoadedTitle, LoadedTitles};
+use crate::library::cache::LoadedTitles;
 use eframe::egui;
 
 #[derive(Default)]
@@ -12,23 +13,19 @@ pub struct App {
 #[derive(Default)]
 pub struct State {
     pub config: Config,
+    pub launcher: Launcher, // launcher config
     pub loaded_titles: LoadedTitles,
 }
 
 impl App {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         egui_extras::install_image_loaders(&cc.egui_ctx);
-        let mut app = Self {
+        let app = Self {
             gui: Default::default(),
             state: State {
-                config: Config::load().unwrap_or_else(|error| {
-                    eprintln!("Failed to load configuration: {error}");
-                    Config::default()
-                }),
-                loaded_titles: LoadedTitles::load().unwrap_or_else(|error| {
-                    eprintln!("Failed to load cached titles: {error}");
-                    LoadedTitles::default()
-                }),
+                config: Config::load(),
+                launcher: Launcher::load(),
+                loaded_titles: LoadedTitles::load(),
             },
         };
         app

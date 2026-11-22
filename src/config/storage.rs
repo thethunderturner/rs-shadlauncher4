@@ -1,4 +1,4 @@
-use crate::config::{emulator, keys, users};
+use crate::config::{emulator, keys, launcher, users};
 use serde::Serialize;
 use std::io;
 use std::io::Write;
@@ -32,6 +32,7 @@ pub fn initialize_user_directory() -> io::Result<PathBuf> {
     }
 
     create_default_json::<emulator::Config>(&user_dir.join("config.json"))?;
+    create_default_json::<launcher::Launcher>(&user_dir.join("launcher.json"))?;
     create_default_json::<keys::Keys>(&user_dir.join("keys.json"))?;
     create_default_json::<users::Users>(&user_dir.join("users.json"))?;
 

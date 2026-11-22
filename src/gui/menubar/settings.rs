@@ -1,4 +1,4 @@
-use crate::config::emulator::Config;
+use crate::app::State;
 use crate::gui::windows::settings::SettingsWindow;
 use eframe::egui;
 use eframe::egui::Button;
@@ -10,8 +10,7 @@ pub struct Settings {
 }
 
 impl Settings {
-    pub fn show(&mut self, ui: &mut egui::Ui, config: &mut Config) {
-        let mut temp = config.clone();
+    pub fn show(&mut self, ui: &mut egui::Ui, state: &mut State) {
         ui.menu_button("Settings", |ui| {
             if ui
                 .add(
@@ -24,8 +23,8 @@ impl Settings {
                 .clicked()
             {
                 if !self.open {
-                    temp.frontend.home_tab = String::from("General");
-                    self.window.begin_edit(&temp);
+                    self.window.begin_edit(state);
+                    self.window.select_tab("General");
                 }
                 self.open = true;
             }
@@ -40,8 +39,8 @@ impl Settings {
                 .clicked()
             {
                 if !self.open {
-                    temp.frontend.home_tab = String::from("Frontend");
-                    self.window.begin_edit(&temp);
+                    self.window.begin_edit(state);
+                    self.window.select_tab("Frontend");
                 }
                 self.open = true;
             }
@@ -56,8 +55,8 @@ impl Settings {
                 .clicked()
             {
                 if !self.open {
-                    temp.frontend.home_tab = String::from("General");
-                    self.window.begin_edit(&temp);
+                    self.window.begin_edit(state);
+                    self.window.select_tab("Graphics");
                 }
                 self.open = true;
             }
@@ -82,8 +81,8 @@ impl Settings {
                 .clicked()
             {
                 if !self.open {
-                    temp.frontend.home_tab = String::from("Input");
-                    self.window.begin_edit(&temp);
+                    self.window.begin_edit(state);
+                    self.window.select_tab("Input");
                 }
                 self.open = true;
             }
@@ -98,8 +97,8 @@ impl Settings {
                 .clicked()
             {
                 if !self.open {
-                    temp.frontend.home_tab = String::from("Network");
-                    self.window.begin_edit(&temp);
+                    self.window.begin_edit(state);
+                    self.window.select_tab("Network");
                 }
                 self.open = true;
             }
@@ -114,8 +113,8 @@ impl Settings {
                 .clicked()
             {
                 if !self.open {
-                    temp.frontend.home_tab = String::from("Paths");
-                    self.window.begin_edit(&temp);
+                    self.window.begin_edit(state);
+                    self.window.select_tab("Paths");
                 }
                 self.open = true;
             }
@@ -130,8 +129,8 @@ impl Settings {
                 .clicked()
             {
                 if !self.open {
-                    temp.frontend.home_tab = String::from("Log");
-                    self.window.begin_edit(&temp);
+                    self.window.begin_edit(state);
+                    self.window.select_tab("Log");
                 }
                 self.open = true;
             }
@@ -146,12 +145,12 @@ impl Settings {
                 .clicked()
             {
                 if !self.open {
-                    temp.frontend.home_tab = String::from("Debug");
-                    self.window.begin_edit(&temp);
+                    self.window.begin_edit(state);
+                    self.window.select_tab("Debug");
                 }
                 self.open = true;
             }
         });
-        self.window.show(ui, &mut self.open, &mut temp, false);
+        self.window.show(ui, &mut self.open, state, false);
     }
 }

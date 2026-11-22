@@ -22,9 +22,9 @@ pub struct Gui {
 
 impl Gui {
     pub fn show(&mut self, ui: &mut egui::Ui, state: &mut State) {
-        self.menubar.show(ui, &mut state.config);
+        self.menubar.show(ui, state);
         self.sidebar.show(ui);
-        self.toolbar.show(ui, &mut state.config);
+        self.toolbar.show(ui, state);
         self.footer.show(ui, state);
         self.table.show(ui, state);
     }

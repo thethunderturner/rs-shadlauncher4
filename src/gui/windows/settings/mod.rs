@@ -1,4 +1,6 @@
+use crate::app::State;
 use crate::config::emulator::Config;
+use crate::config::launcher::Launcher;
 use crate::gui::windows::settings::experimental::ExperimentalWindow;
 use debug::DebugWindow;
 use eframe::egui;
@@ -23,7 +25,7 @@ pub mod paths;
 pub mod user;
 
 pub struct SettingsWindow {
-    config: Config,
+    draft: State,
     custom_serial: Option<String>,
     save_error: Option<String>,
     selected_tab: String,
@@ -42,12 +44,17 @@ pub struct SettingsWindow {
 impl Default for SettingsWindow {
     fn default() -> Self {
         let config = Config::default();
-        let selected_tab = config.frontend.home_tab.clone();
+        let frontend = Launcher::default();
+        let selected_tab = frontend.home_tab.clone();
         let general_window = GeneralWindow::new(config.audio.audio_backend);
         let graphics_window = GraphicsWindow::new();
         let input_window = InputWindow::new();
         Self {
-            config,
+            draft: State {
+                config,
+                launcher: frontend,
+                ..State::default()
+            },
             custom_serial: None,
             save_error: None,
             selected_tab,
@@ -66,34 +73,36 @@ impl Default for SettingsWindow {
 }
 
 impl SettingsWindow {
-    pub fn begin_edit(&mut self, config: &Config) {
+    pub fn begin_edit(&mut self, state: &State) {
         self.custom_serial = None;
         self.save_error = None;
-        self.config = config.clone();
-        self.selected_tab = config.frontend.home_tab.clone();
-        self.general_window = GeneralWindow::new(config.audio.audio_backend);
+        self.draft.config = state.config.clone();
+        self.draft.launcher = state.launcher.clone();
+        self.selected_tab = state.launcher.home_tab.clone();
+        self.general_window = GeneralWindow::new(state.config.audio.audio_backend);
     }
 
-    pub fn begin_custom_edit(&mut self, serial: &str, config: &Config) {
-        self.begin_edit(config);
+    pub fn begin_custom_edit(&mut self, serial: &str, state: &State) {
+        self.begin_edit(state);
         self.custom_serial = Some(serial.to_owned());
         self.selected_tab = "General".into();
     }
 
+    pub fn select_tab(&mut self, tab: &str) {
+        self.selected_tab = tab.to_owned();
+    }
+
     fn save_current(&self) -> std::io::Result<()> {
         match &self.custom_serial {
-            Some(serial) => self.config.save_custom(serial),
-            None => self.config.save(),
+            Some(serial) => self.draft.config.save_custom(serial),
+            None => {
+                self.draft.config.save()?;
+                self.draft.launcher.save()
+            }
         }
     }
 
-    pub fn show(
-        &mut self,
-        ui: &mut egui::Ui,
-        open: &mut bool,
-        active_config: &mut Config,
-        is_custom: bool,
-    ) -> bool {
+    pub fn show(&mut self, ui: &mut egui::Ui, open: &mut bool, state: &mut State, is_custom: bool) -> bool {
         if !*open {
             return false;
         }
@@ -180,16 +189,16 @@ impl SettingsWindow {
                         });
                         ui.separator();
                         match self.selected_tab.as_str() {
-                            "General" => self.general_window.show(ui, &mut self.config),
-                            "Frontend" => self.frontend_window.show(ui, &mut self.config),
-                            "Graphics" => self.graphics_window.show(ui, &mut self.config),
-                            "User" => self.user_window.show(ui, &mut self.config),
-                            "Input" => self.input_window.show(ui, &mut self.config),
-                            "Network" => self.network_window.show(ui, &mut self.config),
-                            "Paths" => self.paths_window.show(ui, &mut self.config),
-                            "Log" => self.log_window.show(ui, &mut self.config),
-                            "Debug" => self.debug_window.show(ui, &mut self.config),
-                            "Experimental" => self.experimental_window.show(ui, &mut self.config),
+                            "General" => self.general_window.show(ui, &mut self.draft.config),
+                            "Frontend" => self.frontend_window.show(ui, &mut self.draft),
+                            "Graphics" => self.graphics_window.show(ui, &mut self.draft.config),
+                            "User" => self.user_window.show(ui, &mut self.draft.config),
+                            "Input" => self.input_window.show(ui, &mut self.draft.config),
+                            "Network" => self.network_window.show(ui, &mut self.draft.config),
+                            "Paths" => self.paths_window.show(ui, &mut self.draft.config),
+                            "Log" => self.log_window.show(ui, &mut self.draft.config),
+                            "Debug" => self.debug_window.show(ui, &mut self.draft.config),
+                            "Experimental" => self.experimental_window.show(ui, &mut self.draft.config),
                             _ => {}
                         }
                         if let Some(error) = &self.save_error {
@@ -213,7 +222,10 @@ impl SettingsWindow {
                                             Ok(()) => {
                                                 saved = true;
                                                 self.save_error = None;
-                                                *active_config = self.config.clone();
+                                                state.config = self.draft.config.clone();
+                                                if self.custom_serial.is_none() {
+                                                    state.launcher = self.draft.launcher.clone();
+                                                }
                                                 *open = false;
                                             }
                                             Err(err) => {
@@ -233,7 +245,10 @@ impl SettingsWindow {
                                             Ok(()) => {
                                                 saved = true;
                                                 self.save_error = None;
-                                                *active_config = self.config.clone();
+                                                state.config = self.draft.config.clone();
+                                                if self.custom_serial.is_none() {
+                                                    state.launcher = self.draft.launcher.clone();
+                                                }
                                             }
                                             Err(err) => {
                                                 self.save_error =
@@ -249,7 +264,8 @@ impl SettingsWindow {
                                         .clicked()
                                     {
                                         *open = false;
-                                        self.config = active_config.clone();
+                                        self.draft.config = state.config.clone();
+                                        self.draft.launcher = state.launcher.clone();
                                     }
                                 });
                             });

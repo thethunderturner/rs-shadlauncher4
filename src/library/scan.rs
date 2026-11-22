@@ -29,7 +29,7 @@ pub struct Title {
 
 impl Scan {
     pub fn scan(mut progress: impl FnMut(Option<f32>, String)) -> Vec<Title> {
-        let config = Config::load().unwrap_or_default();
+        let config = Config::load();
         let mut titles: BTreeMap<String, Title> = BTreeMap::new();
 
         progress(None, "Finding game folders".into());
