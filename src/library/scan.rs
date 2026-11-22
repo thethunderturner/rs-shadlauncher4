@@ -12,9 +12,7 @@ pub struct Scan;
 pub struct Title {
     pub parent_dir: PathBuf,
     pub icon_path: Option<PathBuf>,
-    pub icon: Option<std::sync::Arc<[u8]>>, // Only used when loading the icon at the launcher
     pub background_path: Option<PathBuf>,
-    pub background: Option<std::sync::Arc<[u8]>>, // Only used when loading the icon at the launcher
     pub name: String,
     pub serial: String,
     pub publisher_id: String,
@@ -26,9 +24,7 @@ pub struct Title {
     pub patch_path: Option<PathBuf>,
     pub supports_vr: bool,
     pub supports_neo: bool,
-    pub compatibility: Option<String>, // Only used when loading the icon at the launcher
     pub milestone: Option<String>,
-    pub playtime: Option<String>, // Only used when loading the icon at the launcher
 }
 
 impl Scan {

@@ -1,3 +1,4 @@
+use crate::library::cache::LoadedTitle;
 use crate::library::scan::Title;
 use eframe::egui;
 
@@ -95,16 +96,16 @@ impl Sidebar {
         changed
     }
 
-    pub fn search(&self, titles: &[Title]) -> Vec<usize> {
+    pub fn search(&self, titles: &[LoadedTitle]) -> Vec<usize> {
         let query = self.search.trim().to_lowercase();
         let visible_indices: Vec<usize> = titles
             .iter()
             .enumerate()
             .filter(|(_, title)| {
-                self.filter.matches(title)
+                self.filter.matches(&title.title)
                     && (query.is_empty()
-                        || title.name.to_lowercase().contains(&query)
-                        || title.serial.to_lowercase().contains(&query))
+                        || title.title.name.to_lowercase().contains(&query)
+                        || title.title.serial.to_lowercase().contains(&query))
             })
             .map(|(index, _)| index)
             .collect();

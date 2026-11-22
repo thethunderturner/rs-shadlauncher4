@@ -8,6 +8,37 @@ pub struct Db {
     conn: Connection,
 }
 
+#[derive(Default, Debug)]
+pub struct LoadedTitle {
+    pub title: Title,
+    pub icon: Option<std::sync::Arc<[u8]>>, // Only used when loading the icon at the launcher
+    pub background: Option<std::sync::Arc<[u8]>>, // Only used when you click on a row
+    pub compatibility: Option<String>,
+    pub playtime: Option<String>,
+}
+
+#[derive(Default, Debug)]
+pub struct LoadedTitles {
+    pub loaded_titles: Vec<LoadedTitle>,
+    pub load_ms: u128,
+    pub visible_indices: Vec<usize>,
+}
+
+impl LoadedTitles {
+    pub fn load() -> std::io::Result<Self> {
+        let start = std::time::Instant::now();
+        let db = Db::connect()?;
+        db.create_tables().map_err(std::io::Error::other)?;
+        let titles = db.load_titles().map_err(std::io::Error::other)?;
+
+        Ok(Self {
+            visible_indices: (0..titles.len()).collect(),
+            loaded_titles: titles,
+            load_ms: start.elapsed().as_millis(),
+        })
+    }
+}
+
 impl Db {
     pub fn connect() -> std::io::Result<Self> {
         let path = user_directory()?.join("cache.db");
@@ -16,7 +47,7 @@ impl Db {
         Ok(Self { conn: connection })
     }
 
-    pub fn load_titles(&self) -> rusqlite::Result<Vec<Title>> {
+    pub fn load_titles(&self) -> rusqlite::Result<Vec<LoadedTitle>> {
         let mut statement = self.conn.prepare(
             "SELECT titles.serial, parent_dir, name, publisher_id, version, fw, app_type, category, app_path, patch_path, icon, supports_vr, supports_neo, COALESCE(c.status, titles.compatibility), playtime, c.milestone
                  FROM titles LEFT JOIN compatibility c ON titles.serial = c.serial
@@ -24,24 +55,27 @@ impl Db {
         )?;
         statement
             .query_map([], |row| {
-                Ok(Title {
-                    serial: row.get(0)?,
-                    parent_dir: row.get::<_, String>(1)?.into(),
-                    name: row.get(2)?,
-                    publisher_id: row.get(3)?,
-                    version: row.get(4)?,
-                    fw: row.get(5)?,
-                    app_type: row.get(6)?,
-                    category: row.get(7)?,
-                    app_path: row.get::<_, Option<String>>(8)?.map(Into::into),
-                    patch_path: row.get::<_, Option<String>>(9)?.map(Into::into),
+                Ok(LoadedTitle {
+                    title: Title {
+                        serial: row.get(0)?,
+                        parent_dir: row.get::<_, String>(1)?.into(),
+                        name: row.get(2)?,
+                        publisher_id: row.get(3)?,
+                        version: row.get(4)?,
+                        fw: row.get(5)?,
+                        app_type: row.get(6)?,
+                        category: row.get(7)?,
+                        app_path: row.get::<_, Option<String>>(8)?.map(Into::into),
+                        patch_path: row.get::<_, Option<String>>(9)?.map(Into::into),
+                        supports_vr: row.get(11)?,
+                        supports_neo: row.get(12)?,
+                        milestone: row.get(15)?,
+                        ..Title::default()
+                    },
                     icon: row.get::<_, Option<Vec<u8>>>(10)?.map(Into::into),
-                    supports_vr: row.get(11)?,
-                    supports_neo: row.get(12)?,
                     compatibility: row.get(13)?,
                     playtime: row.get(14)?,
-                    milestone: row.get(15)?,
-                    ..Title::default()
+                    ..LoadedTitle::default()
                 })
             })?
             .collect()
@@ -60,8 +94,8 @@ impl Db {
         let transaction = self.conn.transaction()?;
         {
             let mut statement = transaction.prepare(
-                "INSERT INTO Titles(serial, parent_dir, NAME, publisher_id, VERSION, fw, app_type, category, app_path, patch_path, icon, background, supports_vr, supports_neo, compatibility, playtime)
-                     VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)
+                "INSERT INTO Titles(serial, parent_dir, NAME, publisher_id, VERSION, fw, app_type, category, app_path, patch_path, icon, background, supports_vr, supports_neo)
+                     VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)
                      ON Conflict(serial) do UPDATE SET
                       parent_dir = excluded.parent_dir,
                       NAME = excluded.NAME,
@@ -96,8 +130,6 @@ impl Db {
                     background,
                     title.supports_vr,
                     title.supports_neo,
-                    title.compatibility,
-                    title.playtime,
                 ])?;
                 progress(index + 1, titles.len());
             }

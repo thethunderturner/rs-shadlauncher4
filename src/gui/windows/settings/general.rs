@@ -1,45 +1,12 @@
 use crate::config::emulator::Config;
 use crate::devices::audio::AudioDevices;
+use crate::localization::LANGUAGE;
 use eframe::egui;
 
 #[derive(Default)]
 pub struct GeneralWindow {
     audio_devices: AudioDevices,
 }
-
-const LANGUAGES: &[(&str, u32)] = &[
-    ("Arabic", 21),
-    ("Czech", 23),
-    ("Danish", 14),
-    ("Dutch", 6),
-    ("English (United Kingdom)", 18),
-    ("English (United States)", 1),
-    ("Finnish", 12),
-    ("French (Canada)", 22),
-    ("French (France)", 2),
-    ("German", 4),
-    ("Greek", 25),
-    ("Hungarian", 24),
-    ("Indonesian", 29),
-    ("Italian", 5),
-    ("Japanese", 0),
-    ("Korean", 9),
-    ("Norwegian (Bokmaal)", 15),
-    ("Polish", 16),
-    ("Portuguese (Brazil)", 17),
-    ("Portuguese (Portugal)", 7),
-    ("Romanian", 26),
-    ("Russian", 8),
-    ("Simplified Chinese", 11),
-    ("Spanish (Latin America)", 20),
-    ("Spanish (Spain)", 3),
-    ("Swedish", 13),
-    ("Thai", 27),
-    ("Traditional Chinese", 10),
-    ("Turkish", 19),
-    ("Ukrainian", 30),
-    ("Vietnamese", 28),
-];
 
 impl GeneralWindow {
     pub fn new(backend: u32) -> Self {
@@ -58,14 +25,11 @@ impl GeneralWindow {
                     egui::ComboBox::from_id_salt("console_language")
                         .width(ui.available_width())
                         .selected_text(
-                            LANGUAGES
-                                .iter()
-                                .find(|(_, id)| id == current)
-                                .map_or("Unknown", |(name, _)| name),
+                            LANGUAGE::from_id(*current).map_or_else(|| "Unknown".to_owned(), LANGUAGE::label),
                         )
                         .show_ui(ui, |ui| {
-                            for (name, id) in LANGUAGES {
-                                ui.selectable_value(current, *id, *name);
+                            for language in LANGUAGE::ALL {
+                                ui.selectable_value(current, *language as u32, LANGUAGE::label(*language));
                             }
                         });
                 });

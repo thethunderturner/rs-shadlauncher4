@@ -6,9 +6,9 @@ pub mod devices;
 pub mod emulation;
 pub mod gui;
 pub mod library;
+pub mod localization;
 pub mod sfo;
 pub mod versions;
-pub mod localization;
 
 fn main() -> eframe::Result {
     if let Err(error) = config::storage::initialize_user_directory() {

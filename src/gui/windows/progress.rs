@@ -1,8 +1,14 @@
-use crate::app::state::Progress;
 use eframe::egui;
 
+#[derive(Clone)]
+pub struct Progress {
+    pub title: String,
+    pub fraction: Option<f32>,
+    pub message: String,
+}
+
 pub fn show(ctx: &egui::Context, progress: &Progress) {
-    egui::Window::new(progress.title)
+    egui::Window::new(progress.title.clone())
         .id(egui::Id::unique("library_progress"))
         .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::ZERO)
         .collapsible(false)

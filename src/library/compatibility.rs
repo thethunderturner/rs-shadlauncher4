@@ -1,4 +1,4 @@
-use super::scan::Title;
+use super::cache::LoadedTitle;
 use crate::config::storage::user_directory;
 use eframe::egui;
 use serde::Deserialize;
@@ -109,10 +109,10 @@ pub fn status_color(status: &str) -> egui::Color32 {
     }
 }
 
-pub fn apply(titles: &mut [Title], reports: &Reports) {
+pub fn apply(titles: &mut [LoadedTitle], reports: &Reports) {
     for title in titles {
-        let report = reports.get(&title.serial);
+        let report = reports.get(&title.title.serial);
         title.compatibility = report.map(|report| report.status.clone());
-        title.milestone = report.and_then(|report| report.milestone.clone());
+        title.title.milestone = report.and_then(|report| report.milestone.clone());
     }
 }

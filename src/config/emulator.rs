@@ -426,7 +426,7 @@ impl Default for Vulkan {
 pub struct Other {
     pub version_path: PathBuf,
     pub pkg_install_dir: PathBuf,
-    pub localization: u32
+    pub localization: u32,
 }
 
 impl Default for Other {

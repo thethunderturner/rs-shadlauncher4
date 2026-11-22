@@ -1,4 +1,4 @@
-use crate::library::scan::Title;
+use crate::library::cache::LoadedTitle;
 use eframe::egui;
 use std::cmp::Ordering;
 
@@ -50,30 +50,29 @@ impl Sorting {
         button.frame(false)
     }
 
-    pub fn sort(&self, titles: &[Title], indices: &mut [usize]) {
+    pub fn sort(&self, titles: &[LoadedTitle], indices: &mut [usize]) {
         indices.sort_by(|&a, &b| {
             let a = &titles[a];
             let b = &titles[b];
             let comparison = match self.column.as_str() {
                 "icon" => a.icon.is_some().cmp(&b.icon.is_some()),
-                "name" => a.name.to_lowercase().cmp(&b.name.to_lowercase()),
+                "name" => a.title.name.to_lowercase().cmp(&b.title.name.to_lowercase()),
                 "status" | "compatibility" | "compatibility_status" => {
                     status_rank(a.compatibility.as_deref()).cmp(&status_rank(b.compatibility.as_deref()))
                 }
-                "serial" => a.serial.cmp(&b.serial),
-                "region" => {
-                    region_from_content_id(&a.publisher_id).cmp(region_from_content_id(&b.publisher_id))
-                }
-                "firmware" => a.fw.cmp(&b.fw),
-                "version" => compare_versions(&a.version, &b.version),
+                "serial" => a.title.serial.cmp(&b.title.serial),
+                "region" => region_from_content_id(&a.title.publisher_id)
+                    .cmp(region_from_content_id(&b.title.publisher_id)),
+                "firmware" => a.title.fw.cmp(&b.title.fw),
+                "version" => compare_versions(&a.title.version, &b.title.version),
                 "path" => {
-                    let a = a.app_path.as_ref().or(a.patch_path.as_ref());
-                    let b = b.app_path.as_ref().or(b.patch_path.as_ref());
+                    let a = a.title.app_path.as_ref().or(a.title.patch_path.as_ref());
+                    let b = b.title.app_path.as_ref().or(b.title.patch_path.as_ref());
                     a.map(|p| p.to_string_lossy().to_lowercase())
                         .unwrap_or_default()
                         .cmp(&b.map(|p| p.to_string_lossy().to_lowercase()).unwrap_or_default())
                 }
-                "milestone" => a.milestone.cmp(&b.milestone),
+                "milestone" => a.title.milestone.cmp(&b.title.milestone),
                 _ => Ordering::Equal,
             };
             match self.order {

@@ -15,13 +15,7 @@ pub struct Toolbar {
 }
 
 impl Toolbar {
-    pub fn show(
-        &mut self,
-        ui: &mut egui::Ui,
-        loading: bool,
-        compatibility_message: Option<&str>,
-        config: &mut Config,
-    ) -> Option<Action> {
+    pub fn show(&mut self, ui: &mut egui::Ui, config: &mut Config) -> Option<Action> {
         let mut action = None;
         egui::Panel::top("toolbar").show(ui, |ui| {
             ui.horizontal_top(|ui| {
@@ -42,13 +36,9 @@ impl Toolbar {
                             egui::include_image!("../assets/toolbar/refresh-titles.svg"),
                         )
                         .clicked()
-                        {
-                            if !loading {
-                                action = Some(Action::RefreshTitles);
-                            }
-                        };
+                        {};
                         if ui
-                            .add_enabled_ui(!loading, |ui| {
+                            .add_enabled_ui(false, |ui| {
                                 button(
                                     ui,
                                     "Refresh Compatibility",
@@ -71,12 +61,6 @@ impl Toolbar {
                         self.settings.open = true;
                     };
                 });
-                // Keep feedback in the same row: a second row makes the vertical
-                // separators inherit the larger panel height on every frame.
-                if let Some(message) = compatibility_message {
-                    ui.add(egui::Label::new(message).truncate())
-                        .on_hover_text(message);
-                }
             });
         });
         self.settings
