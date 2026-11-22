@@ -19,6 +19,11 @@ pub struct Table {
 impl Table {
     pub fn show(&mut self, ui: &mut Ui, state: &mut State) {
         egui::CentralPanel::default().show(ui, |ui| {
+            if !state.launcher.play_background_music {
+                if self.sound.active {
+                    self.sound.stop();
+                }
+            }
             self.show_background(ui, state);
             table_visuals(ui);
             let ctx = ui.ctx().clone();
@@ -120,7 +125,9 @@ impl Table {
                                     None
                                 }
                             };
-                            self.sound.play(title, state.launcher.background_music_volume);
+                            if state.launcher.play_background_music {
+                                self.sound.play(title, state.launcher.background_music_volume);
+                            }
                             ctx.request_repaint();
                         }
                     });

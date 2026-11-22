@@ -174,10 +174,10 @@ enum Command {
 
 #[derive(Default)]
 pub struct Player {
-    sender: Option<mpsc::Sender<Command>>,
-    generation: Arc<AtomicU64>,
-    volume: u32,
-    active: bool,
+    pub sender: Option<mpsc::Sender<Command>>,
+    pub generation: Arc<AtomicU64>,
+    pub volume: u32,
+    pub active: bool,
 }
 
 impl Player {
