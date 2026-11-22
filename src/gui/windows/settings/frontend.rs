@@ -1,5 +1,4 @@
 use crate::app::State;
-use crate::localization::LANGUAGE;
 use crate::themes::AppTheme;
 use eframe::egui;
 

@@ -1,5 +1,4 @@
 use crate::app::State;
-use crate::config::emulator::Config;
 use controllers::Controllers;
 use eframe::egui;
 use file::File;

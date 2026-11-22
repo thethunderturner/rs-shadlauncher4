@@ -65,7 +65,7 @@ impl RowWidget {
         });
     }
 
-    pub fn dialog(ui: &mut Ui, state: State, title: &Title) {
+    pub fn dialog(ui: &mut Ui, _state: State, title: &Title) {
         ui.menu_button("Launch", |ui| {
             let _ = ui.button("Launch with game specific configs (default)");
             let _ = ui.button("Launch with global configs only");
