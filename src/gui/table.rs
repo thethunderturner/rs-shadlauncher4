@@ -120,6 +120,7 @@ impl Table {
                                     None
                                 }
                             };
+                            self.sound.play(title, state.launcher.background_music_volume);
                             ctx.request_repaint();
                         }
                     });
