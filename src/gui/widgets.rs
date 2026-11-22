@@ -94,7 +94,13 @@ impl RowWidget {
                 }
             } else {
                 if ui
-                    .button("Create Game-Specific config from global config")
+                    .button("Create Game-Specific config from global settings")
+                    .clicked()
+                {
+                    ui.close();
+                }
+                if ui
+                    .button("Create Game-Specific config from default settings")
                     .clicked()
                 {
                     ui.close();
