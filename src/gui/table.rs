@@ -2,6 +2,7 @@ use crate::app::State;
 use crate::gui::widgets::RowWidget;
 use crate::library::attrac9::Player;
 use crate::library::sorting::Sorting;
+use crate::themes::table_visuals;
 use eframe::egui;
 use eframe::egui::Ui;
 use egui_extras::{Column, TableBuilder};
@@ -17,6 +18,7 @@ pub struct Table {
 impl Table {
     pub fn show(&mut self, ui: &mut Ui, state: &mut State) {
         egui::CentralPanel::default().show(ui, |ui| {
+            table_visuals(ui);
             TableBuilder::new(ui)
                 .striped(true)
                 .resizable(true)

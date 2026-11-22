@@ -36,3 +36,12 @@ impl AppTheme {
         }
     }
 }
+
+// Apply translucent selection
+pub fn table_visuals(ui: &mut eframe::egui::Ui) {
+    let visuals = ui.visuals_mut();
+    let [r, g, b, _] = visuals.selection.bg_fill.to_srgba_unmultiplied();
+    visuals.selection.bg_fill = eframe::egui::Color32::from_rgba_unmultiplied(r, g, b, 153);
+    let [r, g, b, _] = visuals.widgets.hovered.bg_fill.to_srgba_unmultiplied();
+    visuals.widgets.hovered.bg_fill = eframe::egui::Color32::from_rgba_unmultiplied(r, g, b, 153);
+}
