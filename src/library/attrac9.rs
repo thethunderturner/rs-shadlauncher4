@@ -1,4 +1,4 @@
-use super::scan::Title;
+use crate::library::title::Title;
 use alto::Source;
 use std::{
     ffi::c_void,

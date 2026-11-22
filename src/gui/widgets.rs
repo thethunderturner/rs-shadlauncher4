@@ -1,5 +1,5 @@
 use crate::app::State;
-use crate::library::scan::Title;
+use crate::library::title::Title;
 use eframe::egui;
 use eframe::egui::Ui;
 

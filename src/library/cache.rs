@@ -1,5 +1,5 @@
 use crate::config::storage::user_directory;
-use crate::library::scan::Title;
+use crate::library::title::Title;
 use rusqlite::{Connection, params};
 use std::io::Cursor;
 use std::path::Path;
@@ -15,6 +15,7 @@ pub struct LoadedTitle {
     pub background: Option<std::sync::Arc<[u8]>>, // Only used when you click on a row
     pub compatibility: Option<String>,
     pub playtime: Option<String>,
+    pub has_custom_config: bool,
 }
 
 #[derive(Default, Debug)]
@@ -60,6 +61,9 @@ impl Db {
         )?;
         statement
             .query_map([], |row| {
+                let custom_config_dir = user_directory()
+                    .map_err(|error| rusqlite::Error::ToSqlConversionFailure(Box::new(error)))?
+                    .join("custom_config");
                 Ok(LoadedTitle {
                     title: Title {
                         serial: row.get(0)?,
@@ -80,6 +84,9 @@ impl Db {
                     icon: row.get::<_, Option<Vec<u8>>>(10)?.map(Into::into),
                     compatibility: row.get(13)?,
                     playtime: row.get(14)?,
+                    has_custom_config: custom_config_dir
+                        .join(format!("{}.json", row.get::<_, String>(0)?))
+                        .is_file(),
                     ..LoadedTitle::default()
                 })
             })?

@@ -1,31 +1,12 @@
 use crate::config::emulator::Config;
 use crate::library::cache::Db;
+use crate::library::title::{Title, find_background, find_icon};
 use crate::sfo::parse_param::attribute::{supports_neo, supports_vr};
 use crate::sfo::reader::read_sfo;
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::{Path, PathBuf};
 
 pub struct Scan;
-
-#[derive(Clone, Debug, Default)]
-pub struct Title {
-    pub parent_dir: PathBuf,
-    pub icon_path: Option<PathBuf>,
-    pub background_path: Option<PathBuf>,
-    pub name: String,
-    pub serial: String,
-    pub publisher_id: String,
-    pub version: String,
-    pub fw: u32,
-    pub app_type: Option<u32>,
-    pub category: String,
-    pub app_path: Option<PathBuf>,
-    pub patch_path: Option<PathBuf>,
-    pub supports_vr: bool,
-    pub supports_neo: bool,
-    pub milestone: Option<String>,
-}
 
 impl Scan {
     pub fn scan(mut progress: impl FnMut(Option<f32>, String)) -> Vec<Title> {
@@ -142,20 +123,4 @@ impl Scan {
 
         titles
     }
-}
-
-fn existing_file(path: PathBuf) -> Option<PathBuf> {
-    path.is_file().then_some(path)
-}
-
-fn find_icon(game_dir: &Path) -> Option<PathBuf> {
-    ["icon0.png", "icon1.png"]
-        .into_iter()
-        .find_map(|name| existing_file(game_dir.join("sce_sys").join(name)))
-}
-
-fn find_background(game_dir: &Path) -> Option<PathBuf> {
-    ["pic0.png", "pic1.png"]
-        .into_iter()
-        .find_map(|name| existing_file(game_dir.join("sce_sys").join(name)))
 }

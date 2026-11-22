@@ -181,10 +181,8 @@ impl Table {
     }
 
     pub fn sort_titles(&self, state: &mut State) {
-        self.sorting.sort(
-            &state.loaded_titles.loaded_titles,
-            &mut state.visible_indices,
-        );
+        self.sorting
+            .sort(&state.loaded_titles.loaded_titles, &mut state.visible_indices);
     }
 }
 
