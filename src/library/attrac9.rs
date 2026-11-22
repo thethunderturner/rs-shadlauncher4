@@ -162,7 +162,7 @@ fn decode(bytes: &[u8], cancelled: impl Fn() -> bool) -> Result<Option<Audio>, S
     }))
 }
 
-enum Command {
+pub enum Command {
     Play {
         paths: Vec<PathBuf>,
         generation: u64,

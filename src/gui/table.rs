@@ -19,6 +19,15 @@ pub struct Table {
 impl Table {
     pub fn show(&mut self, ui: &mut Ui, state: &mut State) {
         egui::CentralPanel::default().show(ui, |ui| {
+            if state.loaded_titles.loaded_titles.is_empty() {
+                if !state.config.general.install_dirs.iter().any(|directory| directory.enabled) {
+                    ui.label("Add or enable a game folder in Settings -> Paths.");
+                    return;
+                }
+            } else if state.visible_indices.is_empty() {
+                ui.label("No titles match your search or filter. Clear the search or select All.");
+                return;
+            }
             if !state.launcher.play_background_music {
                 if self.sound.active {
                     self.sound.stop();
@@ -131,7 +140,7 @@ impl Table {
                             ctx.request_repaint();
                         }
                     });
-                })
+                });
         });
     }
 
