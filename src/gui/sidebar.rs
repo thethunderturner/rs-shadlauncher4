@@ -1,6 +1,6 @@
-use crate::library::cache::LoadedTitle;
 use crate::library::scan::Title;
 use eframe::egui;
+use crate::app::State;
 
 #[derive(Clone, Copy, Default, PartialEq, Eq)]
 pub enum Filter {
@@ -96,9 +96,9 @@ impl Sidebar {
         changed
     }
 
-    pub fn search(&self, titles: &[LoadedTitle]) -> Vec<usize> {
+    pub fn search(&self, state: &State) -> Vec<usize> {
         let query = self.search.trim().to_lowercase();
-        let visible_indices: Vec<usize> = titles
+        let visible_indices: Vec<usize> = state.loaded_titles.loaded_titles
             .iter()
             .enumerate()
             .filter(|(_, title)| {

@@ -21,7 +21,6 @@ pub struct LoadedTitle {
 pub struct LoadedTitles {
     pub loaded_titles: Vec<LoadedTitle>,
     pub load_ms: u128,
-    pub visible_indices: Vec<usize>,
 }
 
 impl LoadedTitles {
@@ -33,7 +32,6 @@ impl LoadedTitles {
             let titles = db.load_titles().map_err(std::io::Error::other)?;
 
             Ok(Self {
-                visible_indices: (0..titles.len()).collect(),
                 loaded_titles: titles,
                 load_ms: start.elapsed().as_millis(),
             })

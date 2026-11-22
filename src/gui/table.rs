@@ -66,8 +66,8 @@ impl Table {
                 .body(|body| {
                     let titles = &state.loaded_titles;
 
-                    body.rows(60.0, titles.visible_indices.len(), |mut row| {
-                        let index = titles.visible_indices[row.index()];
+                    body.rows(60.0, state.visible_indices.len(), |mut row| {
+                        let index = state.visible_indices[row.index()];
                         let loaded = &titles.loaded_titles[index];
                         let title = &loaded.title;
 

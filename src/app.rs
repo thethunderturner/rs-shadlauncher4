@@ -16,17 +16,21 @@ pub struct State {
     pub config: Config,
     pub launcher: Launcher, // launcher config
     pub loaded_titles: LoadedTitles,
+    pub visible_indices: Vec<usize>,
 }
 
 impl App {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         egui_extras::install_image_loaders(&cc.egui_ctx);
+        let titles = LoadedTitles::load();
+        let visible_indices = (0..titles.loaded_titles.len()).collect();
         let app = Self {
             gui: Default::default(),
             state: State {
                 config: Config::load(),
                 launcher: Launcher::load(),
-                loaded_titles: LoadedTitles::load(),
+                loaded_titles: titles,
+                visible_indices,
             },
         };
         let theme = AppTheme::from_id(app.state.launcher.theme).unwrap_or(AppTheme::Dark);
