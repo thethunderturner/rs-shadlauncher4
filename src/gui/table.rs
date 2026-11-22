@@ -84,10 +84,7 @@ impl Table {
                                 if sortable {
                                     if ui.add(self.sorting.header(column, label)).clicked() {
                                         self.sorting.select_column(column);
-                                        self.sorting.sort(
-                                            &state.loaded_titles.loaded_titles,
-                                            &mut state.visible_indices,
-                                        );
+                                        self.sort_titles(state);
                                     }
                                 } else {
                                     ui.add(egui::Label::new(label).truncate().selectable(false));
@@ -182,6 +179,13 @@ impl Table {
                     .image(background.id(), rect, uv, egui::Color32::WHITE.gamma_multiply(opacity));
             }
         }
+    }
+
+    pub fn sort_titles(&self, state: &mut State) {
+        self.sorting.sort(
+            &state.loaded_titles.loaded_titles,
+            &mut state.visible_indices,
+        );
     }
 }
 

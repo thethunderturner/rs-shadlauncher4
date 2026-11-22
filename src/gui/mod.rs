@@ -25,6 +25,7 @@ impl Gui {
         self.menubar.show(ui, state);
         if self.sidebar.show(ui) {
             state.visible_indices = self.sidebar.search(state);
+            self.table.sort_titles(state);
         }
         self.toolbar.show(ui, state);
         self.footer.show(ui, state);
