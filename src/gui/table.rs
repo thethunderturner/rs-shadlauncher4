@@ -11,7 +11,6 @@ use egui_extras::{Column, TableBuilder};
 #[derive(Default)]
 pub struct Table {
     selected: Option<usize>, // selected title index
-    column: Option<Column>,  // clicked column
     background: Option<egui::TextureHandle>,
     sorting: Sorting,
     sound: Player,
