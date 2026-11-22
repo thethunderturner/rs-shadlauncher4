@@ -46,9 +46,9 @@ impl Default for Launcher {
     fn default() -> Self {
         Self {
             show_background_image: false,
-            background_image_opacity: 100,
+            background_image_opacity: 15,
             play_background_music: false,
-            background_music_volume: 100,
+            background_music_volume: 5,
             show_compatibility: false,
             check_compatibility_at_startup: false,
             check_for_updates: false,

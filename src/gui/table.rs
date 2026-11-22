@@ -1,6 +1,7 @@
 use crate::app::State;
 use crate::gui::widgets::RowWidget;
 use crate::library::attrac9::Player;
+use crate::library::cache::Db;
 use crate::library::sorting::Sorting;
 use crate::themes::table_visuals;
 use eframe::egui;
@@ -18,7 +19,9 @@ pub struct Table {
 impl Table {
     pub fn show(&mut self, ui: &mut Ui, state: &mut State) {
         egui::CentralPanel::default().show(ui, |ui| {
+            self.show_background(ui, state);
             table_visuals(ui);
+            let ctx = ui.ctx().clone();
             TableBuilder::new(ui)
                 .striped(true)
                 .resizable(true)
@@ -55,7 +58,7 @@ impl Table {
                         });
                     }
                 })
-                .body(|mut body| {
+                .body(|body| {
                     let titles = &state.loaded_titles;
 
                     body.rows(60.0, titles.visible_indices.len(), |mut row| {
@@ -110,9 +113,47 @@ impl Table {
 
                         if row.response().clicked() {
                             self.selected = Some(index);
+                            self.background = match load_background(&ctx, &title.serial) {
+                                Ok(background) => background,
+                                Err(error) => {
+                                    eprintln!("Failed to load background for {}: {error}", title.serial);
+                                    None
+                                }
+                            };
+                            ctx.request_repaint();
                         }
                     });
                 })
         });
     }
+
+    fn show_background(&self, ui: &mut Ui, state: &State) {
+        if state.launcher.show_background_image {
+            if let Some(background) = &self.background {
+                let rect = ui.max_rect();
+                let size = background.size_vec2();
+                let scale = (rect.width() / size.x).max(rect.height() / size.y);
+                let uv = egui::Rect::from_center_size(egui::pos2(0.5, 0.5), rect.size() / (size * scale));
+                let opacity = state.launcher.background_image_opacity.min(100) as f32 / 100.0;
+                ui.painter()
+                    .image(background.id(), rect, uv, egui::Color32::WHITE.gamma_multiply(opacity));
+            }
+        }
+    }
+}
+
+fn load_background(
+    ctx: &egui::Context,
+    serial: &str,
+) -> Result<Option<egui::TextureHandle>, Box<dyn std::error::Error>> {
+    let db = Db::connect()?;
+    let Some(bytes) = db.load_background(serial)? else {
+        return Ok(None);
+    };
+    let image = image::load_from_memory(&bytes)?.to_rgba8();
+    let image = egui::ColorImage::from_rgba_unmultiplied(
+        [image.width() as usize, image.height() as usize],
+        image.as_raw(),
+    );
+    Ok(Some(ctx.load_texture("selected-title-background", image, egui::TextureOptions::LINEAR)))
 }
