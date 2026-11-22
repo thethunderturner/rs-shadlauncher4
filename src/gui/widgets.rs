@@ -1,4 +1,5 @@
 use crate::app::State;
+use crate::library::cache::{LoadedTitle, LoadedTitles};
 use crate::library::title::Title;
 use eframe::egui;
 use eframe::egui::Ui;
@@ -65,9 +66,11 @@ impl RowWidget {
         });
     }
 
-    pub fn dialog(ui: &mut Ui, _state: State, title: &Title) {
+    pub fn dialog(ui: &mut Ui, state: &State, loaded_title: &LoadedTitle) {
         ui.menu_button("Launch", |ui| {
-            let _ = ui.button("Launch with game specific configs (default)");
+            if loaded_title.has_custom_config {
+                let _ = ui.button("Launch with game specific configs (default)");
+            }
             let _ = ui.button("Launch with global configs only");
             let _ = ui.button("Launch with default settings");
         });
@@ -82,37 +85,22 @@ impl RowWidget {
                 let _ = ui.button("Unimplemented user 4");
             });
         });
-        // ui.menu_button("Game Specific Settings", |ui| match state.as_ref() {
-        //     Some(Ok(Some(config))) => {
-        //         if ui.button("Configure Game-Specific settings").clicked() {
-        //             edit_config = Some(config.clone());
-        //             ui.close();
-        //         }
-        //         if ui.button("Delete Game-Specific settings").clicked() {
-        //             *custom_config = Some(match Config::delete_custom(&title.serial) {
-        //                 Ok(()) => {
-        //                     custom_config_serials.remove(&title.serial);
-        //                     ui.ctx().request_repaint();
-        //                     Ok(None)
-        //                 }
-        //                 Err(error) => Err(format!("Could not delete config: {error}")),
-        //             });
-        //         }
-        //     }
-        //     Some(Ok(None)) => {
-        //         if ui
-        //             .button("Create Game-Specific config from global config")
-        //             .clicked()
-        //         {
-        //             edit_config = Some(global_config.clone());
-        //             ui.close();
-        //         }
-        //     }
-        //     Some(Err(error)) => {
-        //         ui.colored_label(ui.visuals().error_fg_color, format!("Could not load custom config: {error}"));
-        //     }
-        //     None => {}
-        // });
+        ui.menu_button("Game Specific Settings", |ui| {
+            if loaded_title.has_custom_config {
+                if ui.button("Configure Game-Specific settings").clicked() {
+                    ui.close();
+                } else if ui.button("Delete Game-Specific settings").clicked() {
+                    ui.close();
+                }
+            } else {
+                if ui
+                    .button("Create Game-Specific config from global config")
+                    .clicked()
+                {
+                    ui.close();
+                }
+            }
+        });
         let _ = ui.button("Add to favorites");
         ui.menu_button("Add to folder", |ui| {
             let _ = ui.button("TODO");
@@ -123,9 +111,9 @@ impl RowWidget {
             .on_disabled_hover_text("SFO Viewer is not implemented yet.");
         ui.menu_button("Copy Info", |ui| {
             for (label, value) in [
-                ("Name", &title.name),
-                ("Serial", &title.serial),
-                ("Publisher ID", &title.publisher_id),
+                ("Name", &loaded_title.title.name),
+                ("Serial", &loaded_title.title.serial),
+                ("Publisher ID", &loaded_title.title.publisher_id),
             ] {
                 if ui.button(label).clicked() {
                     ui.ctx().copy_text(value.clone());

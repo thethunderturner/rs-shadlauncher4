@@ -120,7 +120,7 @@ impl Table {
                                         .fit_to_exact_size(egui::vec2(24.0, 24.0))
                                         .alt_text("Game-specific settings"),
                                 )
-                                    .on_hover_text("Game-specific settings");
+                                .on_hover_text("Game-specific settings");
                             }
                             RowWidget::label(ui, &title.name);
                         });
@@ -155,6 +155,19 @@ impl Table {
                             }
                         });
 
+                        row.response().context_menu(|ui| {
+                            self.selected = Some(index);
+                            self.background = match load_background(&ctx, &title.serial) {
+                                Ok(background) => background,
+                                Err(error) => {
+                                    eprintln!("Failed to load background for {}: {error}", title.serial);
+                                    None
+                                }
+                            };
+                            ctx.request_repaint();
+                            RowWidget::dialog(ui, state, loaded);
+                        });
+
                         if row.response().clicked() {
                             self.selected = Some(index);
                             self.background = match load_background(&ctx, &title.serial) {
@@ -164,10 +177,10 @@ impl Table {
                                     None
                                 }
                             };
+                            ctx.request_repaint();
                             if state.launcher.play_background_music {
                                 self.sound.play(title, state.launcher.background_music_volume);
                             }
-                            ctx.request_repaint();
                         }
                     });
                 });
