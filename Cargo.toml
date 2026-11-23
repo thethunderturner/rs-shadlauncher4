@@ -1,7 +1,8 @@
 [package]
-name = "rs-new-shadLauncher4"
-version = "0.1.0"
+name = "rs-shadLauncher4"
+version = "0.2.0"
 edition = "2024"
+license = "GPL-2"
 
 [dependencies]
 eframe = { version = "0.37", default-features = false, features = [
@@ -28,3 +29,6 @@ objc2-metal = { version = "0.3.2", default-features = false, features = ["MTLDev
 
 [build-dependencies]
 cc = "1.11.2"
+
+[package.metadata.appimage]
+icon = "src/assets/icon.png"
