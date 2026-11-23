@@ -145,8 +145,8 @@ fn decode(bytes: &[u8], cancelled: impl Fn() -> bool) -> Result<Option<Audio>, S
         if fact.len() >= 12 {
             let count = u32::from_le_bytes(fact[..4].try_into().unwrap()) as usize * info.channels as usize;
             let skip = u32::from_le_bytes(fact[8..12].try_into().unwrap()) as usize * info.channels as usize;
-            if skip > samples.len() || count > samples.len() - skip {
-                return Err("Invalid ATRAC9 sample count".into());
+            if skip > samples.len() {
+                return Err("ATRAC9 encoder delay exceeds the decoded audio length".into());
             }
             samples.drain(..skip);
             samples.truncate(count);
