@@ -160,24 +160,28 @@ impl UpdateWindow {
         let mut cancel = false;
         let previous_channel = self.channel;
         let mut window = egui::Window::new("Update Launcher")
-            .id(egui::Id::unique("launcher_update"))
             .default_width(560.0)
-            .min_width(320.0)
+            .max_width(680.0)
+            .resizable(false)
             .collapsible(false);
         if !installing {
             window = window.open(&mut open);
         }
         window.show(ui.ctx(), |ui| {
-            ui.heading("Launcher updates");
-            ui.add_enabled_ui(matches!(self.phase, Phase::Idle | Phase::Checking), |ui| {
-                egui::ComboBox::from_id_salt("launcher_update_channel")
-                    .selected_text(self.channel.label())
-                    .show_ui(ui, |ui| {
-                        ui.selectable_value(&mut self.channel, Channel::Release, "Release");
-                        ui.selectable_value(&mut self.channel, Channel::PreRelease, "Pre-release");
+            ui.horizontal(|ui| {
+                ui.heading("Launcher update");
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    ui.add_enabled_ui(matches!(self.phase, Phase::Idle | Phase::Checking), |ui| {
+                        egui::ComboBox::from_id_salt("launcher_update_channel")
+                            .selected_text(self.channel.label())
+                            .show_ui(ui, |ui| {
+                                ui.selectable_value(&mut self.channel, Channel::Release, "Release");
+                                ui.selectable_value(&mut self.channel, Channel::PreRelease, "Pre-release");
+                            });
                     });
+                });
             });
-            ui.add_space(8.0);
+            ui.add_space(6.0);
             egui::Grid::new("launcher_update_versions").spacing([16.0, 6.0]).show(ui, |ui| {
                 ui.label("Current commit");
                 ui.monospace(update::short_commit(update::CURRENT_COMMIT))
@@ -193,16 +197,16 @@ impl UpdateWindow {
                     ui.end_row();
                 }
             });
-            ui.add_space(8.0);
+            ui.add_space(6.0);
             if let Some(update) = &self.update {
+                ui.strong(&update.version);
                 ui.label(&update.message);
-                ui.add(egui::Label::new(format!("Version to download: {}", update.version)).wrap())
-                    .on_hover_text(format!("Tag: {}", update.tag));
+                ui.label(egui::RichText::new(format!("Tag: {}", update.tag)).weak());
                 if !update.commits.is_empty() {
                     ui.separator();
                     ui.strong("Changes");
                     egui::ScrollArea::vertical().id_salt("launcher_update_commits")
-                        .max_height(240.0).auto_shrink([false, true]).show(ui, |ui| {
+                        .max_height(200.0).auto_shrink([false, true]).show(ui, |ui| {
                             for commit in &update.commits {
                                 ui.push_id(&commit.sha, |ui| {
                                     ui.horizontal_top(|ui| {
@@ -242,16 +246,21 @@ impl UpdateWindow {
             if let Some(error) = &self.error {
                 ui.add(egui::Label::new(egui::RichText::new(error).color(ui.visuals().error_fg_color)).wrap());
             }
+            ui.add_space(4.0);
             ui.separator();
-            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                let can_update = self.channel == previous_channel && self.phase == Phase::Idle && self.update.as_ref()
-                    .is_some_and(|update| update.available && update.install_error.is_none());
-                if self.error.is_some() {
-                    retry = ui.button("Retry").clicked();
-                } else {
-                    download = ui.add_enabled(can_update, egui::Button::new("Update")).clicked();
-                }
-                cancel = ui.add_enabled(!installing, egui::Button::new("Cancel")).clicked();
+            egui::Panel::bottom("footer").show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Max), |ui| {
+                        let can_update = self.channel == previous_channel && self.phase == Phase::Idle && self.update.as_ref()
+                            .is_some_and(|update| update.available && update.install_error.is_none());
+                        if self.error.is_some() {
+                            retry = ui.button("Retry").clicked();
+                        } else {
+                            download = ui.add_enabled(can_update, egui::Button::new("Update")).clicked();
+                        }
+                        cancel = ui.add_enabled(!installing, egui::Button::new("Cancel")).clicked();
+                    });
+                });
             });
         });
         if !installing && (cancel || !open || ui.ctx().input(|input| input.key_pressed(egui::Key::Escape))) {
