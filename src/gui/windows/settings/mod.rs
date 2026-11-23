@@ -107,6 +107,10 @@ impl SettingsWindow {
     }
 
     pub fn show(&mut self, ui: &mut egui::Ui, state: &mut State, is_custom: bool) -> bool {
+        if !is_custom {
+            self.frontend_window.show_updates(ui, &mut state.launcher);
+            self.draft.launcher.update_channel = state.launcher.update_channel;
+        }
         if !self.open {
             return false;
         }
