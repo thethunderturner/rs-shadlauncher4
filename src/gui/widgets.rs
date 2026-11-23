@@ -10,6 +10,20 @@ pub struct RowWidget;
 pub struct PanelWidget;
 
 impl RowWidget {
+    pub fn compatibility(ui: &mut Ui, status: Option<&str>) {
+        let status = status.filter(|status| !status.is_empty()).unwrap_or("Unknown");
+        ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
+            ui.add_space(8.0);
+            let (rect, _) = ui.allocate_exact_size(egui::vec2(12.0, 12.0), egui::Sense::hover());
+            ui.painter().circle_filled(
+                rect.center(),
+                5.0,
+                crate::library::compatibility::status_color(status),
+            );
+            ui.add(egui::Label::new(status).truncate().selectable(false));
+        });
+    }
+
     pub fn label(ui: &mut Ui, str: &str, is_custom: bool) {
         ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
             ui.add_space(8.0);
@@ -19,7 +33,7 @@ impl RowWidget {
                         .fit_to_exact_size(egui::vec2(20.0, 20.0))
                         .alt_text("Game-specific settings"),
                 )
-                    .on_hover_text("Game-specific settings");
+                .on_hover_text("Game-specific settings");
             }
             ui.add(
                 egui::Label::new(str)

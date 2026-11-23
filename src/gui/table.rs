@@ -120,7 +120,7 @@ impl Table {
                         });
                         if state.launcher.show_compatibility {
                             row.col(|ui| {
-                                RowWidget::label(ui, loaded.compatibility.as_deref().unwrap_or("Unknown"), false);
+                                RowWidget::compatibility(ui, loaded.compatibility.as_deref());
                             });
                             row.col(|ui| {
                                 RowWidget::label(ui, title.milestone.as_deref().unwrap_or("Unknown"), false);
@@ -145,7 +145,7 @@ impl Table {
                         });
                         row.col(|ui| {
                             if let Some(path) = title.app_path.as_ref().or(title.patch_path.as_ref()) {
-                                ui.add(egui::Label::new(path.to_string_lossy()).truncate());
+                                RowWidget::label(ui, &path.to_string_lossy(), false);
                             }
                         });
 
