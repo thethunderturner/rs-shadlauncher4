@@ -26,21 +26,21 @@ pub struct LoadedTitles {
 
 impl LoadedTitles {
     pub fn load() -> Self {
-        let result = (|| -> std::io::Result<Self> {
-            let start = std::time::Instant::now();
-            let db = Db::connect()?;
-            db.create_tables().map_err(std::io::Error::other)?;
-            let titles = db.load_titles().map_err(std::io::Error::other)?;
-
-            Ok(Self {
-                loaded_titles: titles,
-                load_ms: start.elapsed().as_millis(),
-            })
-        })();
-
-        result.unwrap_or_else(|error| {
+        Self::try_load().unwrap_or_else(|error| {
             eprintln!("Failed to load cached titles: {error}");
             Self::default()
+        })
+    }
+
+    pub fn try_load() -> std::io::Result<Self> {
+        let start = std::time::Instant::now();
+        let db = Db::connect()?;
+        db.create_tables().map_err(std::io::Error::other)?;
+        let titles = db.load_titles().map_err(std::io::Error::other)?;
+
+        Ok(Self {
+            loaded_titles: titles,
+            load_ms: start.elapsed().as_millis(),
         })
     }
 }

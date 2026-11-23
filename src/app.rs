@@ -2,6 +2,7 @@ use crate::config::emulator::Config;
 use crate::config::launcher::Launcher;
 use crate::gui::Gui;
 use crate::library::cache::LoadedTitles;
+use crate::library::scan::Scan;
 use crate::themes::AppTheme;
 use eframe::egui;
 
@@ -13,6 +14,7 @@ pub struct App {
 
 #[derive(Default)]
 pub struct State {
+    pub scan: Scan,
     pub config: Config,
     pub launcher: Launcher, // launcher config
     pub loaded_titles: LoadedTitles,
@@ -25,8 +27,9 @@ impl App {
         let titles = LoadedTitles::load();
         let visible_indices = (0..titles.loaded_titles.len()).collect();
         let app = Self {
-            gui: Default::default(),
+            gui: Gui::default(),
             state: State {
+                scan: Scan::default(),
                 config: Config::load(),
                 launcher: Launcher::load(),
                 loaded_titles: titles,

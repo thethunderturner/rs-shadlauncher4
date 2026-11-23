@@ -9,7 +9,7 @@ pub struct Toolbar {
 }
 
 impl Toolbar {
-    pub fn show(&mut self, ui: &mut egui::Ui, state: &mut State) {
+    pub fn show(&mut self, ui: &mut egui::Ui, state: &mut State) -> bool {
         egui::Panel::top("toolbar").show(ui, |ui| {
             ui.horizontal_top(|ui| {
                 ui.group(|ui| {
@@ -29,7 +29,9 @@ impl Toolbar {
                             egui::include_image!("../assets/toolbar/refresh-titles.svg"),
                         )
                         .clicked()
-                        {};
+                        {
+                            state.scan.start(ui.ctx(), &state.config)
+                        };
                         if ui
                             .add_enabled_ui(false, |ui| {
                                 button(
@@ -55,6 +57,13 @@ impl Toolbar {
             });
         });
         self.settings.window.show(ui, state, false);
+        if let Some(titles) = state.scan.show(ui) {
+            state.visible_indices = (0..titles.loaded_titles.len()).collect();
+            state.loaded_titles = titles;
+            true
+        } else {
+            false
+        }
     }
 }
 
