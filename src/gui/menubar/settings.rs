@@ -6,7 +6,6 @@ use eframe::egui::Button;
 #[derive(Default)]
 pub struct Settings {
     pub window: SettingsWindow,
-    pub open: bool,
 }
 
 impl Settings {
@@ -22,11 +21,11 @@ impl Settings {
                 )
                 .clicked()
             {
-                if !self.open {
+                if !self.window.open {
                     self.window.begin_edit(state);
-                    self.window.select_tab("General");
                 }
-                self.open = true;
+                self.window.select_tab("General");
+                self.window.open = true;
             }
             if ui
                 .add(
@@ -38,11 +37,11 @@ impl Settings {
                 )
                 .clicked()
             {
-                if !self.open {
+                if !self.window.open {
                     self.window.begin_edit(state);
-                    self.window.select_tab("Frontend");
                 }
-                self.open = true;
+                self.window.select_tab("Frontend");
+                self.window.open = true;
             }
             if ui
                 .add(
@@ -54,11 +53,11 @@ impl Settings {
                 )
                 .clicked()
             {
-                if !self.open {
+                if !self.window.open {
                     self.window.begin_edit(state);
-                    self.window.select_tab("Graphics");
                 }
-                self.open = true;
+                self.window.select_tab("Graphics");
+                self.window.open = true;
             }
             if ui
                 .add(
@@ -80,11 +79,11 @@ impl Settings {
                 )
                 .clicked()
             {
-                if !self.open {
+                if !self.window.open {
                     self.window.begin_edit(state);
-                    self.window.select_tab("Input");
                 }
-                self.open = true;
+                self.window.select_tab("Input");
+                self.window.open = true;
             }
             if ui
                 .add(
@@ -96,11 +95,11 @@ impl Settings {
                 )
                 .clicked()
             {
-                if !self.open {
+                if !self.window.open {
                     self.window.begin_edit(state);
-                    self.window.select_tab("Network");
                 }
-                self.open = true;
+                self.window.select_tab("Network");
+                self.window.open = true;
             }
             if ui
                 .add(
@@ -112,11 +111,11 @@ impl Settings {
                 )
                 .clicked()
             {
-                if !self.open {
+                if !self.window.open {
                     self.window.begin_edit(state);
-                    self.window.select_tab("Paths");
                 }
-                self.open = true;
+                self.window.select_tab("Paths");
+                self.window.open = true;
             }
             if ui
                 .add(
@@ -128,11 +127,11 @@ impl Settings {
                 )
                 .clicked()
             {
-                if !self.open {
+                if !self.window.open {
                     self.window.begin_edit(state);
-                    self.window.select_tab("Log");
                 }
-                self.open = true;
+                self.window.select_tab("Log");
+                self.window.open = true;
             }
             if ui
                 .add(
@@ -144,13 +143,13 @@ impl Settings {
                 )
                 .clicked()
             {
-                if !self.open {
+                if !self.window.open {
                     self.window.begin_edit(state);
-                    self.window.select_tab("Debug");
                 }
-                self.open = true;
+                self.window.select_tab("Debug");
+                self.window.open = true;
             }
         });
-        self.window.show(ui, &mut self.open, state, false);
+        self.window.show(ui, state, false);
     }
 }

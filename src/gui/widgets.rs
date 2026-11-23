@@ -1,8 +1,10 @@
 use crate::app::State;
-use crate::library::cache::{LoadedTitle, LoadedTitles};
+use crate::library::cache::{LoadedTitle};
 use crate::library::title::Title;
 use eframe::egui;
 use eframe::egui::Ui;
+use crate::gui::table::Table;
+use crate::gui::windows::settings::SettingsWindow;
 
 pub struct RowWidget;
 pub struct PanelWidget;
@@ -66,7 +68,7 @@ impl RowWidget {
         });
     }
 
-    pub fn dialog(ui: &mut Ui, state: &State, loaded_title: &LoadedTitle) {
+    pub fn dialog(ui: &mut Ui, state: &State, loaded_title: &LoadedTitle, custom_settings_window: &SettingsWindow) {
         ui.menu_button("Launch", |ui| {
             if loaded_title.has_custom_config {
                 let _ = ui.button("Launch with game specific configs (default)");

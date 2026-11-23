@@ -46,17 +46,15 @@ impl Toolbar {
                 ui.add(egui::Separator::default().vertical().shrink(8.0));
                 ui.group(|ui| {
                     if button(ui, "Settings", egui::include_image!("../assets/settings.svg")).clicked() {
-                        if !self.settings.open {
+                        if !self.settings.window.open {
                             self.settings.window.begin_edit(state);
                         }
-                        self.settings.open = true;
+                        self.settings.window.open = true;
                     };
                 });
             });
         });
-        self.settings
-            .window
-            .show(ui, &mut self.settings.open, state, false);
+        self.settings.window.show(ui, state, false);
     }
 }
 

@@ -7,6 +7,7 @@ use crate::themes::table_visuals;
 use eframe::egui;
 use eframe::egui::Ui;
 use egui_extras::{Column, TableBuilder};
+use crate::gui::windows::settings::SettingsWindow;
 
 #[derive(Default)]
 pub struct Table {
@@ -14,6 +15,7 @@ pub struct Table {
     background: Option<egui::TextureHandle>,
     sorting: Sorting,
     sound: Player,
+    custom_settings_window: SettingsWindow
 }
 
 impl Table {
@@ -165,7 +167,7 @@ impl Table {
                                 }
                             };
                             ctx.request_repaint();
-                            RowWidget::dialog(ui, state, loaded);
+                            RowWidget::dialog(ui, state, loaded, &self.custom_settings_window);
                         });
 
                         if row.response().clicked() {

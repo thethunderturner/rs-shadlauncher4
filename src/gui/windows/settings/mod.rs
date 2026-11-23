@@ -1,9 +1,9 @@
 use crate::app::State;
 use crate::config::emulator::Config;
 use crate::config::launcher::Launcher;
-use crate::gui::windows::settings::experimental::ExperimentalWindow;
 use debug::DebugWindow;
 use eframe::egui;
+use experimental::ExperimentalWindow;
 use frontend::FrontendWindow;
 use general::GeneralWindow;
 use graphics::GraphicsWindow;
@@ -25,6 +25,7 @@ pub mod paths;
 pub mod user;
 
 pub struct SettingsWindow {
+    pub(crate) open: bool,
     draft: State,
     custom_serial: Option<String>,
     save_error: Option<String>,
@@ -50,6 +51,7 @@ impl Default for SettingsWindow {
         let graphics_window = GraphicsWindow::new();
         let input_window = InputWindow::new();
         Self {
+            open: false,
             draft: State {
                 config,
                 launcher: frontend,
@@ -102,8 +104,8 @@ impl SettingsWindow {
         }
     }
 
-    pub fn show(&mut self, ui: &mut egui::Ui, open: &mut bool, state: &mut State, is_custom: bool) -> bool {
-        if !*open {
+    pub fn show(&mut self, ui: &mut egui::Ui, state: &mut State, is_custom: bool) -> bool {
+        if !self.open {
             return false;
         }
 
@@ -226,7 +228,7 @@ impl SettingsWindow {
                                                 if self.custom_serial.is_none() {
                                                     state.launcher = self.draft.launcher.clone();
                                                 }
-                                                *open = false;
+                                                self.open = false;
                                             }
                                             Err(err) => {
                                                 self.save_error =
@@ -263,7 +265,7 @@ impl SettingsWindow {
                                         ))
                                         .clicked()
                                     {
-                                        *open = false;
+                                        self.open = false;
                                         self.draft.config = state.config.clone();
                                         self.draft.launcher = state.launcher.clone();
                                     }
