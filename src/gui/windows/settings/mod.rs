@@ -62,7 +62,7 @@ impl Default for SettingsWindow {
             selected_tab,
             general_window,
             frontend_window: FrontendWindow::default(),
-            graphics_window: graphics_window.expect("REASON"),
+            graphics_window,
             user_window: UserWindow::default(),
             input_window: input_window.expect("REASON"),
             paths_window: PathsWindow::default(),

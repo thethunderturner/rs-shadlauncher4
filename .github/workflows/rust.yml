@@ -5,11 +5,14 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
-  release:
-    types: [published]
 
 permissions:
-  contents: write
+  contents: read
+
+# Serialize main builds so an older run cannot replace a newer pre-release.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
   CARGO_TERM_COLOR: always
@@ -107,68 +110,121 @@ jobs:
           path: dist/*
           if-no-files-found: error
 
-  prerelease:
-    name: Create prerelease
+  publish:
+    name: Publish package version
     needs: build
-
-    # Dont create a GitHub release for PR builds
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
+      - name: Checkout package metadata
+        uses: actions/checkout@v6
+
+      - name: Read package version
+        id: package
+        run: |
+          python3 - <<'PYTHON'
+          import os
+          import re
+          import tomllib
+
+          with open("Cargo.toml", "rb") as manifest:
+              version = tomllib.load(manifest)["package"]["version"]
+          match = re.fullmatch(r"[0-9]+\.[0-9]+\.([01])", version)
+          channel = ("prerelease" if match[1] == "1" else "release") if match else "skip"
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              print(f"version={version}", file=output)
+              print(f"channel={channel}", file=output)
+          if channel == "skip":
+              print(f"Version {version} does not end in .0 or .1; skipping publication.")
+          PYTHON
+
       - name: Download artifacts
+        if: steps.package.outputs.channel != 'skip'
         uses: actions/download-artifact@v8
         with:
           pattern: rs-shadLauncher4-*
           path: release
           merge-multiple: true
 
-      - name: Inspect release files
-        run: ls -alh release/
-
-      - name: Create prerelease
+      - name: Publish release and clean up older pre-releases
+        if: steps.package.outputs.channel != 'skip'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PACKAGE_VERSION: ${{ steps.package.outputs.version }}
+          RELEASE_CHANNEL: ${{ steps.package.outputs.channel }}
         run: |
-          RELEASE_DATE=$(TZ=Europe/Amsterdam date +'%d/%m/%Y')
-          SHORT_SHA="${GITHUB_SHA::7}"
-          TAG="continuous-${GITHUB_RUN_NUMBER}"
+          set -euo pipefail
 
-          gh release create "$TAG" \
-            release/* \
-            --repo "${GITHUB_REPOSITORY}" \
-            --target "${GITHUB_SHA}" \
-            --title "shadlauncher-${RELEASE_DATE}-${SHORT_SHA}" \
-            --notes "Automated development build from main." \
-            --prerelease \
-            --latest=false
+          # Unique pre-release tags keep every published build's commit reachable.
+          # The visible release title is always the exact Cargo package version.
+          if [[ "$RELEASE_CHANNEL" == "prerelease" ]]; then
+            TAG="v${PACKAGE_VERSION}-build.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}"
+            PRERELEASE=true
+            LATEST=false
+          else
+            TAG="v${PACKAGE_VERSION}"
+            PRERELEASE=false
+            LATEST=true
+          fi
 
-  upload-release:
-    name: Upload artifacts to release
-    needs: build
+          RELEASES_FILE="${RUNNER_TEMP}/launcher-releases.json"
+          gh api --paginate --slurp \
+            "repos/${GITHUB_REPOSITORY}/releases?per_page=100" > "$RELEASES_FILE"
+          EXISTING=$(jq -r --arg tag "$TAG" \
+            '.[][] | select(.tag_name == $tag) | if .draft then "draft" else "published" end' \
+            "$RELEASES_FILE")
 
-    if: github.event_name == 'release'
+          # Never replace or overwrite an already published stable version.
+          if [[ "$EXISTING" == "published" && "$RELEASE_CHANNEL" == "release" ]]; then
+            echo "Release ${PACKAGE_VERSION} is already published; keeping it unchanged."
+            exit 0
+          fi
 
-    runs-on: ubuntu-latest
+          for asset in \
+            rs-shadLauncher4-linux-x86_64.AppImage \
+            rs-shadLauncher4-windows-x86_64.exe \
+            rs-shadLauncher4-macos-arm64; do
+            test -s "release/$asset"
+          done
 
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v8
-        with:
-          pattern: rs-shadLauncher4-*
-          path: release
-          merge-multiple: true
+          if [[ "$EXISTING" == "draft" ]]; then
+            DRAFT_COMMIT=$(jq -r --arg tag "$TAG" \
+              '.[][] | select(.tag_name == $tag) | .target_commitish' "$RELEASES_FILE")
+            if [[ "$DRAFT_COMMIT" != "$GITHUB_SHA" ]]; then
+              echo "::error::An unfinished release for $TAG targets another commit. Resolve that draft before publishing."
+              exit 1
+            fi
+            gh release upload "$TAG" release/* --repo "$GITHUB_REPOSITORY" --clobber
+          elif [[ -z "$EXISTING" ]]; then
+            gh release create "$TAG" release/* \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" \
+              --title "$PACKAGE_VERSION" \
+              --notes "Launcher ${PACKAGE_VERSION}, built from commit ${GITHUB_SHA}." \
+              --draft \
+              --prerelease="$PRERELEASE" \
+              --latest=false
+          fi
 
-      - name: Inspect release files
-        run: ls -alh release/
+          # Publish only after all platform assets are uploaded.
+          gh release edit "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$PACKAGE_VERSION" \
+            --draft=false \
+            --prerelease="$PRERELEASE" \
+            --latest="$LATEST"
 
-      - name: Upload artifacts to release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release upload \
-            "${{ github.event.release.tag_name }}" \
-            release/* \
-            --repo "${GITHUB_REPOSITORY}" \
-            --clobber
+          if [[ "$RELEASE_CHANNEL" == "prerelease" ]]; then
+            gh api --paginate --slurp \
+              "repos/${GITHUB_REPOSITORY}/releases?per_page=100" > "$RELEASES_FILE"
+            jq -r --arg tag "$TAG" \
+              '.[][] | select(.prerelease == true and .draft == false and .tag_name != $tag) | .id' \
+              "$RELEASES_FILE" > "${RUNNER_TEMP}/old-launcher-prereleases.txt"
+            while IFS= read -r release_id; do
+              # Delete only the release, retaining its tag for commit comparisons.
+              gh api --method DELETE "repos/${GITHUB_REPOSITORY}/releases/${release_id}"
+            done < "${RUNNER_TEMP}/old-launcher-prereleases.txt"
+          fi
