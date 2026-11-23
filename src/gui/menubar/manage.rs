@@ -2,7 +2,14 @@ use eframe::egui;
 use eframe::egui::Button;
 
 #[derive(Default)]
-pub struct Manage;
+pub struct Manage {
+    window: ManageWindow,
+}
+
+#[derive(Default)]
+pub struct ManageWindow {
+    open: bool,
+}
 
 impl Manage {
     pub fn show(&mut self, ui: &mut egui::Ui) {
@@ -16,7 +23,24 @@ impl Manage {
                     .image_tint_follows_text_color(true),
                 )
                 .clicked()
-            {}
+            {
+                self.window.open = true
+            }
         });
+        if self.window.open {
+            self.window.show(ui)
+        }
+    }
+}
+
+impl ManageWindow {
+    pub fn show(&mut self, ui: &mut egui::Ui) {
+        egui::Window::new("Manage Users")
+            .open(&mut self.open)
+            .default_size(egui::vec2(500.0, 200.0))
+            .collapsible(false)
+            .show(ui.ctx(), |ui| {
+                ui.label("Coming soon");
+            });
     }
 }
