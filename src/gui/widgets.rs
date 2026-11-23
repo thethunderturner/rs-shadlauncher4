@@ -1,10 +1,10 @@
 use crate::app::State;
-use crate::library::cache::{LoadedTitle};
+use crate::config::emulator::Config;
+use crate::gui::windows::settings::SettingsWindow;
+use crate::library::cache::LoadedTitle;
 use crate::library::title::Title;
 use eframe::egui;
 use eframe::egui::Ui;
-use crate::gui::table::Table;
-use crate::gui::windows::settings::SettingsWindow;
 
 pub struct RowWidget;
 pub struct PanelWidget;
@@ -68,7 +68,12 @@ impl RowWidget {
         });
     }
 
-    pub fn dialog(ui: &mut Ui, state: &State, loaded_title: &LoadedTitle, custom_settings_window: &SettingsWindow) {
+    pub fn dialog(
+        ui: &mut Ui,
+        state: &State,
+        loaded_title: &LoadedTitle,
+        custom_settings_window: &mut SettingsWindow,
+    ) {
         ui.menu_button("Launch", |ui| {
             if loaded_title.has_custom_config {
                 let _ = ui.button("Launch with game specific configs (default)");
@@ -88,23 +93,49 @@ impl RowWidget {
             });
         });
         ui.menu_button("Game Specific Settings", |ui| {
+            let serial = &loaded_title.title.serial;
+
             if loaded_title.has_custom_config {
                 if ui.button("Configure Game-Specific settings").clicked() {
-                    ui.close();
-                } else if ui.button("Delete Game-Specific settings").clicked() {
-                    ui.close();
+                    match Config::load_custom(serial) {
+                        Ok(config) => {
+                            custom_settings_window.begin_custom_edit(serial, state, config);
+                            custom_settings_window.open = true;
+                            ui.close();
+                        }
+                        Err(error) => {
+                            eprintln!("Failed to load settings for {serial}: {error}");
+                        }
+                    }
                 }
+                // if ui.button("Delete Game-Specific settings").clicked() {
+                //     match Config::delete_custom(&loaded_title.title.serial) {
+                //         Ok(()) => {
+                //             // custom_config_serials.remove(&title.serial);
+                //             ui.ctx().request_repaint();
+                //             Ok(None)
+                //         }
+                //         Err(error) => {
+                //             eprintln!("Could not delete config: {error}");
+                //         }
+                //     }
+                // }
             } else {
                 if ui
-                    .button("Create Game-Specific config from global settings")
+                    .button("Create Game-Specific config from Global settings")
                     .clicked()
                 {
+                    custom_settings_window.begin_custom_edit(serial, state, state.config.clone());
+                    custom_settings_window.open = true;
                     ui.close();
                 }
+
                 if ui
-                    .button("Create Game-Specific config from default settings")
+                    .button("Create Game-Specific config from Default settings")
                     .clicked()
                 {
+                    custom_settings_window.begin_custom_edit(serial, state, Config::default());
+                    custom_settings_window.open = true;
                     ui.close();
                 }
             }

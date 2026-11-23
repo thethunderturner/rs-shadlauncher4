@@ -25,7 +25,7 @@ pub mod paths;
 pub mod user;
 
 pub struct SettingsWindow {
-    pub(crate) open: bool,
+    pub open: bool,
     draft: State,
     custom_serial: Option<String>,
     save_error: Option<String>,
@@ -84,8 +84,10 @@ impl SettingsWindow {
         self.general_window = GeneralWindow::new(state.config.audio.audio_backend);
     }
 
-    pub fn begin_custom_edit(&mut self, serial: &str, state: &State) {
+    pub fn begin_custom_edit(&mut self, serial: &str, state: &State, config: Config) {
         self.begin_edit(state);
+        self.general_window = GeneralWindow::new(config.audio.audio_backend);
+        self.draft.config = config;
         self.custom_serial = Some(serial.to_owned());
         self.selected_tab = "General".into();
     }
@@ -224,8 +226,18 @@ impl SettingsWindow {
                                             Ok(()) => {
                                                 saved = true;
                                                 self.save_error = None;
-                                                state.config = self.draft.config.clone();
+                                                if let Some(serial) = &self.custom_serial {
+                                                    if let Some(loaded) = state
+                                                        .loaded_titles
+                                                        .loaded_titles
+                                                        .iter_mut()
+                                                        .find(|loaded| &loaded.title.serial == serial)
+                                                    {
+                                                        loaded.has_custom_config = true;
+                                                    }
+                                                }
                                                 if self.custom_serial.is_none() {
+                                                    state.config = self.draft.config.clone();
                                                     state.launcher = self.draft.launcher.clone();
                                                 }
                                                 self.open = false;
@@ -247,8 +259,18 @@ impl SettingsWindow {
                                             Ok(()) => {
                                                 saved = true;
                                                 self.save_error = None;
-                                                state.config = self.draft.config.clone();
+                                                if let Some(serial) = &self.custom_serial {
+                                                    if let Some(loaded) = state
+                                                        .loaded_titles
+                                                        .loaded_titles
+                                                        .iter_mut()
+                                                        .find(|loaded| &loaded.title.serial == serial)
+                                                    {
+                                                        loaded.has_custom_config = true;
+                                                    }
+                                                }
                                                 if self.custom_serial.is_none() {
+                                                    state.config = self.draft.config.clone();
                                                     state.launcher = self.draft.launcher.clone();
                                                 }
                                             }

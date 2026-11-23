@@ -1,5 +1,6 @@
 use crate::app::State;
 use crate::gui::widgets::RowWidget;
+use crate::gui::windows::settings::SettingsWindow;
 use crate::library::attrac9::Player;
 use crate::library::cache::Db;
 use crate::library::sorting::Sorting;
@@ -7,7 +8,6 @@ use crate::themes::table_visuals;
 use eframe::egui;
 use eframe::egui::Ui;
 use egui_extras::{Column, TableBuilder};
-use crate::gui::windows::settings::SettingsWindow;
 
 #[derive(Default)]
 pub struct Table {
@@ -15,7 +15,7 @@ pub struct Table {
     background: Option<egui::TextureHandle>,
     sorting: Sorting,
     sound: Player,
-    custom_settings_window: SettingsWindow
+    custom_settings_window: SettingsWindow, // for the custom settings
 }
 
 impl Table {
@@ -167,7 +167,7 @@ impl Table {
                                 }
                             };
                             ctx.request_repaint();
-                            RowWidget::dialog(ui, state, loaded, &self.custom_settings_window);
+                            RowWidget::dialog(ui, state, loaded, &mut self.custom_settings_window);
                         });
 
                         if row.response().clicked() {
@@ -187,6 +187,7 @@ impl Table {
                     });
                 });
         });
+        self.custom_settings_window.show(ui, state, true);
     }
 
     fn show_background(&self, ui: &mut Ui, state: &State) {
