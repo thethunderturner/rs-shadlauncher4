@@ -1,5 +1,6 @@
-use super::cache::LoadedTitle;
+use super::cache::{Db, LoadedTitle, LoadedTitles};
 use crate::config::storage::user_directory;
+use crate::gui::windows::progress::{self, Progress};
 use eframe::egui;
 use serde::Deserialize;
 use std::{collections::BTreeMap, fs, io::Read, time::Duration};
@@ -51,29 +52,40 @@ pub fn download(mut progress: impl FnMut(Option<f32>, String)) -> Result<Reports
             format!("Downloading compatibility: {} KB", bytes.len() / 1024),
         );
     }
+    let reports = parse(&bytes, platform())?;
     progress(None, "Saving compatibility_data.json".into());
     let directory = user_directory().map_err(|error| format!("Could not locate user folder: {error}"))?;
     fs::create_dir_all(&directory).map_err(|error| format!("Could not create user folder: {error}"))?;
     let path = directory.join("compatibility_data.json");
     fs::write(&path, &bytes).map_err(|error| format!("Could not save {}: {error}", path.display()))?;
-    drop(bytes);
+    Ok(reports)
+}
 
-    progress(None, "Reading compatibility_data.json".into());
-    let bytes = fs::read(&path).map_err(|error| format!("Could not read {}: {error}", path.display()))?;
-    let platform = match std::env::consts::OS {
+pub fn load_local() -> Result<Reports, String> {
+    let path = user_directory()
+        .map_err(|error| format!("Could not locate user folder: {error}"))?
+        .join("compatibility_data.json");
+    match fs::read(&path) {
+        Ok(bytes) => parse(&bytes, platform()),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(Reports::new()),
+        Err(error) => Err(format!("Could not read {}: {error}", path.display())),
+    }
+}
+
+fn platform() -> &'static str {
+    match std::env::consts::OS {
         "windows" => "os-windows",
         "macos" => "os-macOS",
         "linux" => "os-linux",
         _ => "os-unknown",
-    };
-    parse(&bytes, platform)
+    }
 }
 
 fn parse(bytes: &[u8], platform: &str) -> Result<Reports, String> {
     let data: BTreeMap<String, BTreeMap<String, Report>> =
         serde_json::from_slice(bytes).map_err(|error| format!("Invalid compatibility data: {error}"))?;
     if data.is_empty() {
-        return Err("Compatibility download is empty".into());
+        return Err("Compatibility data is empty".into());
     }
     Ok(data
         .into_iter()
@@ -114,5 +126,115 @@ pub fn apply(titles: &mut [LoadedTitle], reports: &Reports) {
         let report = reports.get(&title.title.serial);
         title.compatibility = report.map(|report| report.status.clone());
         title.title.milestone = report.and_then(|report| report.milestone.clone());
+    }
+}
+
+#[derive(Default)]
+pub struct Updater {
+    receiver: Option<std::sync::mpsc::Receiver<UpdateEvent>>,
+    progress: Option<Progress>,
+    error: Option<String>,
+}
+
+enum UpdateEvent {
+    Progress(Progress),
+    Finished(Result<LoadedTitles, String>),
+}
+
+impl Updater {
+    pub fn is_running(&self) -> bool {
+        self.receiver.is_some()
+    }
+
+    pub fn start(&mut self, ctx: &egui::Context) {
+        if self.is_running() {
+            return;
+        }
+        self.error = None;
+        self.progress = Some(Progress {
+            title: "Updating compatibility".into(),
+            fraction: None,
+            message: "Starting download".into(),
+        });
+        let (sender, receiver) = std::sync::mpsc::channel();
+        let ctx = ctx.clone();
+        let worker = std::thread::Builder::new()
+            .name("compatibility-update".into())
+            .spawn(move || {
+                let result = (|| {
+                    let reports = download(|fraction, message| {
+                        let _ = sender.send(UpdateEvent::Progress(Progress {
+                            title: "Updating compatibility".into(),
+                            fraction,
+                            message,
+                        }));
+                        ctx.request_repaint();
+                    })?;
+                    let mut db = Db::connect().map_err(|error| error.to_string())?;
+                    db.create_tables().map_err(|error| error.to_string())?;
+                    db.save_compatibility(&reports)
+                        .map_err(|error| error.to_string())?;
+                    LoadedTitles::try_load().map_err(|error| error.to_string())
+                })();
+                let _ = sender.send(UpdateEvent::Finished(result));
+                ctx.request_repaint();
+            });
+        match worker {
+            Ok(_) => self.receiver = Some(receiver),
+            Err(error) => {
+                self.progress = None;
+                self.error = Some(format!("Could not start compatibility update: {error}"));
+            }
+        }
+    }
+
+    pub fn show(&mut self, ui: &mut eframe::egui::Ui) -> Option<LoadedTitles> {
+        let mut completed = None;
+        while let Some(receiver) = &self.receiver {
+            match receiver.try_recv() {
+                Ok(UpdateEvent::Progress(progress)) => self.progress = Some(progress),
+                Ok(UpdateEvent::Finished(result)) => {
+                    self.receiver = None;
+                    self.progress = None;
+                    match result {
+                        Ok(titles) => {
+                            completed = Some(titles);
+                        }
+                        Err(error) => self.error = Some(error),
+                    }
+                    break;
+                }
+                Err(std::sync::mpsc::TryRecvError::Empty) => break,
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+                    self.receiver = None;
+                    self.progress = None;
+                    self.error = Some(
+                        "The compatibility worker stopped before completing. Try updating again.".into(),
+                    );
+                    break;
+                }
+            }
+        }
+
+        if let Some(progress) = &self.progress {
+            progress::show(ui.ctx(), progress);
+            ui.ctx()
+                .request_repaint_after(std::time::Duration::from_millis(100));
+        }
+        if let Some(error) = &self.error {
+            let mut open = true;
+            eframe::egui::Window::new("Compatibility update failed")
+                .id(eframe::egui::Id::unique("compatibility_error"))
+                .open(&mut open)
+                .collapsible(false)
+                .resizable(false)
+                .show(ui.ctx(), |ui| {
+                    ui.label(error);
+                });
+            if !open {
+                self.error = None
+            }
+        }
+        completed
     }
 }

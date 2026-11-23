@@ -2,6 +2,7 @@ use crate::config::emulator::Config;
 use crate::config::launcher::Launcher;
 use crate::gui::Gui;
 use crate::library::cache::LoadedTitles;
+use crate::library::compatibility::Updater;
 use crate::library::scan::Scan;
 use crate::themes::AppTheme;
 use eframe::egui;
@@ -14,7 +15,9 @@ pub struct App {
 
 #[derive(Default)]
 pub struct State {
+    pub is_busy: bool,
     pub scan: Scan,
+    pub compatibility: Updater,
     pub config: Config,
     pub launcher: Launcher, // launcher config
     pub loaded_titles: LoadedTitles,
@@ -29,7 +32,9 @@ impl App {
         let app = Self {
             gui: Gui::default(),
             state: State {
+                is_busy: false,
                 scan: Scan::default(),
+                compatibility: Updater::default(),
                 config: Config::load(),
                 launcher: Launcher::load(),
                 loaded_titles: titles,

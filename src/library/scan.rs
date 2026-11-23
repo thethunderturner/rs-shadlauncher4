@@ -2,6 +2,7 @@ use crate::config::emulator::Config;
 use crate::gui::windows::progress;
 use crate::gui::windows::progress::Progress;
 use crate::library::cache::{Db, LoadedTitles};
+use crate::library::compatibility;
 use crate::library::title::{Title, find_background, find_icon};
 use crate::sfo::parse_param::attribute::{supports_neo, supports_vr};
 use crate::sfo::reader::read_sfo;
@@ -21,11 +22,14 @@ enum ScanEvent {
 }
 
 impl Scan {
+    pub fn is_running(&self) -> bool {
+        self.receiver.is_some()
+    }
+
     pub fn start(&mut self, ctx: &eframe::egui::Context, config: &Config) {
-        if self.receiver.is_some() {
+        if self.is_running() {
             return;
         }
-
         self.error = None;
         self.progress = Some(Progress {
             title: "Scanning titles".into(),
@@ -50,7 +54,6 @@ impl Scan {
                 let _ = sender.send(ScanEvent::Finished(result));
                 ctx.request_repaint();
             });
-
         match worker {
             Ok(_) => self.receiver = Some(receiver),
             Err(error) => {
@@ -228,6 +231,8 @@ impl Scan {
         }
         let titles: Vec<Title> = titles.into_values().collect();
 
+        progress(None, "Reading local compatibility data".into());
+        let reports = compatibility::load_local()?;
         let mut db = Db::connect().map_err(|error| format!("Failed to open cache: {error}"))?;
         db.create_tables()
             .map_err(|error| format!("Failed to create cache tables: {error}"))?;
@@ -238,6 +243,8 @@ impl Scan {
             );
         })
         .map_err(|error| format!("Failed to save titles: {error}"))?;
+        db.save_compatibility(&reports)
+            .map_err(|error| format!("Failed to cache compatibility: {error}"))?;
         progress(None, "Loading the updated table".into());
 
         Ok(titles)

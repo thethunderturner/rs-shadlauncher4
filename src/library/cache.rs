@@ -55,7 +55,7 @@ impl Db {
 
     pub fn load_titles(&self) -> rusqlite::Result<Vec<LoadedTitle>> {
         let mut statement = self.conn.prepare(
-            "SELECT titles.serial, parent_dir, name, publisher_id, version, fw, app_type, category, app_path, patch_path, icon, supports_vr, supports_neo, COALESCE(c.status, titles.compatibility), playtime, c.milestone
+            "SELECT titles.serial, parent_dir, name, publisher_id, version, fw, app_type, category, app_path, patch_path, icon, supports_vr, supports_neo, COALESCE(NULLIF(c.status, ''), NULLIF(titles.compatibility, ''), 'Unknown'), playtime, NULLIF(c.milestone, '')
                  FROM titles LEFT JOIN compatibility c ON titles.serial = c.serial
                  ORDER BY name COLLATE NOCASE, titles.serial",
         )?;
