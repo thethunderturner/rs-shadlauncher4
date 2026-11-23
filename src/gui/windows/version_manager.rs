@@ -1,15 +1,15 @@
-use eframe::egui;
 use crate::app::State;
+use eframe::egui;
 
 #[derive(Default)]
 pub struct VersionManager {
-    pub open: bool
+    pub open: bool,
 }
 
 impl VersionManager {
-    pub fn show(&mut self, ui: &mut egui::Ui, state: &mut State) -> bool {
+    pub fn show(&mut self, ui: &mut egui::Ui, state: &mut State) {
         if !self.open {
-            return false;
+            return;
         }
 
         egui::Window::new("Version Manager")
@@ -25,7 +25,12 @@ impl VersionManager {
                         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                             if ui.button("Browse").clicked() {
                                 if let Some(folder) = rfd::FileDialog::new().pick_folder() {
-                                    state.config.general.addon_install_dir = folder;
+                                    path = folder.to_string_lossy().into_owned();
+                                    state.launcher.version_path = folder;
+
+                                    if let Err(error) = state.launcher.save() {
+                                        eprintln!("Failed to save launcher settings: {error}");
+                                    }
                                 }
                             }
                             ui.add(
@@ -38,6 +43,5 @@ impl VersionManager {
                     });
                 });
             });
-        self.open
     }
 }

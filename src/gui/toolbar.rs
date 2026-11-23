@@ -1,13 +1,13 @@
 use crate::app::State;
 use crate::gui::menubar::settings::Settings;
+use crate::gui::windows::version_manager::VersionManager;
 use eframe::egui;
 use eframe::egui::ImageSource;
-use crate::gui::windows::version_manager::VersionManager;
 
 #[derive(Default)]
 pub struct Toolbar {
     settings: Settings,
-    version_manager: VersionManager
+    version_manager: VersionManager,
 }
 
 impl Toolbar {
@@ -65,7 +65,7 @@ impl Toolbar {
                         self.settings.window.open = true;
                     };
                 });
-                ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     let label = "Version Manager";
                     let font = egui::TextStyle::Button.resolve(ui.style());
                     let text_width = ui
@@ -73,12 +73,17 @@ impl Toolbar {
                         .layout_no_wrap(label.to_owned(), font, ui.visuals().text_color())
                         .size()
                         .x;
+
                     let width = text_width + ui.spacing().button_padding.x * 2.0;
+                    let control_height = ui.spacing().interact_size.y;
+                    let gap = 8.0;
 
                     ui.allocate_ui_with_layout(
-                        egui::vec2(width, 0.0),
+                        egui::vec2(width, control_height * 2.0 + gap),
                         egui::Layout::top_down(egui::Align::Min),
                         |ui| {
+                            ui.spacing_mut().item_spacing.y = gap;
+
                             ui.add_enabled_ui(false, |ui| {
                                 egui::ComboBox::from_id_salt("installed_versions")
                                     .width(width)
@@ -90,10 +95,10 @@ impl Toolbar {
                                     .on_disabled_hover_text("No installed version found");
                             });
 
-                            if ui.add_sized(
-                                [width, ui.spacing().interact_size.y],
-                                egui::Button::new(label),
-                            ).clicked() {
+                            if ui
+                                .add_sized([width, control_height], egui::Button::new(label))
+                                .clicked()
+                            {
                                 self.version_manager.open = true;
                             }
                         },
