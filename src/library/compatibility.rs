@@ -216,8 +216,7 @@ impl Updater {
 
         if let Some(progress) = &self.progress {
             progress::show(ui.ctx(), progress);
-            ui.ctx()
-                .request_repaint_after(Duration::from_millis(100));
+            ui.ctx().request_repaint_after(Duration::from_millis(100));
         }
         if let Some(error) = &self.error {
             let mut open = true;

@@ -105,15 +105,7 @@ impl Table {
                         row.set_selected(self.selected == Some(index));
 
                         row.col(|ui| {
-                            if let Some(icon) = &loaded.icon {
-                                ui.add(
-                                    egui::Image::from_bytes(
-                                        format!("bytes://{}/icon.png", title.serial),
-                                        icon.clone(),
-                                    )
-                                    .fit_to_exact_size(egui::vec2(48.0, 48.0)),
-                                );
-                            }
+                            RowWidget::icon(ui, &loaded);
                         });
                         row.col(|ui| {
                             RowWidget::label(ui, &title.name, loaded.has_custom_config);

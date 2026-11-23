@@ -4,12 +4,31 @@ use crate::gui::windows::settings::SettingsWindow;
 use crate::library::cache::LoadedTitle;
 use crate::library::title::Title;
 use eframe::egui;
-use eframe::egui::Ui;
+use eframe::egui::{Direction, Ui};
 
 pub struct RowWidget;
 pub struct PanelWidget;
 
 impl RowWidget {
+    pub fn icon(ui: &mut Ui, loaded_title: &LoadedTitle) {
+        if let Some(icon) = &loaded_title.icon {
+            ui.with_layout(
+                egui::Layout::centered_and_justified(Direction::LeftToRight)
+                    .with_main_align(egui::Align::Center),
+                |ui| {
+                    ui.add(
+                        egui::Image::from_bytes(
+                            format!("bytes://{}/icon.png", loaded_title.title.serial),
+                            icon.clone(),
+                        )
+                        .fit_to_exact_size(egui::vec2(55.0, 55.0))
+                        .corner_radius(6),
+                    );
+                },
+            );
+        }
+    }
+
     pub fn compatibility(ui: &mut Ui, status: Option<&str>) {
         let status = status.filter(|status| !status.is_empty()).unwrap_or("Unknown");
         ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
