@@ -1,13 +1,10 @@
 use eframe::egui;
 use eframe::egui::Button;
+use crate::gui::windows::controllers::ControllersWindow;
 
 #[derive(Default)]
 pub struct Controllers {
     window: ControllersWindow,
-}
-#[derive(Default)]
-pub struct ControllersWindow {
-    open: bool,
 }
 
 impl Controllers {
@@ -30,17 +27,5 @@ impl Controllers {
         if self.window.open {
             self.window.show(ui)
         }
-    }
-}
-
-impl ControllersWindow {
-    pub fn show(&mut self, ui: &mut egui::Ui) {
-        egui::Window::new("Manage Controllers")
-            .open(&mut self.open)
-            .default_size(egui::vec2(500.0, 200.0))
-            .collapsible(false)
-            .show(ui.ctx(), |ui| {
-                ui.label("Coming soon");
-            });
     }
 }

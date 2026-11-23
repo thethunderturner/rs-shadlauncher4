@@ -4,3 +4,4 @@ pub mod file;
 pub mod progress;
 pub mod settings;
 pub mod version_manager;
+pub mod manage;
