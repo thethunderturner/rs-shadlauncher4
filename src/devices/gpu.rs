@@ -14,7 +14,11 @@ impl GpuDevice {
     pub fn scan() -> Result<Vec<GpuDevice>, Box<dyn std::error::Error>> {
         unsafe {
             let entry = ash::Entry::load()?;
-            let app_info = vk::ApplicationInfo::default().api_version(vk::API_VERSION_1_3);
+            let api_version = match entry.try_enumerate_instance_version()? {
+                Some(version) => version.min(vk::API_VERSION_1_3),
+                None => vk::API_VERSION_1_0,
+            };
+            let app_info = vk::ApplicationInfo::default().api_version(api_version);
             let create_info = vk::InstanceCreateInfo::default().application_info(&app_info);
             let instance = entry.create_instance(&create_info, None)?;
             let result = (|| -> Result<Vec<GpuDevice>, vk::Result> {

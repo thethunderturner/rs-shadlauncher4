@@ -2874,7 +2874,7 @@ checksum = "5a2d2f3481209a6b42eec2fbb49063fb4e8d35b57023401495d4fe0f85c817f0"
 
 [[package]]
 name = "rs-shadLauncher4"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "alto",
  "ash",
@@ -2885,6 +2885,7 @@ dependencies = [
  "objc2-metal 0.3.2",
  "open",
  "rfd",
+ "ring",
  "rusqlite",
  "sdl3",
  "sdl3-sys",

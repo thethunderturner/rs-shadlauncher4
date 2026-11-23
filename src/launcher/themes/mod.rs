@@ -1,8 +1,8 @@
 pub mod dark;
 pub mod light;
 
-use crate::themes::dark::dark;
-use crate::themes::light::light;
+use crate::launcher::themes::dark::dark;
+use crate::launcher::themes::light::light;
 use eframe::egui::Visuals;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

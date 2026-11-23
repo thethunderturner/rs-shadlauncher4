@@ -37,7 +37,7 @@ impl MenuBar {
                 self.manage.show(ui);
                 self.utilities.show(ui);
                 self.view.show(ui);
-                self.help.show(ui);
+                self.help.show(ui, state);
             });
         });
     }

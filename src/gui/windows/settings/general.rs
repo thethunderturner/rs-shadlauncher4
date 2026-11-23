@@ -1,6 +1,6 @@
 use crate::config::emulator::Config;
 use crate::devices::audio::AudioDevices;
-use crate::localization::LANGUAGE;
+use crate::launcher::localization::LANGUAGE;
 use eframe::egui;
 
 #[derive(Default)]

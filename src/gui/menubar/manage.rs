@@ -1,14 +1,10 @@
+use crate::gui::windows::manage::ManageWindow;
 use eframe::egui;
 use eframe::egui::Button;
 
 #[derive(Default)]
 pub struct Manage {
     window: ManageWindow,
-}
-
-#[derive(Default)]
-pub struct ManageWindow {
-    open: bool,
 }
 
 impl Manage {
@@ -30,17 +26,5 @@ impl Manage {
         if self.window.open {
             self.window.show(ui)
         }
-    }
-}
-
-impl ManageWindow {
-    pub fn show(&mut self, ui: &mut egui::Ui) {
-        egui::Window::new("Manage Users")
-            .open(&mut self.open)
-            .default_size(egui::vec2(500.0, 200.0))
-            .collapsible(false)
-            .show(ui.ctx(), |ui| {
-                ui.label("Coming soon");
-            });
     }
 }

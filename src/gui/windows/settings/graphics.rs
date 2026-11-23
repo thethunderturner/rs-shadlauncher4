@@ -4,13 +4,24 @@ use eframe::egui;
 
 pub struct GraphicsWindow {
     graphics_devices: Vec<GpuDevice>,
+    scan_error: Option<String>,
 }
 
 impl GraphicsWindow {
-    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        Ok(Self {
-            graphics_devices: GpuDevice::scan()?,
-        })
+    pub fn new() -> Self {
+        match GpuDevice::scan() {
+            Ok(graphics_devices) => Self {
+                graphics_devices,
+                scan_error: None,
+            },
+            Err(error) => {
+                eprintln!("Could not enumerate Vulkan devices: {error}");
+                Self {
+                    graphics_devices: Vec::new(),
+                    scan_error: Some(error.to_string()),
+                }
+            }
+        }
     }
 
     pub fn show(&mut self, ui: &mut egui::Ui, config: &mut Config) {
@@ -45,6 +56,16 @@ impl GraphicsWindow {
                     )
                     .on_hover_text(tooltip);
                 });
+                if let Some(error) = &self.scan_error {
+                    ui.add_space(4.0);
+                    ui.label(
+                        egui::RichText::new(
+                            "Could not detect Vulkan devices. Check that a Vulkan driver is installed.",
+                        )
+                        .color(ui.visuals().error_fg_color),
+                    )
+                    .on_hover_text(error);
+                }
                 ui.checkbox(&mut config.gpu.null_gpu, "Enable NULL GPU");
             });
             columns[0].label(egui::RichText::new("FSR Settings").strong());

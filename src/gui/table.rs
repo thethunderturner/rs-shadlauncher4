@@ -1,10 +1,10 @@
 use crate::app::State;
 use crate::gui::widgets::RowWidget;
 use crate::gui::windows::settings::SettingsWindow;
+use crate::launcher::themes::table_visuals;
 use crate::library::attrac9::Player;
 use crate::library::cache::Db;
 use crate::library::sorting::Sorting;
-use crate::themes::table_visuals;
 use eframe::egui;
 use eframe::egui::Ui;
 use egui_extras::{Column, TableBuilder};
