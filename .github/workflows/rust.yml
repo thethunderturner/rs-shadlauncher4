@@ -77,8 +77,8 @@ jobs:
           APPIMAGE_EXTRACT_AND_RUN=1 cargo appimage
           mkdir -p dist
           cp \
-            target/appimage/rs-shadlauncher4.AppImage \
-            dist/rs-shadlauncher4-linux-x86_64.AppImage
+            target/appimage/rs-shadLauncher4.AppImage \
+            dist/rs-shadLauncher4-linux-x86_64.AppImage
 
       # Windows
       - name: Prepare Windows build
@@ -87,8 +87,8 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path dist
           Copy-Item `
-            target\release\rs-shadlauncher4.exe `
-            dist\rs-shadlauncher4-windows-x86_64.exe
+            target\release\rs-shadLauncher4.exe `
+            dist\rs-shadLauncher4-windows-x86_64.exe
 
       # macOS
       - name: Prepare macOS build
@@ -96,14 +96,14 @@ jobs:
         run: |
           mkdir -p dist
           cp \
-            target/release/rs-shadlauncher4 \
-            dist/rs-shadlauncher4-macos-arm64
+            target/release/rs-shadLauncher4 \
+            dist/rs-shadLauncher4-macos-arm64
 
       # Upload build artifacts
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: rs-shadlauncher4-${{ matrix.os }}
+          name: rs-shadLauncher4-${{ matrix.os }}
           path: dist/*
           if-no-files-found: error
 
@@ -120,7 +120,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v8
         with:
-          pattern: rs-shadlauncher4-*
+          pattern: rs-shadLauncher4-*
           path: release
           merge-multiple: true
 
@@ -156,7 +156,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v8
         with:
-          pattern: rs-shadlauncher4-*
+          pattern: rs-shadLauncher4-*
           path: release
           merge-multiple: true
 
