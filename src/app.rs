@@ -1,10 +1,10 @@
 use crate::config::emulator::Config;
 use crate::config::launcher::Launcher;
 use crate::gui::Gui;
+use crate::launcher::themes::AppTheme;
 use crate::library::cache::LoadedTitles;
 use crate::library::compatibility::Updater;
 use crate::library::scan::Scan;
-use crate::themes::AppTheme;
 use eframe::egui;
 
 #[derive(Default)]

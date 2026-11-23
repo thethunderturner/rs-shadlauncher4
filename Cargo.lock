@@ -2885,6 +2885,7 @@ dependencies = [
  "objc2-metal 0.3.2",
  "open",
  "rfd",
+ "ring",
  "rusqlite",
  "sdl3",
  "sdl3-sys",

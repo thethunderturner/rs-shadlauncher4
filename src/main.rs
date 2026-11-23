@@ -5,10 +5,9 @@ pub mod config;
 pub mod devices;
 pub mod emulation;
 pub mod gui;
+pub mod launcher;
 pub mod library;
-pub mod localization;
 pub mod sfo;
-pub mod themes;
 pub mod versions;
 
 fn main() -> eframe::Result {

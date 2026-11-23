@@ -1,6 +1,6 @@
+use crate::gui::windows::manage::ManageWindow;
 use eframe::egui;
 use eframe::egui::Button;
-use crate::gui::windows::manage::ManageWindow;
 
 #[derive(Default)]
 pub struct Manage {

@@ -1,6 +1,6 @@
+use crate::gui::windows::controllers::ControllersWindow;
 use eframe::egui;
 use eframe::egui::Button;
-use crate::gui::windows::controllers::ControllersWindow;
 
 #[derive(Default)]
 pub struct Controllers {

@@ -23,6 +23,7 @@ open = "5.4.5"
 rusqlite = { version = "0.43.0", features = ["bundled"] }
 image = "0.25.10"
 ureq = "3.5.2"
+ring = "0.17.14"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2-metal = { version = "0.3.2", default-features = false, features = ["MTLDevice"] }

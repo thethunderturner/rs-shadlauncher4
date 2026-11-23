@@ -1,4 +1,6 @@
+use crate::app::State;
 use crate::gui::windows::about::AboutWindow;
+use crate::gui::windows::update::UpdateWindow;
 use eframe::egui;
 use eframe::egui::Button;
 
@@ -6,15 +8,18 @@ use eframe::egui::Button;
 pub struct Help {
     about_window: AboutWindow,
     update_window: UpdateWindow,
-}
-
-#[derive(Default)]
-pub struct UpdateWindow {
-    open: bool,
+    startup_checked: bool,
 }
 
 impl Help {
-    pub fn show(&mut self, ui: &mut egui::Ui) {
+    pub fn show(&mut self, ui: &mut egui::Ui, state: &mut State) {
+        if !self.startup_checked {
+            self.startup_checked = true;
+            self.update_window.channel = state.launcher.update_channel;
+            if state.launcher.check_for_updates {
+                self.update_window.check_at_startup(ui.ctx());
+            }
+        }
         ui.menu_button("Help", |ui| {
             if ui
                 .add(
@@ -26,7 +31,8 @@ impl Help {
                 )
                 .clicked()
             {
-                self.update_window.open = true
+                self.update_window.start(ui.ctx());
+                ui.close();
             }
             if ui
                 .add(
@@ -41,20 +47,6 @@ impl Help {
         if self.about_window.open {
             self.about_window.show(ui);
         }
-        if self.update_window.open {
-            self.update_window.show(ui);
-        }
-    }
-}
-
-impl UpdateWindow {
-    pub fn show(&mut self, ui: &mut egui::Ui) {
-        egui::Window::new("Update Launcher")
-            .open(&mut self.open)
-            .default_size(egui::vec2(500.0, 200.0))
-            .collapsible(false)
-            .show(ui.ctx(), |ui| {
-                ui.label("Coming soon");
-            });
+        self.update_window.show(ui, &mut state.launcher);
     }
 }
