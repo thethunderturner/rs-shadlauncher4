@@ -15,18 +15,22 @@ impl PathsWindow {
                     ui.push_id(index, |ui| {
                         ui.horizontal(|ui| {
                             ui.checkbox(&mut dir.enabled, "");
-                            let mut path = dir.path.to_string_lossy().into_owned();
-                            if ui.text_edit_singleline(&mut path).changed() {
-                                dir.path = path.into();
-                            }
-                            if ui.button("Browse").clicked() {
-                                if let Some(path) = rfd::FileDialog::new().pick_folder() {
-                                    dir.path = path;
+                            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                                if ui.button("Remove").clicked() {
+                                    remove = Some(index);
                                 }
-                            }
-                            if ui.button("Remove").clicked() {
-                                remove = Some(index);
-                            }
+                                if ui.button("Browse").clicked() {
+                                    if let Some(path) = rfd::FileDialog::new().pick_folder() {
+                                        dir.path = path;
+                                    }
+                                }
+                                let mut path = dir.path.to_string_lossy().into_owned();
+                                ui.add(
+                                    egui::TextEdit::singleline(&mut path)
+                                        .interactive(false)
+                                        .desired_width(ui.available_width().max(0.0)),
+                                );
+                            });
                         });
                     });
                 }
