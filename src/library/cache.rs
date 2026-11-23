@@ -36,7 +36,13 @@ impl LoadedTitles {
         let start = std::time::Instant::now();
         let db = Db::connect()?;
         db.create_tables().map_err(std::io::Error::other)?;
-        let titles = db.load_titles().map_err(std::io::Error::other)?;
+        let mut titles = db.load_titles().map_err(std::io::Error::other)?;
+        // The portable cache may have been populated on a different OS
+        let reports = super::compatibility::load_local().unwrap_or_else(|error| {
+            eprintln!("Failed to load local compatibility: {error}");
+            super::compatibility::Reports::new()
+        });
+        super::compatibility::apply(&mut titles, &reports);
 
         Ok(Self {
             loaded_titles: titles,

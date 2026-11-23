@@ -90,9 +90,7 @@ fn parse(bytes: &[u8], platform: &str) -> Result<Reports, String> {
     Ok(data
         .into_iter()
         .map(|(serial, mut platforms)| {
-            let report = platforms
-                .remove(platform)
-                .or_else(|| platforms.remove("os-unknown"));
+            let report = platforms.remove(platform);
             let status = match report.as_ref().map(|report| report.status.as_str()) {
                 Some("status-playable") => "Playable",
                 Some("status-ingame") => "Ingame",
@@ -188,7 +186,7 @@ impl Updater {
         }
     }
 
-    pub fn show(&mut self, ui: &mut eframe::egui::Ui) -> Option<LoadedTitles> {
+    pub fn show(&mut self, ui: &mut egui::Ui) -> Option<LoadedTitles> {
         let mut completed = None;
         while let Some(receiver) = &self.receiver {
             match receiver.try_recv() {
@@ -219,12 +217,12 @@ impl Updater {
         if let Some(progress) = &self.progress {
             progress::show(ui.ctx(), progress);
             ui.ctx()
-                .request_repaint_after(std::time::Duration::from_millis(100));
+                .request_repaint_after(Duration::from_millis(100));
         }
         if let Some(error) = &self.error {
             let mut open = true;
-            eframe::egui::Window::new("Compatibility update failed")
-                .id(eframe::egui::Id::unique("compatibility_error"))
+            egui::Window::new("Compatibility update failed")
+                .id(egui::Id::unique("compatibility_error"))
                 .open(&mut open)
                 .collapsible(false)
                 .resizable(false)
