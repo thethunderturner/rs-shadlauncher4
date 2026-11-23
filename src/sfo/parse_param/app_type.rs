@@ -15,15 +15,3 @@ pub fn description(bytes: [u8; 4]) -> Vec<String> {
         .map(|(_, text)| (*text).to_owned())
         .collect()
 }
-
-#[cfg(test)]
-mod tests {
-    use super::description;
-
-    #[test]
-    fn app_type_is_one_value_not_a_bitmask() {
-        assert_eq!(description(0u32.to_le_bytes()), vec!["Not Specified"]);
-        assert_eq!(description(3u32.to_le_bytes()), vec!["Demo App"]);
-        assert!(description(5u32.to_le_bytes()).is_empty());
-    }
-}

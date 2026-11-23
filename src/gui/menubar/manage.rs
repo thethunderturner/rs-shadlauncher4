@@ -1,0 +1,22 @@
+use eframe::egui;
+use eframe::egui::Button;
+
+#[derive(Default)]
+pub struct Manage;
+
+impl Manage {
+    pub fn show(&mut self, ui: &mut egui::Ui) {
+        ui.menu_button("Manage", |ui| {
+            if ui
+                .add(
+                    Button::image_and_text(
+                        egui::include_image!("../../assets/menubar/settings/user-group.svg"),
+                        "Manage Users",
+                    )
+                    .image_tint_follows_text_color(true),
+                )
+                .clicked()
+            {}
+        });
+    }
+}

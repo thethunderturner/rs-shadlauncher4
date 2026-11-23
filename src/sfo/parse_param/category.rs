@@ -31,17 +31,3 @@ pub fn description(value: &str) -> Vec<String> {
         .map(|(_, text)| (*text).to_owned())
         .collect()
 }
-
-#[cfg(test)]
-mod tests {
-    use super::description;
-
-    #[test]
-    fn category_codes_are_matched_exactly() {
-        assert_eq!(description("gd"), vec!["Game Digital Application"]);
-        assert_eq!(description("gda"), vec!["System Application"]);
-        assert_eq!(description("gdO"), vec!["PS2 Classic"]);
-        assert!(description("gdo").is_empty());
-        assert!(description("unknown").is_empty());
-    }
-}

@@ -1,51 +1,38 @@
-use crate::gui::menubar::controllers::Controllers;
-use crate::gui::menubar::file::File;
-use crate::gui::menubar::help::Help;
-use crate::gui::menubar::manage::Manage;
-use crate::gui::menubar::settings::Settings;
-use crate::gui::menubar::utilities::Utilities;
-use crate::gui::menubar::view::View;
+use crate::app::State;
+use controllers::Controllers;
 use eframe::egui;
+use file::File;
+use help::Help;
+use manage::Manage;
+use settings::Settings;
+use utilities::Utilities;
+use view::View;
 
-pub(super) mod controllers;
-mod file;
-mod help;
-mod manage;
-mod settings;
-mod utilities;
-mod view;
-pub struct Menubar {
-    pub controllers: Controllers,
-    pub file: File,
-    pub help: Help,
-    pub manage: Manage,
-    pub settings: Settings,
-    pub utilities: Utilities,
-    pub view: View,
+pub mod controllers;
+pub mod file;
+pub mod help;
+pub mod manage;
+pub mod settings;
+pub mod utilities;
+pub mod view;
+
+#[derive(Default)]
+pub struct MenuBar {
+    file: File,
+    settings: Settings,
+    controllers: Controllers,
+    manage: Manage,
+    utilities: Utilities,
+    view: View,
+    help: Help,
 }
 
-impl Default for Menubar {
-    fn default() -> Self {
-        Self {
-            controllers: Controllers {
-                show_controllers: false,
-            },
-            file: File {},
-            help: Help { show_about: false },
-            manage: Manage {},
-            settings: Settings::default(),
-            utilities: Utilities,
-            view: View {},
-        }
-    }
-}
-
-impl Menubar {
-    pub fn show(&mut self, ui: &mut egui::Ui) {
-        egui::Panel::top("menu_bar").show(ui, |ui| {
+impl MenuBar {
+    pub fn show(&mut self, ui: &mut egui::Ui, state: &mut State) {
+        egui::Panel::top("menubar").show(ui, |ui| {
             egui::MenuBar::new().ui(ui, |ui| {
                 self.file.show(ui);
-                self.settings.show(ui);
+                self.settings.show(ui, state);
                 self.controllers.show(ui);
                 self.manage.show(ui);
                 self.utilities.show(ui);
@@ -53,12 +40,5 @@ impl Menubar {
                 self.help.show(ui);
             });
         });
-    }
-
-    pub fn show_windows(&mut self, ctx: &egui::Context) -> bool {
-        let settings_saved = self.settings.show_window(ctx);
-        self.controllers.show_window(ctx);
-        self.help.show_window(ctx);
-        settings_saved
     }
 }
