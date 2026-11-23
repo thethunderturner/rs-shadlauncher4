@@ -10,9 +10,17 @@ pub struct RowWidget;
 pub struct PanelWidget;
 
 impl RowWidget {
-    pub fn label(ui: &mut Ui, str: &str) {
+    pub fn label(ui: &mut Ui, str: &str, is_custom: bool) {
         ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
             ui.add_space(8.0);
+            if is_custom {
+                ui.add(
+                    egui::Image::new(egui::include_image!("../assets/settings.svg"))
+                        .fit_to_exact_size(egui::vec2(20.0, 20.0))
+                        .alt_text("Game-specific settings"),
+                )
+                    .on_hover_text("Game-specific settings");
+            }
             ui.add(
                 egui::Label::new(str)
                     .truncate()

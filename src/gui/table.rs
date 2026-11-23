@@ -116,26 +116,18 @@ impl Table {
                             }
                         });
                         row.col(|ui| {
-                            if loaded.has_custom_config {
-                                ui.add(
-                                    egui::Image::new(egui::include_image!("../assets/settings.svg"))
-                                        .fit_to_exact_size(egui::vec2(24.0, 24.0))
-                                        .alt_text("Game-specific settings"),
-                                )
-                                .on_hover_text("Game-specific settings");
-                            }
-                            RowWidget::label(ui, &title.name);
+                            RowWidget::label(ui, &title.name, loaded.has_custom_config);
                         });
                         if state.launcher.show_compatibility {
                             row.col(|ui| {
-                                RowWidget::label(ui, loaded.compatibility.as_deref().unwrap_or("Unknown"));
+                                RowWidget::label(ui, loaded.compatibility.as_deref().unwrap_or("Unknown"), false);
                             });
                             row.col(|ui| {
-                                RowWidget::label(ui, title.milestone.as_deref().unwrap_or("Unknown"));
+                                RowWidget::label(ui, title.milestone.as_deref().unwrap_or("Unknown"), false);
                             });
                         }
                         row.col(|ui| {
-                            RowWidget::label(ui, &title.serial);
+                            RowWidget::label(ui, &title.serial, false);
                         });
                         row.col(|ui| {
                             RowWidget::region(ui, &title.publisher_id);
@@ -143,10 +135,10 @@ impl Table {
                         row.col(|ui| {
                             let text =
                                 format!("{:02X}.{:02X}", (title.fw >> 24) & 0xff, (title.fw >> 16) & 0xff);
-                            RowWidget::label(ui, &text);
+                            RowWidget::label(ui, &text, false);
                         });
                         row.col(|ui| {
-                            RowWidget::label(ui, &title.version);
+                            RowWidget::label(ui, &title.version, false);
                         });
                         row.col(|ui| {
                             RowWidget::features(ui, &title);
