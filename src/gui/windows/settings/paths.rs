@@ -9,39 +9,43 @@ impl PathsWindow {
         ui.columns(2, |columns| {
             columns[0].label(egui::RichText::new("Game Folders").strong());
             columns[0].group(|ui| {
-                let mut remove = None;
-                let dirs = &mut config.general.install_dirs;
-                for (index, dir) in dirs.iter_mut().enumerate() {
-                    ui.push_id(index, |ui| {
-                        ui.horizontal(|ui| {
-                            ui.checkbox(&mut dir.enabled, "");
-                            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                                if ui.button("Remove").clicked() {
-                                    remove = Some(index);
-                                }
-                                if ui.button("Browse").clicked() {
-                                    if let Some(path) = rfd::FileDialog::new().pick_folder() {
-                                        dir.path = path;
-                                    }
-                                }
-                                let mut path = dir.path.to_string_lossy().into_owned();
-                                ui.add(
-                                    egui::TextEdit::singleline(&mut path)
-                                        .interactive(false)
-                                        .desired_width(ui.available_width().max(0.0)),
-                                );
+                egui::ScrollArea::vertical()
+                    .id_salt("game_folders")
+                    .show(ui, |ui| {
+                        let mut remove = None;
+                        let dirs = &mut config.general.install_dirs;
+                        for (index, dir) in dirs.iter_mut().enumerate() {
+                            ui.push_id(index, |ui| {
+                                ui.horizontal(|ui| {
+                                    ui.checkbox(&mut dir.enabled, "");
+                                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                                        if ui.button("Remove").clicked() {
+                                            remove = Some(index);
+                                        }
+                                        if ui.button("Browse").clicked() {
+                                            if let Some(path) = rfd::FileDialog::new().pick_folder() {
+                                                dir.path = path;
+                                            }
+                                        }
+                                        let mut path = dir.path.to_string_lossy().into_owned();
+                                        ui.add(
+                                            egui::TextEdit::singleline(&mut path)
+                                                .interactive(false)
+                                                .desired_width(ui.available_width().max(0.0)),
+                                        );
+                                    });
+                                });
                             });
-                        });
+                        }
+                        if let Some(index) = remove {
+                            dirs.remove(index);
+                        }
+                        if ui.button("Add folder").clicked() {
+                            if let Some(path) = rfd::FileDialog::new().pick_folder() {
+                                dirs.push(InstallDir { enabled: true, path });
+                            }
+                        }
                     });
-                }
-                if let Some(index) = remove {
-                    dirs.remove(index);
-                }
-                if ui.button("Add folder").clicked() {
-                    if let Some(path) = rfd::FileDialog::new().pick_folder() {
-                        dirs.push(InstallDir { enabled: true, path });
-                    }
-                }
             });
 
             columns[1].label(egui::RichText::new("DLC Path").strong());

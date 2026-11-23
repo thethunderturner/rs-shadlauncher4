@@ -123,6 +123,97 @@ impl SettingsWindow {
             .collapsible(false)
             .show(ui.ctx(), |ui| {
                 egui::CentralPanel::default().show(ui, |ui| {
+                    // Reserve the footer before the tab content measures its available height.
+                    egui::Panel::bottom("footer").resizable(false).show(ui, |ui| {
+                        if let Some(error) = &self.save_error {
+                            ui.colored_label(ui.visuals().error_fg_color, error);
+                        }
+
+                        ui.horizontal(|ui| {
+                            ui.with_layout(egui::Layout::right_to_left(egui::Align::Max), |ui| {
+                                let color = ui.visuals().selection;
+                                if ui
+                                    .add(
+                                        egui::Button::image_and_text(
+                                            egui::include_image!("../../../assets/save.svg"),
+                                            egui::RichText::new("Save").color(color.stroke.color),
+                                        )
+                                        .fill(color.bg_fill),
+                                    )
+                                    .clicked()
+                                {
+                                    match self.save_current() {
+                                        Ok(()) => {
+                                            saved = true;
+                                            self.save_error = None;
+                                            if let Some(serial) = &self.custom_serial {
+                                                if let Some(loaded) = state
+                                                    .loaded_titles
+                                                    .loaded_titles
+                                                    .iter_mut()
+                                                    .find(|loaded| &loaded.title.serial == serial)
+                                                {
+                                                    loaded.has_custom_config = true;
+                                                }
+                                            }
+                                            if self.custom_serial.is_none() {
+                                                state.config = self.draft.config.clone();
+                                                state.launcher = self.draft.launcher.clone();
+                                            }
+                                            self.open = false;
+                                        }
+                                        Err(err) => {
+                                            self.save_error =
+                                                Some(format!("Failed to save configuration: {err}"))
+                                        }
+                                    }
+                                };
+                                if ui
+                                    .add(egui::Button::image_and_text(
+                                        egui::include_image!("../../../assets/check.svg"),
+                                        egui::RichText::new("Apply").color(color.stroke.color),
+                                    ))
+                                    .clicked()
+                                {
+                                    match self.save_current() {
+                                        Ok(()) => {
+                                            saved = true;
+                                            self.save_error = None;
+                                            if let Some(serial) = &self.custom_serial {
+                                                if let Some(loaded) = state
+                                                    .loaded_titles
+                                                    .loaded_titles
+                                                    .iter_mut()
+                                                    .find(|loaded| &loaded.title.serial == serial)
+                                                {
+                                                    loaded.has_custom_config = true;
+                                                }
+                                            }
+                                            if self.custom_serial.is_none() {
+                                                state.config = self.draft.config.clone();
+                                                state.launcher = self.draft.launcher.clone();
+                                            }
+                                        }
+                                        Err(err) => {
+                                            self.save_error =
+                                                Some(format!("Failed to apply configuration: {err}"))
+                                        }
+                                    }
+                                }
+                                if ui
+                                    .add(egui::Button::image_and_text(
+                                        egui::include_image!("../../../assets/cancel.svg"),
+                                        egui::RichText::new("Cancel").color(color.stroke.color),
+                                    ))
+                                    .clicked()
+                                {
+                                    self.open = false;
+                                    self.draft.config = state.config.clone();
+                                    self.draft.launcher = state.launcher.clone();
+                                }
+                            });
+                        });
+                    });
                     ui.vertical(|ui| {
                         ui.horizontal(|ui| {
                             if ui
@@ -205,95 +296,6 @@ impl SettingsWindow {
                             "Experimental" => self.experimental_window.show(ui, &mut self.draft.config),
                             _ => {}
                         }
-                        if let Some(error) = &self.save_error {
-                            ui.colored_label(ui.visuals().error_fg_color, error);
-                        }
-                        egui::Panel::bottom("footer").show(ui, |ui| {
-                            ui.horizontal(|ui| {
-                                ui.with_layout(egui::Layout::right_to_left(egui::Align::Max), |ui| {
-                                    let color = ui.visuals().selection;
-                                    if ui
-                                        .add(
-                                            egui::Button::image_and_text(
-                                                egui::include_image!("../../../assets/save.svg"),
-                                                egui::RichText::new("Save").color(color.stroke.color),
-                                            )
-                                            .fill(color.bg_fill),
-                                        )
-                                        .clicked()
-                                    {
-                                        match self.save_current() {
-                                            Ok(()) => {
-                                                saved = true;
-                                                self.save_error = None;
-                                                if let Some(serial) = &self.custom_serial {
-                                                    if let Some(loaded) = state
-                                                        .loaded_titles
-                                                        .loaded_titles
-                                                        .iter_mut()
-                                                        .find(|loaded| &loaded.title.serial == serial)
-                                                    {
-                                                        loaded.has_custom_config = true;
-                                                    }
-                                                }
-                                                if self.custom_serial.is_none() {
-                                                    state.config = self.draft.config.clone();
-                                                    state.launcher = self.draft.launcher.clone();
-                                                }
-                                                self.open = false;
-                                            }
-                                            Err(err) => {
-                                                self.save_error =
-                                                    Some(format!("Failed to save configuration: {err}"))
-                                            }
-                                        }
-                                    };
-                                    if ui
-                                        .add(egui::Button::image_and_text(
-                                            egui::include_image!("../../../assets/check.svg"),
-                                            egui::RichText::new("Apply").color(color.stroke.color),
-                                        ))
-                                        .clicked()
-                                    {
-                                        match self.save_current() {
-                                            Ok(()) => {
-                                                saved = true;
-                                                self.save_error = None;
-                                                if let Some(serial) = &self.custom_serial {
-                                                    if let Some(loaded) = state
-                                                        .loaded_titles
-                                                        .loaded_titles
-                                                        .iter_mut()
-                                                        .find(|loaded| &loaded.title.serial == serial)
-                                                    {
-                                                        loaded.has_custom_config = true;
-                                                    }
-                                                }
-                                                if self.custom_serial.is_none() {
-                                                    state.config = self.draft.config.clone();
-                                                    state.launcher = self.draft.launcher.clone();
-                                                }
-                                            }
-                                            Err(err) => {
-                                                self.save_error =
-                                                    Some(format!("Failed to apply configuration: {err}"))
-                                            }
-                                        }
-                                    }
-                                    if ui
-                                        .add(egui::Button::image_and_text(
-                                            egui::include_image!("../../../assets/cancel.svg"),
-                                            egui::RichText::new("Cancel").color(color.stroke.color),
-                                        ))
-                                        .clicked()
-                                    {
-                                        self.open = false;
-                                        self.draft.config = state.config.clone();
-                                        self.draft.launcher = state.launcher.clone();
-                                    }
-                                });
-                            });
-                        });
                     });
                 });
             });
