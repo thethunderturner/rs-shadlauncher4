@@ -1,5 +1,12 @@
 use crate::library::title::Title;
+#[cfg(not(windows))]
 use alto::Source;
+#[cfg(windows)]
+use sdl3_sys::audio::{
+    SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, SDL_AUDIO_S16, SDL_AudioSpec, SDL_AudioStream, SDL_DestroyAudioStream,
+    SDL_FlushAudioStream, SDL_OpenAudioDeviceStream, SDL_PutAudioStreamData, SDL_ResumeAudioStreamDevice,
+    SDL_SetAudioStreamGain,
+};
 use std::{
     ffi::c_void,
     path::PathBuf,
@@ -178,14 +185,35 @@ pub struct Player {
     pub generation: Arc<AtomicU64>,
     pub volume: u32,
     pub active: bool,
+    #[cfg(windows)]
+    audio: Option<sdl3::AudioSubsystem>,
+    #[cfg(windows)]
+    worker: Option<std::thread::JoinHandle<()>>,
 }
 
 impl Player {
     pub fn play(&mut self, title: &Title, volume: u32) {
         if self.sender.is_none() {
+            #[cfg(windows)]
+            {
+                // Keep SDL alive on the UI thread while the worker owns its audio streams.
+                match sdl3::init().and_then(|sdl| sdl.audio()) {
+                    Ok(audio) => self.audio = Some(audio),
+                    Err(error) => {
+                        eprintln!("Could not play title sound: SDL audio initialization failed: {error}");
+                        return;
+                    }
+                }
+            }
             let (sender, receiver) = mpsc::channel();
             let generation = self.generation.clone();
-            std::thread::spawn(move || run(receiver, generation));
+            let worker = std::thread::spawn(move || run(receiver, generation));
+            #[cfg(windows)]
+            {
+                self.worker = Some(worker);
+            }
+            #[cfg(not(windows))]
+            drop(worker);
             self.sender = Some(sender);
         }
         let mut paths = Vec::new();
@@ -230,12 +258,76 @@ impl Player {
 impl Drop for Player {
     fn drop(&mut self) {
         self.stop();
+        #[cfg(windows)]
+        {
+            self.sender.take();
+            if let Some(worker) = self.worker.take() {
+                let _ = worker.join();
+            }
+        }
     }
 }
 
+#[cfg(windows)]
+struct Playback(*mut SDL_AudioStream);
+
+#[cfg(windows)]
+impl Playback {
+    fn new(audio: Audio, volume: u32, cancelled: impl Fn() -> bool) -> Result<Option<Self>, String> {
+        let spec = SDL_AudioSpec {
+            format: SDL_AUDIO_S16,
+            channels: audio.channels,
+            freq: audio.rate,
+        };
+        let len = i32::try_from(std::mem::size_of_val(audio.samples.as_slice()))
+            .map_err(|_| "Title sound is too large for SDL playback")?;
+        // SDL copies the PCM bytes before returning. The stream stays on this worker.
+        unsafe {
+            let stream = SDL_OpenAudioDeviceStream(
+                SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK,
+                &spec,
+                None,
+                std::ptr::null_mut(),
+            );
+            if stream.is_null() {
+                return Err(format!("Could not open SDL playback stream: {}", sdl3::get_error()));
+            }
+            let playback = Self(stream);
+            if !SDL_PutAudioStreamData(stream, audio.samples.as_ptr().cast(), len)
+                || !SDL_FlushAudioStream(stream)
+                || !playback.set_gain(volume.min(100) as f32 / 100.0)
+            {
+                return Err(format!("Could not queue SDL title audio: {}", sdl3::get_error()));
+            }
+            if cancelled() {
+                return Ok(None);
+            }
+            if !SDL_ResumeAudioStreamDevice(stream) {
+                return Err(format!("Could not start SDL title audio: {}", sdl3::get_error()));
+            }
+            Ok(Some(playback))
+        }
+    }
+
+    fn set_gain(&self, gain: f32) -> bool {
+        unsafe { SDL_SetAudioStreamGain(self.0, gain) }
+    }
+}
+
+#[cfg(windows)]
+impl Drop for Playback {
+    fn drop(&mut self) {
+        unsafe { SDL_DestroyAudioStream(self.0) };
+    }
+}
+
+#[cfg(not(windows))]
+type Playback = alto::StaticSource;
+
 fn run(receiver: mpsc::Receiver<Command>, generation: Arc<AtomicU64>) {
+    #[cfg(not(windows))]
     let mut context = None;
-    let mut source: Option<alto::StaticSource> = None;
+    let mut source: Option<Playback> = None;
     for command in receiver {
         match command {
             Command::Stop => {
@@ -256,7 +348,7 @@ fn run(receiver: mpsc::Receiver<Command>, generation: Arc<AtomicU64>) {
                 if cancelled() {
                     continue;
                 }
-                let result = (|| -> Result<Option<alto::StaticSource>, String> {
+                let result = (|| -> Result<Option<Playback>, String> {
                     let Some(path) = paths.into_iter().find(|path| path.is_file()) else {
                         return Ok(None);
                     };
@@ -267,29 +359,35 @@ fn run(receiver: mpsc::Receiver<Command>, generation: Arc<AtomicU64>) {
                     if cancelled() {
                         return Ok(None);
                     }
-                    if context.is_none() {
-                        let alto = alto::Alto::load_default().map_err(|error| error.to_string())?;
-                        let device = alto.open(None).map_err(|error| error.to_string())?;
-                        context = Some(device.new_context(None).map_err(|error| error.to_string())?);
-                    }
-                    let context = context.as_ref().unwrap();
-                    let buffer = match audio.channels {
-                        1 => context.new_buffer::<alto::Mono<i16>, _>(&audio.samples[..], audio.rate),
-                        _ => context.new_buffer::<alto::Stereo<i16>, _>(&audio.samples[..], audio.rate),
-                    }
-                    .map_err(|error| error.to_string())?;
-                    let mut source = context.new_static_source().map_err(|error| error.to_string())?;
-                    source
-                        .set_buffer(Arc::new(buffer))
+                    #[cfg(windows)]
+                    return Playback::new(audio, volume, cancelled);
+                    #[cfg(not(windows))]
+                    {
+                        if context.is_none() {
+                            let alto = alto::Alto::load_default()
+                                .map_err(|error| format!("Could not load OpenAL: {error:?}"))?;
+                            let device = alto.open(None).map_err(|error| error.to_string())?;
+                            context = Some(device.new_context(None).map_err(|error| error.to_string())?);
+                        }
+                        let context = context.as_ref().unwrap();
+                        let buffer = match audio.channels {
+                            1 => context.new_buffer::<alto::Mono<i16>, _>(&audio.samples[..], audio.rate),
+                            _ => context.new_buffer::<alto::Stereo<i16>, _>(&audio.samples[..], audio.rate),
+                        }
                         .map_err(|error| error.to_string())?;
-                    source
-                        .set_gain(volume.min(100) as f32 / 100.0)
-                        .map_err(|error| error.to_string())?;
-                    if cancelled() {
-                        return Ok(None);
+                        let mut source = context.new_static_source().map_err(|error| error.to_string())?;
+                        source
+                            .set_buffer(Arc::new(buffer))
+                            .map_err(|error| error.to_string())?;
+                        source
+                            .set_gain(volume.min(100) as f32 / 100.0)
+                            .map_err(|error| error.to_string())?;
+                        if cancelled() {
+                            return Ok(None);
+                        }
+                        source.play();
+                        Ok(Some(source))
                     }
-                    source.play();
-                    Ok(Some(source))
                 })();
                 match result {
                     Ok(playing) => source = playing,
