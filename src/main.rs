@@ -1,3 +1,5 @@
+#![cfg_attr(windows, windows_subsystem = "windows")] // hide CMD on windows
+
 use eframe::egui;
 
 pub mod app;
