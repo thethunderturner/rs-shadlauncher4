@@ -1,5 +1,8 @@
 fn main() {
     embed_revision();
+    if cfg!(target_os = "windows") {
+        embed_windows_icon();
+    }
     let source = "externals/libatrac9/C/src";
     println!("cargo:rerun-if-changed={source}");
     let mut build = cc::Build::new();
@@ -14,6 +17,12 @@ fn main() {
     if std::env::var("CARGO_CFG_UNIX").is_ok() {
         println!("cargo:rustc-link-lib=m");
     }
+}
+
+fn embed_windows_icon() {
+    let mut res = winres::WindowsResource::new();
+    res.set_icon("src/assets/icon.ico");
+    res.compile().expect("Failed to compile Windows resources");
 }
 
 fn embed_revision() {
