@@ -22,7 +22,7 @@ sdl3-sys = "0.7.3"
 ash = "0.38.0"
 open = "5.4.5"
 rusqlite = { version = "0.43.0", features = ["bundled"] }
-image = "0.25.10"
+image = { version = "0.25.10", default-features = false, features = ["png"] }
 ureq = "3.5.2"
 ring = "0.17.14"
 
@@ -30,7 +30,8 @@ ring = "0.17.14"
 objc2-metal = { version = "0.3.2", default-features = false, features = ["MTLDevice"] }
 
 [build-dependencies]
-cc = "1.11.2"
+cc = "1.12.0"
+[target.'cfg(windows)'.build-dependencies]
 winres = "0.1.12"
 
 [package.metadata.appimage]

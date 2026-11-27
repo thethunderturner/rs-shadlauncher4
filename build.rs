@@ -1,8 +1,6 @@
 fn main() {
     embed_revision();
-    if cfg!(target_os = "windows") {
-        embed_windows_icon();
-    }
+    embed_windows_icon();
     let source = "externals/libatrac9/C/src";
     println!("cargo:rerun-if-changed={source}");
     let mut build = cc::Build::new();
@@ -19,11 +17,15 @@ fn main() {
     }
 }
 
+#[cfg(windows)]
 fn embed_windows_icon() {
     let mut res = winres::WindowsResource::new();
     res.set_icon("src/assets/icon.ico");
     res.compile().expect("Failed to compile Windows resources");
 }
+
+#[cfg(not(windows))]
+fn embed_windows_icon() {}
 
 fn embed_revision() {
     fn git(args: &[&str]) -> Option<String> {

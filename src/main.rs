@@ -18,7 +18,7 @@ fn main() -> eframe::Result {
         std::process::exit(1);
     }
 
-    let icon = eframe::icon_data::from_png_bytes(include_bytes!("assets/icon.ico"))
+    let icon = eframe::icon_data::from_png_bytes(include_bytes!("assets/icon.png"))
         .expect("The bundled launcher icon must be a valid PNG");
     let options = eframe::NativeOptions {
         renderer: eframe::Renderer::Glow,
