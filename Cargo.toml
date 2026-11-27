@@ -6,6 +6,7 @@ license = "GPL-2"
 
 [dependencies]
 eframe = { version = "0.37", default-features = false, features = [
+    "clipboard",
     "glow",
     "default_fonts",
     "x11",
@@ -30,6 +31,7 @@ objc2-metal = { version = "0.3.2", default-features = false, features = ["MTLDev
 
 [build-dependencies]
 cc = "1.11.2"
+winres = "0.1.12"
 
 [package.metadata.appimage]
 icon = "src/assets/icon.png"
