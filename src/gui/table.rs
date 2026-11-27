@@ -33,6 +33,7 @@ impl Table {
                     return;
                 } else {
                     ui.label("Please refresh the cache by refreshing titles.");
+                    return;
                 }
             } else if state.visible_indices.is_empty() {
                 ui.label("No titles match your search or filter. Clear the search or select All.");
